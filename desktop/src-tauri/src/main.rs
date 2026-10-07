@@ -31,6 +31,7 @@ fn main() {
             commands::remove_network,
             commands::delete_network_identity,
             commands::run_diagnostics,
+            commands::inspect_destination,
             commands::open_auth_url,
             commands::get_settings,
             commands::set_settings,

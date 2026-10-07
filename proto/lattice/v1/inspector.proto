@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package lattice.v1;
+
+import "lattice/v1/common.proto";
+import "lattice/v1/device.proto";
+
+service InspectorService {
+  rpc InspectDestination(InspectDestinationRequest) returns (InspectDestinationResponse);
+}
+
+enum DestinationKind {
+  DESTINATION_KIND_UNSPECIFIED = 0;
+  DESTINATION_KIND_ADDRESS = 1;
+  DESTINATION_KIND_NAME = 2;
+}
+
+enum MatchKind {
+  MATCH_KIND_UNSPECIFIED = 0;
+  MATCH_KIND_DEVICE_ADDRESS = 1;
+  MATCH_KIND_DEVICE_DNS_NAME = 2;
+  MATCH_KIND_DEVICE_HOSTNAME = 3;
+}
+
+enum ResolutionDecision {
+  RESOLUTION_DECISION_UNSPECIFIED = 0;
+  RESOLUTION_DECISION_UNIQUE = 1;
+  RESOLUTION_DECISION_AMBIGUOUS = 2;
+  RESOLUTION_DECISION_NO_MATCH = 3;
+}
+
+enum DecisionReason {
+  DECISION_REASON_UNSPECIFIED = 0;
+  DECISION_REASON_EXACT_DEVICE_ADDRESS = 1;
+  DECISION_REASON_DEVICE_DNS_NAME = 2;
+  DECISION_REASON_DEVICE_HOSTNAME = 3;
+  DECISION_REASON_MULTIPLE_MATCHES = 4;
+  DECISION_REASON_NO_MATCH = 5;
+}
+
+enum CandidateStatus {
+  CANDIDATE_STATUS_UNSPECIFIED = 0;
+  CANDIDATE_STATUS_SELECTED = 1;
+  CANDIDATE_STATUS_TIED = 2;
+  CANDIDATE_STATUS_OUTRANKED = 3;
+}
+
+message NetworkRef {
+  string id = 1;
+  string display_name = 2;
+  ProviderType provider = 3;
+  NetworkConnectionState state = 4;
+}
+
+message ResolutionCandidate {
+  NetworkRef network = 1;
+  Device device = 2;
+  MatchKind match = 3;
+  string matched_value = 4;
+  CandidateStatus status = 5;
+}
+
+message InspectDestinationRequest {
+  string destination = 1;
+}
+
+message InspectDestinationResponse {
+  string daemon_instance_id = 1;
+  uint64 snapshot_sequence = 2;
+  string query = 3;
+  DestinationKind kind = 4;
+  string normalized = 5;
+  uint32 port = 6;
+  ResolutionDecision decision = 7;
+  DecisionReason reason = 8;
+  MatchKind decided_by = 9;
+  repeated ResolutionCandidate candidates = 10;
+  repeated NetworkRef not_inspected = 11;
+}

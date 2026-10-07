@@ -764,3 +764,31 @@ summary {
   flex-wrap: nowrap;
   justify-content: space-between;
 }
+
+.mono-input {
+  font-family: var(--font-mono);
+  font-size: var(--text-md);
+}
+
+.candidate-list {
+  gap: var(--space-3);
+}
+
+.candidate {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.candidate-outranked {
+  opacity: 0.7;
+}
+
+.network-name {
+  font-size: var(--text-lg);
+}
+
+.inspect-form .btn {
+  height: 36px;
+}

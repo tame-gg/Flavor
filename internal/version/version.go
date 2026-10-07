@@ -12,9 +12,9 @@ func Info() BuildInfo {
 	return BuildInfo{
 		DaemonVersion: "0.1.0-dev",
 		ProtocolMajor: 1,
-		ProtocolMinor: 0,
+		ProtocolMinor: 1,
 		BuildCommit:   buildCommit,
-		Capabilities:  []string{"headscale", "device_snapshots"},
+		Capabilities:  []string{"headscale", "device_snapshots", "connection_inspector"},
 	}
 }
 

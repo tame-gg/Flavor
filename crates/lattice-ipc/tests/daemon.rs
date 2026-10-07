@@ -187,3 +187,52 @@ async fn typed_daemon_errors_and_missing_daemon() {
     );
     assert!(err.is_unavailable(), "{err:?}");
 }
+
+#[tokio::test]
+async fn inspector_reports_duplicate_addresses_and_unique_names() {
+    let daemon = spawn_daemon().await;
+    let client = LatticeIpcClient::new(&daemon.socket);
+    let a = add(&client, "LunarLabs", "https://a.example.com").await;
+    let b = add(&client, "Home", "https://b.example.com").await;
+    for n in [&a, &b] {
+        client
+            .networks
+            .connect_network(ConnectNetworkRequest { network_id: n.id.clone(), ..Default::default() })
+            .await
+            .unwrap();
+    }
+    let inspect = |dest: &str| {
+        let client = client.clone();
+        let dest = dest.to_string();
+        async move {
+            client
+                .inspector
+                .inspect_destination(InspectDestinationRequest { destination: dest, ..Default::default() })
+                .await
+                .map(|r| r.into_owned())
+        }
+    };
+    let mut amb = inspect("100.64.0.1").await.unwrap();
+    for _ in 0..100 {
+        if amb.candidates.len() == 2 {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(20)).await;
+        amb = inspect("100.64.0.1").await.unwrap();
+    }
+    assert_eq!(amb.decision, ResolutionDecision::RESOLUTION_DECISION_AMBIGUOUS);
+    let nets: HashSet<_> = amb.candidates.iter().map(|c| c.network.id.clone()).collect();
+    assert_eq!(nets, HashSet::from([a.id.clone(), b.id.clone()]));
+
+    let dns = format!("postgres.{}.lattice.test", a.id.to_lowercase());
+    let uniq = inspect(&dns).await.unwrap();
+    assert_eq!(uniq.decision, ResolutionDecision::RESOLUTION_DECISION_UNIQUE);
+    assert_eq!(uniq.reason, DecisionReason::DECISION_REASON_DEVICE_DNS_NAME);
+    assert_eq!(uniq.candidates[0].network.id, a.id);
+
+    let collide = inspect("postgres").await.unwrap();
+    assert_eq!(collide.decision, ResolutionDecision::RESOLUTION_DECISION_AMBIGUOUS);
+
+    let err = lattice_ipc::IpcError::from(inspect("not a destination").await.unwrap_err());
+    assert_eq!(err.lattice_code(), Some(LatticeErrorCode::LATTICE_ERROR_CODE_INVALID_ARGUMENT));
+}

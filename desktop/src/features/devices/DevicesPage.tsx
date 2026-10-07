@@ -1,13 +1,12 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useDaemon } from "../../app/sync/useDaemon";
 import { deviceRows } from "./filter";
 
-type Props = { networkId: string; onNetworkChange: (id: string) => void };
+type Props = { networkId: string; onNetworkChange: (id: string) => void; query: string; onQueryChange: (q: string) => void };
 
-export function DevicesPage({ networkId, onNetworkChange }: Props) {
+export function DevicesPage({ networkId, onNetworkChange, query, onQueryChange }: Props) {
   const { devices, networks, status } = useDaemon();
-  const [query, setQuery] = useState("");
   const rows = useMemo(() => deviceRows(devices, networks, networkId, query), [devices, networks, networkId, query]);
   const scroller = useRef<HTMLDivElement>(null);
   const virtual = useVirtualizer({
@@ -39,7 +38,7 @@ export function DevicesPage({ networkId, onNetworkChange }: Props) {
           type="search"
           placeholder="Search by name, address or network"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => onQueryChange(e.target.value)}
         />
         <label className="sr-only" htmlFor="device-network">
           Network

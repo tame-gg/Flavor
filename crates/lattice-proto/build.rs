@@ -8,6 +8,7 @@ fn main() {
             "lattice/v1/device.proto",
             "lattice/v1/diagnostics.proto",
             "lattice/v1/events.proto",
+            "lattice/v1/inspector.proto",
             "lattice/v1/network.proto",
         ])
         .include_file("_connectrpc.rs")

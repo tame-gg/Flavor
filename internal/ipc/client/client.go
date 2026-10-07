@@ -16,6 +16,7 @@ type Client struct {
 	Devices     latticev1connect.DeviceServiceClient
 	Diagnostics latticev1connect.DiagnosticsServiceClient
 	Events      latticev1connect.EventServiceClient
+	Inspector   latticev1connect.InspectorServiceClient
 }
 
 func HTTPClient(socket string) *http.Client {
@@ -38,5 +39,6 @@ func New(socket string) *Client {
 		Devices:     latticev1connect.NewDeviceServiceClient(h, BaseURL),
 		Diagnostics: latticev1connect.NewDiagnosticsServiceClient(h, BaseURL),
 		Events:      latticev1connect.NewEventServiceClient(h, BaseURL),
+		Inspector:   latticev1connect.NewInspectorServiceClient(h, BaseURL),
 	}
 }

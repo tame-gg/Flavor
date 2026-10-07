@@ -1,32 +1,27 @@
 import { useEffect, useState } from "react";
-import { NetworkConnectionState } from "@gen/lattice/v1/common_pb";
+import { Capability, NetworkConnectionState } from "@gen/lattice/v1/common_pb";
 import logo from "../logo.svg";
 import { Banner } from "../components/ui/Banner";
 import { Button } from "../components/ui/Button";
 import { DevicesPage } from "../features/devices/DevicesPage";
 import { DiagnosticsPage } from "../features/diagnostics/DiagnosticsPage";
+import { InspectorPage } from "../features/inspector/InspectorPage";
 import { NetworksPage } from "../features/networks/NetworksPage";
 import { Welcome } from "../features/onboarding/Welcome";
 import { SettingsPage } from "../features/settings/SettingsPage";
 import { getSettings, setSettings, setTraySummary } from "../lib/api/daemon";
 import { errorMessage } from "../lib/api/errors";
 import type { LoadedSettings, Settings } from "../lib/api/types";
+import { visiblePages, type Page } from "./navigation";
 import { useDaemon } from "./sync/useDaemon";
-
-type Page = "networks" | "devices" | "diagnostics" | "settings";
-
-const pages: [Page, string][] = [
-  ["networks", "Networks"],
-  ["devices", "Devices"],
-  ["diagnostics", "Diagnostics"],
-  ["settings", "Settings"],
-];
 
 export function App() {
   const { status, info, networks, devices, controller } = useDaemon();
   const [page, setPage] = useState<Page>("networks");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deviceNetwork, setDeviceNetwork] = useState("");
+  const [deviceQuery, setDeviceQuery] = useState("");
+  const [inspectorQuery, setInspectorQuery] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [welcomeDone, setWelcomeDone] = useState(false);
   const [settings, setSettingsState] = useState<LoadedSettings>({ theme: "system", closeBehavior: "tray", warning: null });
@@ -100,7 +95,7 @@ export function App() {
           Lattice
         </div>
         <nav className="stack-sm" aria-label="Sections">
-          {pages.map(([id, label]) => (
+          {visiblePages(info.capabilities).map(([id, label]) => (
             <button key={id} type="button" className="nav-item" aria-current={page === id ? "page" : undefined} onClick={() => setPage(id)}>
               {label}
               {id === "networks" && <span className="nav-count">{networks.size}</span>}
@@ -128,7 +123,24 @@ export function App() {
             }}
           />
         )}
-        {page === "devices" && <DevicesPage networkId={deviceNetwork} onNetworkChange={setDeviceNetwork} />}
+        {page === "devices" && (
+          <DevicesPage networkId={deviceNetwork} onNetworkChange={setDeviceNetwork} query={deviceQuery} onQueryChange={setDeviceQuery} />
+        )}
+        {page === "inspector" && info.capabilities.includes(Capability.CONNECTION_INSPECTOR) && (
+          <InspectorPage
+            query={inspectorQuery}
+            onQueryChange={setInspectorQuery}
+            onOpenNetwork={(id) => {
+              setSelectedId(id);
+              setPage("networks");
+            }}
+            onShowDevice={(networkId, search) => {
+              setDeviceNetwork(networkId);
+              setDeviceQuery(search);
+              setPage("devices");
+            }}
+          />
+        )}
         {page === "diagnostics" && <DiagnosticsPage />}
         {page === "settings" && <SettingsPage settings={settings} error={settingsError} onChange={(s) => void changeSettings(s)} />}
       </main>

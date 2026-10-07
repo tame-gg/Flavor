@@ -9,6 +9,7 @@ const COMMANDS: &[&str] = &[
     "remove_network",
     "delete_network_identity",
     "run_diagnostics",
+    "inspect_destination",
     "open_auth_url",
     "get_settings",
     "set_settings",

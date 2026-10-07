@@ -18,8 +18,9 @@ func timestamp(t time.Time) *timestamppb.Timestamp {
 }
 
 var capabilities = map[string]v1.Capability{
-	"headscale":        v1.Capability_CAPABILITY_HEADSCALE,
-	"device_snapshots": v1.Capability_CAPABILITY_DEVICE_SNAPSHOTS,
+	"headscale":            v1.Capability_CAPABILITY_HEADSCALE,
+	"device_snapshots":     v1.Capability_CAPABILITY_DEVICE_SNAPSHOTS,
+	"connection_inspector": v1.Capability_CAPABILITY_CONNECTION_INSPECTOR,
 }
 
 func daemonInfo(info service.DaemonInfo) *v1.GetDaemonInfoResponse {

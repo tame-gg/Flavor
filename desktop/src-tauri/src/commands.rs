@@ -162,6 +162,16 @@ pub async fn run_diagnostics(daemon: State<'_, Daemon>) -> Result<RunDiagnostics
 }
 
 #[tauri::command]
+pub async fn inspect_destination(daemon: State<'_, Daemon>, destination: String) -> Result<InspectDestinationResponse> {
+    Ok(daemon
+        .client()?
+        .inspector
+        .inspect_destination(InspectDestinationRequest { destination, ..Default::default() })
+        .await?
+        .into_owned())
+}
+
+#[tauri::command]
 pub async fn open_auth_url(
     app: AppHandle,
     daemon: State<'_, Daemon>,

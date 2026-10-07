@@ -16,9 +16,11 @@ import (
 	v1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1"
 	"git.lunarlabs.dev/lattice/lattice/internal/config"
 	"git.lunarlabs.dev/lattice/lattice/internal/ipc/client"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
-const usage = `usage: latticectl [--runtime-dir DIR] <command> [args]
+const usage = `usage: latticectl [--runtime-dir DIR] [--json] <command> [args]
 
 commands:
   info                                 daemon version and protocol
@@ -31,10 +33,14 @@ commands:
   rename <network-id> <name>
   remove [--delete-identity] <network-id>
   diag                                 safe diagnostics summary
+  explain <destination>                which network an address or name belongs to, and why
+
+--json prints the daemon response as JSON for info, list, devices, diag and explain.
 `
 
 func main() {
 	runtimeDir := flag.String("runtime-dir", "", "runtime directory parent (defaults to $XDG_RUNTIME_DIR)")
+	asJSON := flag.Bool("json", false, "print machine-readable JSON")
 	flag.Usage = func() { fmt.Fprint(os.Stderr, usage) }
 	flag.Parse()
 	if flag.NArg() == 0 {
@@ -47,7 +53,7 @@ func main() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-	if err := run(ctx, client.New(paths.Socket), flag.Arg(0), flag.Args()[1:], os.Stdin, os.Stdout); err != nil {
+	if err := run(ctx, client.New(paths.Socket), flag.Arg(0), flag.Args()[1:], *asJSON, os.Stdin, os.Stdout); err != nil {
 		fail(err)
 	}
 }
@@ -72,7 +78,16 @@ func fail(err error) {
 	os.Exit(1)
 }
 
-func run(ctx context.Context, c *client.Client, cmd string, args []string, stdin io.Reader, out io.Writer) error {
+func emit(out io.Writer, m proto.Message) error {
+	b, err := protojson.MarshalOptions{Multiline: true, Indent: "  "}.Marshal(m)
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintln(out, string(b))
+	return err
+}
+
+func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSON bool, stdin io.Reader, out io.Writer) error {
 	need := func(n int) error {
 		if len(args) != n {
 			return fmt.Errorf("%s: expected %d argument(s)\n\n%s", cmd, n, usage)
@@ -85,12 +100,18 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, stdin
 		if err != nil {
 			return err
 		}
+		if asJSON {
+			return emit(out, res.Msg)
+		}
 		m := res.Msg
 		fmt.Fprintf(out, "latticed %s (commit %s)\nprotocol %d.%d\ninstance %s\n", m.DaemonVersion, m.BuildCommit, m.ProtocolMajor, m.ProtocolMinor, m.DaemonInstanceId)
 	case "list":
 		res, err := c.Networks.ListNetworks(ctx, connect.NewRequest(&v1.ListNetworksRequest{}))
 		if err != nil {
 			return err
+		}
+		if asJSON {
+			return emit(out, res.Msg)
 		}
 		w := tabwriter.NewWriter(out, 0, 4, 2, ' ', 0)
 		fmt.Fprintln(w, "ID\tNAME\tPROVIDER\tSTATE\tAUTO")
@@ -115,6 +136,9 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, stdin
 		res, err := c.Devices.ListDevices(ctx, connect.NewRequest(req))
 		if err != nil {
 			return err
+		}
+		if asJSON {
+			return emit(out, res.Msg)
 		}
 		w := tabwriter.NewWriter(out, 0, 4, 2, ' ', 0)
 		fmt.Fprintln(w, "NETWORK\tNODE\tHOSTNAME\tADDRESSES\tONLINE")
@@ -190,11 +214,26 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, stdin
 		if err != nil {
 			return err
 		}
+		if asJSON {
+			return emit(out, res.Msg)
+		}
 		w := tabwriter.NewWriter(out, 0, 4, 2, ' ', 0)
 		for _, ch := range res.Msg.Checks {
 			fmt.Fprintf(w, "%s\t%s\t%s\n", ch.Status, ch.Name, ch.SafeDetail)
 		}
 		return w.Flush()
+	case "explain", "inspect":
+		if err := need(1); err != nil {
+			return err
+		}
+		res, err := c.Inspector.InspectDestination(ctx, connect.NewRequest(&v1.InspectDestinationRequest{Destination: args[0]}))
+		if err != nil {
+			return err
+		}
+		if asJSON {
+			return emit(out, res.Msg)
+		}
+		return printExplain(out, res.Msg)
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", cmd, usage)
 	}
@@ -203,4 +242,52 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, stdin
 
 func enumName(s, prefix string) string {
 	return strings.ToLower(strings.TrimPrefix(s, prefix))
+}
+
+func printExplain(out io.Writer, r *v1.InspectDestinationResponse) error {
+	what := enumName(r.Kind.String(), "DESTINATION_KIND_")
+	fmt.Fprintf(out, "destination  %s (%s)", r.Normalized, what)
+	if r.Port > 0 {
+		fmt.Fprintf(out, ", port %d", r.Port)
+	}
+	fmt.Fprintln(out)
+	decision := enumName(r.Decision.String(), "RESOLUTION_DECISION_")
+	switch r.Decision {
+	case v1.ResolutionDecision_RESOLUTION_DECISION_AMBIGUOUS:
+		nets := map[string]bool{}
+		for _, c := range r.Candidates {
+			if c.Status == v1.CandidateStatus_CANDIDATE_STATUS_TIED {
+				nets[c.Network.GetId()] = true
+			}
+		}
+		decision += fmt.Sprintf(": exists on %d network(s); use a full DNS name to pick one", len(nets))
+	case v1.ResolutionDecision_RESOLUTION_DECISION_UNIQUE:
+		c := r.Candidates[0]
+		decision += fmt.Sprintf(": %s on %s", c.Device.GetHostname(), c.Network.GetDisplayName())
+	}
+	fmt.Fprintf(out, "decision     %s\n", strings.ReplaceAll(decision, "_", " "))
+	fmt.Fprintf(out, "reason       %s\n", strings.ReplaceAll(enumName(r.Reason.String(), "DECISION_REASON_"), "_", " "))
+	if len(r.Candidates) > 0 {
+		fmt.Fprintln(out)
+		w := tabwriter.NewWriter(out, 0, 4, 2, ' ', 0)
+		fmt.Fprintln(w, "NETWORK\tDEVICE\tMATCH\tSTATUS\tADDRESSES\tNETWORK ID\tNODE ID")
+		for _, c := range r.Candidates {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+				c.Network.GetDisplayName(), c.Device.GetHostname(),
+				strings.ReplaceAll(enumName(c.Match.String(), "MATCH_KIND_"), "_", " "),
+				enumName(c.Status.String(), "CANDIDATE_STATUS_"),
+				strings.Join(c.Device.GetAddresses(), ","), c.Network.GetId(), c.Device.GetId().GetNodeId())
+		}
+		if err := w.Flush(); err != nil {
+			return err
+		}
+	}
+	if len(r.NotInspected) > 0 {
+		names := make([]string, 0, len(r.NotInspected))
+		for _, n := range r.NotInspected {
+			names = append(names, n.DisplayName)
+		}
+		fmt.Fprintf(out, "\nnot checked (not connected): %s\n", strings.Join(names, ", "))
+	}
+	return nil
 }

@@ -32,7 +32,7 @@ func main() {
 		case strings.Contains(host, "approval"):
 			e.SetStatus(sessiontest.StatusNeedsMachineAuth())
 		default:
-			e.SetStatus(status(cfg.NetworkID, *peers))
+			e.SetStatus(status(cfg, *peers))
 		}
 	}}
 
@@ -51,15 +51,23 @@ func main() {
 	}
 }
 
-func status(id domain.NetworkID, peers int) session.EngineStatus {
+var peerNames = []string{"postgres", "grafana", "prod-api", "nas", "build-runner", "pi-hole"}
+
+func status(cfg provider.ResolvedSessionConfig, peers int) session.EngineStatus {
+	id := cfg.NetworkID
 	st := sessiontest.StatusSelf("self-"+string(id), "100.64.0.1")
+	st.Self.Hostname = cfg.NodeHostname
+	st.Self.DNSName = cfg.NodeHostname + "." + strings.ToLower(string(id)) + ".lattice.test"
 	for i := range peers {
 		addr := netip.AddrFrom4([4]byte{100, 64, byte((i + 2) >> 8), byte(i + 2)})
 		node := fmt.Sprintf("peer-%04d", i+1)
+		if i < len(peerNames) {
+			node = peerNames[i]
+		}
 		st.Peers = append(st.Peers, session.EnginePeer{
-			NodeID:    domain.NodeID(node + "-" + string(id)),
+			NodeID:    domain.NodeID(fmt.Sprintf("%s-%d", id, i+1)),
 			Hostname:  node,
-			DNSName:   node + ".tail.example.",
+			DNSName:   node + "." + strings.ToLower(string(id)) + ".lattice.test.",
 			Addresses: []netip.Addr{addr},
 			Online:    i%4 != 3,
 		})

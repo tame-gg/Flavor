@@ -21,7 +21,7 @@ jobs:
       - name: proto dirty check
         run: |
           ./scripts/generate-proto.sh
-          git diff --exit-code gen/ proto/buf.lock
+          git diff --exit-code gen/ proto/buf.lock crates/lattice-proto/lattice.binpb
       - name: test
         run: |
           ./scripts/go.sh vet ./...
@@ -29,8 +29,38 @@ jobs:
 
   rust:
     runs-on: ubuntu-latest
+    env:
+      GOENV: ${{ github.workspace }}/go.env
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
       - uses: dtolnay/rust-toolchain@stable
-      - name: check
-        run: cargo check --workspace
+      - name: system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
+      - name: frontend dist placeholder
+        run: mkdir -p desktop/dist
+      - name: test
+        run: cargo test --workspace
+
+  desktop:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - run: npm ci
+      - name: no daemon rpc client in the webview
+        run: |
+          ! grep -rnE "@connectrpc|connect-web|createClient|latticed\.sock" src
+      - run: npm run build
+      - run: npm test

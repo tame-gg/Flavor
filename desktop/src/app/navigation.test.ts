@@ -11,6 +11,11 @@ describe("visiblePages", () => {
     expect(visiblePages([Capability.CONNECTION_INSPECTOR]).map(([id]) => id)).toContain("inspector");
   });
 
+  it("shows Workspaces only when supported", () => {
+    expect(visiblePages([]).map(([id]) => id)).not.toContain("workspaces");
+    expect(visiblePages([Capability.WORKSPACES]).map(([id]) => id)).toContain("workspaces");
+  });
+
   it("gates the Conflict Center separately", () => {
     expect(visiblePages([Capability.CONNECTION_INSPECTOR]).map(([id]) => id)).not.toContain("conflicts");
     expect(visiblePages([Capability.CONFLICT_CENTER]).map(([id]) => id)).toContain("conflicts");

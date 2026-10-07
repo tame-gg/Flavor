@@ -246,3 +246,43 @@ async fn inspector_reports_duplicate_addresses_and_unique_names() {
     assert_eq!(addr.severity, ConflictSeverity::CONFLICT_SEVERITY_EXPECTED);
     assert!(addr.network_context_resolves);
 }
+
+#[tokio::test]
+async fn workspaces_round_trip_through_rust_client() {
+    let daemon = spawn_daemon().await;
+    let client = LatticeIpcClient::new(&daemon.socket);
+    let a = add(&client, "LunarLabs", "https://a.example.com").await;
+    let b = add(&client, "Home", "https://b.example.com").await;
+    let created = client
+        .workspaces
+        .create_workspace(CreateWorkspaceRequest {
+            name: "Work".into(),
+            network_ids: vec![a.id.clone(), b.id.clone()],
+            ..Default::default()
+        })
+        .await
+        .unwrap()
+        .into_owned();
+    let ws = created.workspace.as_option().unwrap().clone();
+    let act = client
+        .workspaces
+        .activate_workspace(ActivateWorkspaceRequest { workspace_id: ws.id.clone(), ..Default::default() })
+        .await
+        .unwrap()
+        .into_owned();
+    assert_eq!(act.results.len(), 2);
+    let snap = client.daemon.get_state_snapshot(GetStateSnapshotRequest::default()).await.unwrap().into_owned();
+    assert_eq!(snap.active_workspace_id, ws.id);
+    assert_eq!(snap.workspaces.len(), 1);
+    let json = serde_json::to_value(&snap).unwrap();
+    assert_eq!(json["activeWorkspaceId"], ws.id);
+
+    let err = lattice_ipc::IpcError::from(
+        client
+            .workspaces
+            .delete_workspace(DeleteWorkspaceRequest { workspace_id: "01NOSUCHWORKSPACE000000000".into(), ..Default::default() })
+            .await
+            .unwrap_err(),
+    );
+    assert_eq!(err.lattice_code(), Some(LatticeErrorCode::LATTICE_ERROR_CODE_WORKSPACE_NOT_FOUND));
+}

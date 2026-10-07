@@ -6,6 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "lattice/v1/common.proto";
 import "lattice/v1/network.proto";
 import "lattice/v1/device.proto";
+import "lattice/v1/workspaces.proto";
 
 service DaemonService {
   rpc GetDaemonInfo(GetDaemonInfoRequest) returns (GetDaemonInfoResponse);
@@ -32,4 +33,6 @@ message GetStateSnapshotResponse {
   repeated Network networks = 4;
   repeated Device devices = 5;
   google.protobuf.Timestamp captured_at = 6;
+  repeated Workspace workspaces = 7;
+  string active_workspace_id = 8;
 }

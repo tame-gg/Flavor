@@ -22,6 +22,7 @@ var capabilities = map[string]v1.Capability{
 	"device_snapshots":     v1.Capability_CAPABILITY_DEVICE_SNAPSHOTS,
 	"connection_inspector": v1.Capability_CAPABILITY_CONNECTION_INSPECTOR,
 	"conflict_center":      v1.Capability_CAPABILITY_CONFLICT_CENTER,
+	"workspaces":           v1.Capability_CAPABILITY_WORKSPACES,
 }
 
 func daemonInfo(info service.DaemonInfo) *v1.GetDaemonInfoResponse {
@@ -158,6 +159,12 @@ func event(ev events.Event, instance string) *v1.DaemonEvent {
 		out.Payload = &v1.DaemonEvent_PeerRemoved{PeerRemoved: &v1.PeerRemoved{
 			Id: &v1.DeviceIdentity{NetworkId: string(p.ID.NetworkID), NodeId: string(p.ID.NodeID)},
 		}}
+	case events.WorkspaceChanged:
+		out.Payload = &v1.DaemonEvent_WorkspaceChanged{WorkspaceChanged: &v1.WorkspaceChanged{Workspace: workspace(p.Workspace)}}
+	case events.WorkspaceRemoved:
+		out.Payload = &v1.DaemonEvent_WorkspaceRemoved{WorkspaceRemoved: &v1.WorkspaceRemoved{WorkspaceId: string(p.WorkspaceID)}}
+	case events.ActiveWorkspaceChanged:
+		out.Payload = &v1.DaemonEvent_ActiveWorkspaceChanged{ActiveWorkspaceChanged: &v1.ActiveWorkspaceChanged{WorkspaceId: string(p.WorkspaceID)}}
 	}
 	return out
 }

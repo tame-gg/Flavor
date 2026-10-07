@@ -32,6 +32,7 @@ func New(svc *service.Service) *http.Server {
 	mux.Handle(latticev1connect.NewEventServiceHandler(h, opts...))
 	mux.Handle(latticev1connect.NewInspectorServiceHandler(h, opts...))
 	mux.Handle(latticev1connect.NewConflictServiceHandler(h, opts...))
+	mux.Handle(latticev1connect.NewWorkspaceServiceHandler(h, opts...))
 	var p http.Protocols
 	p.SetUnencryptedHTTP2(true)
 	return &http.Server{
@@ -63,6 +64,10 @@ func (h *handlers) GetStateSnapshot(ctx context.Context, _ *connect.Request[v1.G
 	for _, d := range snap.Devices {
 		out.Devices = append(out.Devices, device(d))
 	}
+	for _, w := range snap.Workspaces {
+		out.Workspaces = append(out.Workspaces, workspace(w))
+	}
+	out.ActiveWorkspaceId = string(snap.ActiveWorkspace)
 	return connect.NewResponse(out), nil
 }
 
@@ -226,6 +231,7 @@ var connectCodes = map[service.Code]connect.Code{
 	service.CodeStateDirectory:    connect.CodeFailedPrecondition,
 	service.CodeShuttingDown:      connect.CodeUnavailable,
 	service.CodeInternal:          connect.CodeInternal,
+	service.CodeWorkspaceNotFound: connect.CodeNotFound,
 }
 
 func toConnect(err error) error {

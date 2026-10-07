@@ -4,6 +4,7 @@ import { GetDaemonInfoResponseSchema, GetStateSnapshotResponseSchema, type GetSt
 import { DeviceSchema, type Device } from "@gen/lattice/v1/device_pb";
 import { DaemonEventSchema, type DaemonEvent } from "@gen/lattice/v1/events_pb";
 import { AuthenticationPromptSchema, NetworkSchema, type Network } from "@gen/lattice/v1/network_pb";
+import { WorkspaceSchema, type Workspace } from "@gen/lattice/v1/workspaces_pb";
 import { describe, expect, it } from "vitest";
 import type { StreamMessage, UiError } from "../../lib/api/types";
 import { DaemonSyncController, deviceKey, type SyncTransport } from "./controller";
@@ -14,7 +15,7 @@ const net = (id: string, state = NetworkConnectionState.CONNECTED) =>
 const dev = (networkId: string, nodeId: string, ip: string) =>
   create(DeviceSchema, { id: { networkId, nodeId }, hostname: nodeId, addresses: [ip], online: true });
 
-const snapshot = (instance: string, seq: bigint, extra: { networks?: Network[]; devices?: Device[] } = {}) =>
+const snapshot = (instance: string, seq: bigint, extra: { networks?: Network[]; devices?: Device[]; workspaces?: Workspace[]; activeWorkspaceId?: string } = {}) =>
   create(GetStateSnapshotResponseSchema, {
     daemonInstanceId: instance,
     snapshotSequence: seq,
@@ -198,4 +199,30 @@ describe("DaemonSyncController", () => {
     t.emit(event("i1", 2n, { case: "networkUpdated", value: { network: renamed } as never }));
     expect(c.getState().networks.get("a")).toMatchObject({ displayName: "Renamed", state: NetworkConnectionState.CONNECTED });
   });
+
+  it("keeps workspaces and the active workspace correct across events and snapshots", async () => {
+    const ws = (id: string, name: string, networkIds: string[]) => create(WorkspaceSchema, { id, name, networkIds });
+    const { t, c } = setup(
+      snapshot("i1", 1n, { networks: [net("a"), net("b")], workspaces: [ws("w1", "Work", ["a", "b"])], activeWorkspaceId: "w1" }),
+      snapshot("i1", 9n, { networks: [net("a")], workspaces: [ws("w1", "Work", ["a"]), ws("w2", "Home", [])], activeWorkspaceId: "w2" }),
+    );
+    await c.start();
+    expect(c.getState().activeWorkspaceId).toBe("w1");
+    t.emit(event("i1", 2n, { case: "workspaceChanged", value: { workspace: ws("w2", "Home", ["b"]) } as never }));
+    t.emit(event("i1", 3n, { case: "workspaceChanged", value: { workspace: ws("w1", "Work", ["a"]) } as never }));
+    expect([...c.getState().workspaces.keys()].sort()).toEqual(["w1", "w2"]);
+    expect(c.getState().workspaces.get("w1")?.networkIds).toEqual(["a"]);
+    t.emit(event("i1", 4n, { case: "workspaceRemoved", value: { workspaceId: "w1" } as never }));
+    expect(c.getState().activeWorkspaceId).toBe("");
+    expect(c.getState().workspaces.has("w1")).toBe(false);
+    t.emit(event("i1", 5n, { case: "activeWorkspaceChanged", value: { workspaceId: "w2" } as never }));
+    expect(c.getState().activeWorkspaceId).toBe("w2");
+
+    t.emit(event("i1", 7n, { case: "daemonWarning", value: { code: "x", safeMessage: "y" } as never }));
+    await flush();
+    expect(c.getState().workspaces.get("w1")?.networkIds).toEqual(["a"]);
+    expect(c.getState().workspaces.get("w2")?.networkIds).toEqual([]);
+    expect(c.getState().activeWorkspaceId).toBe("w2");
+  });
 });
+

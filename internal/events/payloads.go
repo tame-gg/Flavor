@@ -71,3 +71,21 @@ type NetworkRemoved struct {
 }
 
 func (NetworkRemoved) eventPayload() {}
+
+type WorkspaceChanged struct {
+	Workspace domain.Workspace
+}
+
+func (WorkspaceChanged) eventPayload() {}
+
+type WorkspaceRemoved struct {
+	WorkspaceID domain.WorkspaceID
+}
+
+func (WorkspaceRemoved) eventPayload() {}
+
+type ActiveWorkspaceChanged struct {
+	WorkspaceID domain.WorkspaceID
+}
+
+func (ActiveWorkspaceChanged) eventPayload() {}

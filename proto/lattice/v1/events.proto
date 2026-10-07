@@ -6,6 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "lattice/v1/common.proto";
 import "lattice/v1/device.proto";
 import "lattice/v1/network.proto";
+import "lattice/v1/workspaces.proto";
 
 service EventService {
   rpc WatchEvents(WatchEventsRequest) returns (stream DaemonEvent);
@@ -32,6 +33,9 @@ message DaemonEvent {
     PeerUpdated peer_updated = 18;
     PeerRemoved peer_removed = 19;
     DaemonWarning daemon_warning = 20;
+    WorkspaceChanged workspace_changed = 21;
+    WorkspaceRemoved workspace_removed = 22;
+    ActiveWorkspaceChanged active_workspace_changed = 23;
   }
 }
 
@@ -85,4 +89,16 @@ message PeerRemoved {
 message DaemonWarning {
   string code = 1;
   string safe_message = 2;
+}
+
+message WorkspaceChanged {
+  Workspace workspace = 1;
+}
+
+message WorkspaceRemoved {
+  string workspace_id = 1;
+}
+
+message ActiveWorkspaceChanged {
+  string workspace_id = 1;
 }

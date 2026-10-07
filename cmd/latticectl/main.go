@@ -35,8 +35,15 @@ commands:
   diag                                 safe diagnostics summary
   explain <destination>                which network an address or name belongs to, and why
   conflicts                            addresses and names that exist more than once
+  workspace list
+  workspace create --name NAME [--description TEXT] [network-id...]
+  workspace edit <workspace> [--name NAME] [--description TEXT] [--networks id,id]
+  workspace activate [--disconnect-others] <workspace>
+  workspace deactivate
+  workspace delete <workspace>
+                                       <workspace> is an id or an exact name
 
---json prints the daemon response as JSON for info, list, devices, diag, explain and conflicts.
+--json prints the daemon response as JSON for info, list, devices, diag, explain, conflicts and workspace list.
 `
 
 func main() {
@@ -244,6 +251,8 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSO
 			return emit(out, res.Msg)
 		}
 		return printConflicts(out, res.Msg)
+	case "workspace", "workspaces":
+		return runWorkspace(ctx, c, args, asJSON, out)
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", cmd, usage)
 	}
@@ -338,6 +347,145 @@ func printConflicts(out io.Writer, r *v1.ListConflictsResponse) error {
 			names = append(names, n.DisplayName)
 		}
 		fmt.Fprintf(out, "\nnot checked (not connected): %s\n", strings.Join(names, ", "))
+	}
+	return nil
+}
+
+func runWorkspace(ctx context.Context, c *client.Client, args []string, asJSON bool, out io.Writer) error {
+	if len(args) == 0 {
+		args = []string{"list"}
+	}
+	list, err := c.Workspaces.ListWorkspaces(ctx, connect.NewRequest(&v1.ListWorkspacesRequest{}))
+	if err != nil {
+		return err
+	}
+	find := func(ref string) (*v1.Workspace, error) {
+		for _, w := range list.Msg.Workspaces {
+			if w.Id == ref || w.Name == ref {
+				return w, nil
+			}
+		}
+		return nil, fmt.Errorf("no workspace named %q", ref)
+	}
+	sub, rest := args[0], args[1:]
+	switch sub {
+	case "list", "ls":
+		if asJSON {
+			return emit(out, list.Msg)
+		}
+		nets, err := c.Networks.ListNetworks(ctx, connect.NewRequest(&v1.ListNetworksRequest{}))
+		if err != nil {
+			return err
+		}
+		names := map[string]string{}
+		for _, n := range nets.Msg.Networks {
+			names[n.Id] = n.DisplayName
+		}
+		if len(list.Msg.Workspaces) == 0 {
+			fmt.Fprintln(out, "no workspaces")
+			return nil
+		}
+		w := tabwriter.NewWriter(out, 0, 4, 2, ' ', 0)
+		fmt.Fprintln(w, "ID\tNAME\tACTIVE\tNETWORKS")
+		for _, ws := range list.Msg.Workspaces {
+			members := make([]string, 0, len(ws.NetworkIds))
+			for _, id := range ws.NetworkIds {
+				members = append(members, names[id])
+			}
+			active := ""
+			if ws.Id == list.Msg.ActiveWorkspaceId {
+				active = "yes"
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", ws.Id, ws.Name, active, strings.Join(members, ", "))
+		}
+		return w.Flush()
+	case "create":
+		fs := flag.NewFlagSet("workspace create", flag.ContinueOnError)
+		name := fs.String("name", "", "workspace name")
+		desc := fs.String("description", "", "optional description")
+		if err := fs.Parse(rest); err != nil {
+			return err
+		}
+		res, err := c.Workspaces.CreateWorkspace(ctx, connect.NewRequest(&v1.CreateWorkspaceRequest{Name: *name, Description: *desc, NetworkIds: fs.Args()}))
+		if err != nil {
+			return err
+		}
+		fmt.Fprintln(out, res.Msg.Workspace.Id)
+	case "edit":
+		if len(rest) == 0 {
+			return fmt.Errorf("workspace edit: expected a workspace\n\n%s", usage)
+		}
+		ws, err := find(rest[0])
+		if err != nil {
+			return err
+		}
+		fs := flag.NewFlagSet("workspace edit", flag.ContinueOnError)
+		name := fs.String("name", "", "new name")
+		desc := fs.String("description", "", "new description")
+		networks := fs.String("networks", "", "comma-separated network ids, replaces membership")
+		if err := fs.Parse(rest[1:]); err != nil {
+			return err
+		}
+		req := &v1.UpdateWorkspaceRequest{WorkspaceId: ws.Id}
+		fs.Visit(func(f *flag.Flag) {
+			switch f.Name {
+			case "name":
+				req.Name = name
+			case "description":
+				req.Description = desc
+			case "networks":
+				ids := []string{}
+				for _, id := range strings.Split(*networks, ",") {
+					if id = strings.TrimSpace(id); id != "" {
+						ids = append(ids, id)
+					}
+				}
+				req.Networks = &v1.NetworkIDList{NetworkIds: ids}
+			}
+		})
+		_, err = c.Workspaces.UpdateWorkspace(ctx, connect.NewRequest(req))
+		return err
+	case "activate":
+		fs := flag.NewFlagSet("workspace activate", flag.ContinueOnError)
+		others := fs.Bool("disconnect-others", false, "disconnect networks outside the workspace")
+		if err := fs.Parse(rest); err != nil {
+			return err
+		}
+		if fs.NArg() != 1 {
+			return fmt.Errorf("workspace activate: expected a workspace\n\n%s", usage)
+		}
+		ws, err := find(fs.Arg(0))
+		if err != nil {
+			return err
+		}
+		res, err := c.Workspaces.ActivateWorkspace(ctx, connect.NewRequest(&v1.ActivateWorkspaceRequest{WorkspaceId: ws.Id, DisconnectOthers: *others}))
+		if err != nil {
+			return err
+		}
+		if asJSON {
+			return emit(out, res.Msg)
+		}
+		fmt.Fprintf(out, "activated %s\n", ws.Name)
+		w := tabwriter.NewWriter(out, 0, 4, 2, ' ', 0)
+		for _, r := range res.Msg.Results {
+			fmt.Fprintf(w, "  %s\t%s\t%s\n", r.Network.GetDisplayName(), strings.ReplaceAll(enumName(r.Outcome.String(), "ACTIVATION_OUTCOME_"), "_", " "), r.SafeMessage)
+		}
+		return w.Flush()
+	case "deactivate":
+		_, err := c.Workspaces.DeactivateWorkspace(ctx, connect.NewRequest(&v1.DeactivateWorkspaceRequest{}))
+		return err
+	case "delete", "rm":
+		if len(rest) != 1 {
+			return fmt.Errorf("workspace delete: expected a workspace\n\n%s", usage)
+		}
+		ws, err := find(rest[0])
+		if err != nil {
+			return err
+		}
+		_, err = c.Workspaces.DeleteWorkspace(ctx, connect.NewRequest(&v1.DeleteWorkspaceRequest{WorkspaceId: ws.Id}))
+		return err
+	default:
+		return fmt.Errorf("unknown workspace command %q\n\n%s", sub, usage)
 	}
 	return nil
 }

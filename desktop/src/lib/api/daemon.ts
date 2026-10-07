@@ -7,6 +7,12 @@ import { ListConflictsResponseSchema, type ListConflictsResponse } from "@gen/la
 import { DaemonEventSchema } from "@gen/lattice/v1/events_pb";
 import { InspectDestinationResponseSchema, type InspectDestinationResponse } from "@gen/lattice/v1/inspector_pb";
 import { NetworkSchema, type Network } from "@gen/lattice/v1/network_pb";
+import {
+  ActivateWorkspaceResponseSchema,
+  WorkspaceSchema,
+  type ActivateWorkspaceResponse,
+  type Workspace,
+} from "@gen/lattice/v1/workspaces_pb";
 import type { LoadedSettings, RawStreamMessage, Settings, StreamMessage } from "./types";
 
 const options = { ignoreUnknownFields: true };
@@ -62,6 +68,24 @@ export async function inspectDestination(destination: string): Promise<InspectDe
 
 export async function listConflicts(): Promise<ListConflictsResponse> {
   return fromJson(ListConflictsResponseSchema, await invoke<JsonValue>("list_conflicts"), options);
+}
+
+export async function createWorkspace(input: { name: string; description: string; networkIds: string[] }): Promise<Workspace> {
+  return fromJson(WorkspaceSchema, await invoke<JsonValue>("create_workspace", input), options);
+}
+
+export async function updateWorkspace(
+  workspaceId: string,
+  patch: { name?: string; description?: string; networkIds?: string[] },
+): Promise<Workspace> {
+  return fromJson(WorkspaceSchema, await invoke<JsonValue>("update_workspace", { workspaceId, ...patch }), options);
+}
+
+export const deleteWorkspace = (workspaceId: string) => invoke<void>("delete_workspace", { workspaceId });
+export const deactivateWorkspace = () => invoke<void>("deactivate_workspace");
+
+export async function activateWorkspace(workspaceId: string, disconnectOthers: boolean): Promise<ActivateWorkspaceResponse> {
+  return fromJson(ActivateWorkspaceResponseSchema, await invoke<JsonValue>("activate_workspace", { workspaceId, disconnectOthers }), options);
 }
 
 export const getSettings = () => invoke<LoadedSettings>("get_settings");

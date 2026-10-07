@@ -925,3 +925,59 @@ summary {
 .name-line .badge {
   flex-shrink: 0;
 }
+
+.workspace-active {
+  border-color: var(--accent);
+}
+
+.member-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 32px;
+  padding: 0 var(--space-1) 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.member-chip:hover {
+  background: var(--surface-2);
+}
+
+.network-picker {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  gap: var(--space-2);
+}
+
+.network-picker .check {
+  align-items: center;
+}
+
+.network-picker .check input {
+  margin: 0;
+}
+
+.sidebar-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: var(--text-sm);
+}
+
+.nav-plain {
+  border: 0;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}

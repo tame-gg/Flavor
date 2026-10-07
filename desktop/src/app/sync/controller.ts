@@ -4,6 +4,7 @@ import type { GetDaemonInfoResponse, GetStateSnapshotResponse } from "@gen/latti
 import type { Device } from "@gen/lattice/v1/device_pb";
 import type { DaemonEvent } from "@gen/lattice/v1/events_pb";
 import { AuthenticationPromptSchema, type Network } from "@gen/lattice/v1/network_pb";
+import type { Workspace } from "@gen/lattice/v1/workspaces_pb";
 import type { StreamMessage, UiError } from "../../lib/api/types";
 
 export const PROTOCOL_MAJOR = 1;
@@ -17,6 +18,8 @@ export type SyncState = {
   sequence: bigint;
   networks: ReadonlyMap<string, Network>;
   devices: ReadonlyMap<string, Device>;
+  workspaces: ReadonlyMap<string, Workspace>;
+  activeWorkspaceId: string;
   warnings: readonly string[];
   lastError: UiError | null;
 };
@@ -45,6 +48,8 @@ const initial: SyncState = {
   sequence: 0n,
   networks: new Map(),
   devices: new Map(),
+  workspaces: new Map(),
+  activeWorkspaceId: "",
   warnings: [],
   lastError: null,
 };
@@ -121,6 +126,8 @@ export class DaemonSyncController {
       sequence: snap.snapshotSequence,
       networks: new Map(snap.networks.map((n) => [n.id, n])),
       devices,
+      workspaces: new Map(snap.workspaces.map((w) => [w.id, w])),
+      activeWorkspaceId: snap.activeWorkspaceId,
       warnings: [],
     });
     const watchId = ++this.watchId;
@@ -162,6 +169,8 @@ export class DaemonSyncController {
     const networks = new Map(this.state.networks);
     let devices = this.state.devices;
     let warnings = this.state.warnings;
+    let workspaces = this.state.workspaces;
+    let activeWorkspaceId = this.state.activeWorkspaceId;
     const editDevices = () => {
       if (devices === this.state.devices) devices = new Map(devices);
       return devices as Map<string, Device>;
@@ -241,8 +250,24 @@ export class DaemonSyncController {
         warnings = [...warnings, p.value.safeMessage].slice(-20);
         break;
       }
+      case "workspaceChanged": {
+        const w = p.value.workspace;
+        if (w) workspaces = new Map(workspaces).set(w.id, w);
+        break;
+      }
+      case "workspaceRemoved": {
+        const next = new Map(workspaces);
+        next.delete(p.value.workspaceId);
+        workspaces = next;
+        if (activeWorkspaceId === p.value.workspaceId) activeWorkspaceId = "";
+        break;
+      }
+      case "activeWorkspaceChanged": {
+        activeWorkspaceId = p.value.workspaceId;
+        break;
+      }
     }
-    this.set({ sequence: ev.sequenceId, networks, devices, warnings });
+    this.set({ sequence: ev.sequenceId, networks, devices, warnings, workspaces, activeWorkspaceId });
   }
 
   private fail(error: UiError): void {

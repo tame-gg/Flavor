@@ -92,6 +92,9 @@ type DaemonEvent struct {
 	//	*DaemonEvent_PeerUpdated
 	//	*DaemonEvent_PeerRemoved
 	//	*DaemonEvent_DaemonWarning
+	//	*DaemonEvent_WorkspaceChanged
+	//	*DaemonEvent_WorkspaceRemoved
+	//	*DaemonEvent_ActiveWorkspaceChanged
 	Payload       isDaemonEvent_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -254,6 +257,33 @@ func (x *DaemonEvent) GetDaemonWarning() *DaemonWarning {
 	return nil
 }
 
+func (x *DaemonEvent) GetWorkspaceChanged() *WorkspaceChanged {
+	if x != nil {
+		if x, ok := x.Payload.(*DaemonEvent_WorkspaceChanged); ok {
+			return x.WorkspaceChanged
+		}
+	}
+	return nil
+}
+
+func (x *DaemonEvent) GetWorkspaceRemoved() *WorkspaceRemoved {
+	if x != nil {
+		if x, ok := x.Payload.(*DaemonEvent_WorkspaceRemoved); ok {
+			return x.WorkspaceRemoved
+		}
+	}
+	return nil
+}
+
+func (x *DaemonEvent) GetActiveWorkspaceChanged() *ActiveWorkspaceChanged {
+	if x != nil {
+		if x, ok := x.Payload.(*DaemonEvent_ActiveWorkspaceChanged); ok {
+			return x.ActiveWorkspaceChanged
+		}
+	}
+	return nil
+}
+
 type isDaemonEvent_Payload interface {
 	isDaemonEvent_Payload()
 }
@@ -302,6 +332,18 @@ type DaemonEvent_DaemonWarning struct {
 	DaemonWarning *DaemonWarning `protobuf:"bytes,20,opt,name=daemon_warning,json=daemonWarning,proto3,oneof"`
 }
 
+type DaemonEvent_WorkspaceChanged struct {
+	WorkspaceChanged *WorkspaceChanged `protobuf:"bytes,21,opt,name=workspace_changed,json=workspaceChanged,proto3,oneof"`
+}
+
+type DaemonEvent_WorkspaceRemoved struct {
+	WorkspaceRemoved *WorkspaceRemoved `protobuf:"bytes,22,opt,name=workspace_removed,json=workspaceRemoved,proto3,oneof"`
+}
+
+type DaemonEvent_ActiveWorkspaceChanged struct {
+	ActiveWorkspaceChanged *ActiveWorkspaceChanged `protobuf:"bytes,23,opt,name=active_workspace_changed,json=activeWorkspaceChanged,proto3,oneof"`
+}
+
 func (*DaemonEvent_NetworkAdded) isDaemonEvent_Payload() {}
 
 func (*DaemonEvent_NetworkUpdated) isDaemonEvent_Payload() {}
@@ -323,6 +365,12 @@ func (*DaemonEvent_PeerUpdated) isDaemonEvent_Payload() {}
 func (*DaemonEvent_PeerRemoved) isDaemonEvent_Payload() {}
 
 func (*DaemonEvent_DaemonWarning) isDaemonEvent_Payload() {}
+
+func (*DaemonEvent_WorkspaceChanged) isDaemonEvent_Payload() {}
+
+func (*DaemonEvent_WorkspaceRemoved) isDaemonEvent_Payload() {}
+
+func (*DaemonEvent_ActiveWorkspaceChanged) isDaemonEvent_Payload() {}
 
 type NetworkAdded struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -872,15 +920,147 @@ func (x *DaemonWarning) GetSafeMessage() string {
 	return ""
 }
 
+type WorkspaceChanged struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Workspace     *Workspace             `protobuf:"bytes,1,opt,name=workspace,proto3" json:"workspace,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WorkspaceChanged) Reset() {
+	*x = WorkspaceChanged{}
+	mi := &file_lattice_v1_events_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WorkspaceChanged) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WorkspaceChanged) ProtoMessage() {}
+
+func (x *WorkspaceChanged) ProtoReflect() protoreflect.Message {
+	mi := &file_lattice_v1_events_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WorkspaceChanged.ProtoReflect.Descriptor instead.
+func (*WorkspaceChanged) Descriptor() ([]byte, []int) {
+	return file_lattice_v1_events_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *WorkspaceChanged) GetWorkspace() *Workspace {
+	if x != nil {
+		return x.Workspace
+	}
+	return nil
+}
+
+type WorkspaceRemoved struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	WorkspaceId   string                 `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WorkspaceRemoved) Reset() {
+	*x = WorkspaceRemoved{}
+	mi := &file_lattice_v1_events_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WorkspaceRemoved) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WorkspaceRemoved) ProtoMessage() {}
+
+func (x *WorkspaceRemoved) ProtoReflect() protoreflect.Message {
+	mi := &file_lattice_v1_events_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WorkspaceRemoved.ProtoReflect.Descriptor instead.
+func (*WorkspaceRemoved) Descriptor() ([]byte, []int) {
+	return file_lattice_v1_events_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *WorkspaceRemoved) GetWorkspaceId() string {
+	if x != nil {
+		return x.WorkspaceId
+	}
+	return ""
+}
+
+type ActiveWorkspaceChanged struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	WorkspaceId   string                 `protobuf:"bytes,1,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ActiveWorkspaceChanged) Reset() {
+	*x = ActiveWorkspaceChanged{}
+	mi := &file_lattice_v1_events_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ActiveWorkspaceChanged) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ActiveWorkspaceChanged) ProtoMessage() {}
+
+func (x *ActiveWorkspaceChanged) ProtoReflect() protoreflect.Message {
+	mi := &file_lattice_v1_events_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ActiveWorkspaceChanged.ProtoReflect.Descriptor instead.
+func (*ActiveWorkspaceChanged) Descriptor() ([]byte, []int) {
+	return file_lattice_v1_events_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *ActiveWorkspaceChanged) GetWorkspaceId() string {
+	if x != nil {
+		return x.WorkspaceId
+	}
+	return ""
+}
+
 var File_lattice_v1_events_proto protoreflect.FileDescriptor
 
 const file_lattice_v1_events_proto_rawDesc = "" +
 	"\n" +
 	"\x17lattice/v1/events.proto\x12\n" +
-	"lattice.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17lattice/v1/common.proto\x1a\x17lattice/v1/device.proto\x1a\x18lattice/v1/network.proto\"i\n" +
+	"lattice.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17lattice/v1/common.proto\x1a\x17lattice/v1/device.proto\x1a\x18lattice/v1/network.proto\x1a\x1blattice/v1/workspaces.proto\"i\n" +
 	"\x12WatchEventsRequest\x12,\n" +
 	"\x12daemon_instance_id\x18\x01 \x01(\tR\x10daemonInstanceId\x12%\n" +
-	"\x0eafter_sequence\x18\x02 \x01(\x04R\rafterSequence\"\xcd\a\n" +
+	"\x0eafter_sequence\x18\x02 \x01(\x04R\rafterSequence\"\xc7\t\n" +
 	"\vDaemonEvent\x12,\n" +
 	"\x12daemon_instance_id\x18\x01 \x01(\tR\x10daemonInstanceId\x12\x1f\n" +
 	"\vsequence_id\x18\x02 \x01(\x04R\n" +
@@ -898,7 +1078,10 @@ const file_lattice_v1_events_proto_rawDesc = "" +
 	"peer_added\x18\x11 \x01(\v2\x15.lattice.v1.PeerAddedH\x00R\tpeerAdded\x12<\n" +
 	"\fpeer_updated\x18\x12 \x01(\v2\x17.lattice.v1.PeerUpdatedH\x00R\vpeerUpdated\x12<\n" +
 	"\fpeer_removed\x18\x13 \x01(\v2\x17.lattice.v1.PeerRemovedH\x00R\vpeerRemoved\x12B\n" +
-	"\x0edaemon_warning\x18\x14 \x01(\v2\x19.lattice.v1.DaemonWarningH\x00R\rdaemonWarningB\t\n" +
+	"\x0edaemon_warning\x18\x14 \x01(\v2\x19.lattice.v1.DaemonWarningH\x00R\rdaemonWarning\x12K\n" +
+	"\x11workspace_changed\x18\x15 \x01(\v2\x1c.lattice.v1.WorkspaceChangedH\x00R\x10workspaceChanged\x12K\n" +
+	"\x11workspace_removed\x18\x16 \x01(\v2\x1c.lattice.v1.WorkspaceRemovedH\x00R\x10workspaceRemoved\x12^\n" +
+	"\x18active_workspace_changed\x18\x17 \x01(\v2\".lattice.v1.ActiveWorkspaceChangedH\x00R\x16activeWorkspaceChangedB\t\n" +
 	"\apayload\"=\n" +
 	"\fNetworkAdded\x12-\n" +
 	"\anetwork\x18\x01 \x01(\v2\x13.lattice.v1.NetworkR\anetwork\"?\n" +
@@ -934,7 +1117,13 @@ const file_lattice_v1_events_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\v2\x1a.lattice.v1.DeviceIdentityR\x02id\"F\n" +
 	"\rDaemonWarning\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12!\n" +
-	"\fsafe_message\x18\x02 \x01(\tR\vsafeMessage2X\n" +
+	"\fsafe_message\x18\x02 \x01(\tR\vsafeMessage\"G\n" +
+	"\x10WorkspaceChanged\x123\n" +
+	"\tworkspace\x18\x01 \x01(\v2\x15.lattice.v1.WorkspaceR\tworkspace\"5\n" +
+	"\x10WorkspaceRemoved\x12!\n" +
+	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\";\n" +
+	"\x16ActiveWorkspaceChanged\x12!\n" +
+	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId2X\n" +
 	"\fEventService\x12H\n" +
 	"\vWatchEvents\x12\x1e.lattice.v1.WatchEventsRequest\x1a\x17.lattice.v1.DaemonEvent0\x01B\xa5\x01\n" +
 	"\x0ecom.lattice.v1B\vEventsProtoP\x01Z=git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1;latticev1\xa2\x02\x03LXX\xaa\x02\n" +
@@ -953,7 +1142,7 @@ func file_lattice_v1_events_proto_rawDescGZIP() []byte {
 	return file_lattice_v1_events_proto_rawDescData
 }
 
-var file_lattice_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_lattice_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_lattice_v1_events_proto_goTypes = []any{
 	(*WatchEventsRequest)(nil),      // 0: lattice.v1.WatchEventsRequest
 	(*DaemonEvent)(nil),             // 1: lattice.v1.DaemonEvent
@@ -968,15 +1157,19 @@ var file_lattice_v1_events_proto_goTypes = []any{
 	(*PeerUpdated)(nil),             // 10: lattice.v1.PeerUpdated
 	(*PeerRemoved)(nil),             // 11: lattice.v1.PeerRemoved
 	(*DaemonWarning)(nil),           // 12: lattice.v1.DaemonWarning
-	(*timestamppb.Timestamp)(nil),   // 13: google.protobuf.Timestamp
-	(*Network)(nil),                 // 14: lattice.v1.Network
-	(NetworkConnectionState)(0),     // 15: lattice.v1.NetworkConnectionState
-	(ProviderType)(0),               // 16: lattice.v1.ProviderType
-	(*Device)(nil),                  // 17: lattice.v1.Device
-	(*DeviceIdentity)(nil),          // 18: lattice.v1.DeviceIdentity
+	(*WorkspaceChanged)(nil),        // 13: lattice.v1.WorkspaceChanged
+	(*WorkspaceRemoved)(nil),        // 14: lattice.v1.WorkspaceRemoved
+	(*ActiveWorkspaceChanged)(nil),  // 15: lattice.v1.ActiveWorkspaceChanged
+	(*timestamppb.Timestamp)(nil),   // 16: google.protobuf.Timestamp
+	(*Network)(nil),                 // 17: lattice.v1.Network
+	(NetworkConnectionState)(0),     // 18: lattice.v1.NetworkConnectionState
+	(ProviderType)(0),               // 19: lattice.v1.ProviderType
+	(*Device)(nil),                  // 20: lattice.v1.Device
+	(*DeviceIdentity)(nil),          // 21: lattice.v1.DeviceIdentity
+	(*Workspace)(nil),               // 22: lattice.v1.Workspace
 }
 var file_lattice_v1_events_proto_depIdxs = []int32{
-	13, // 0: lattice.v1.DaemonEvent.timestamp:type_name -> google.protobuf.Timestamp
+	16, // 0: lattice.v1.DaemonEvent.timestamp:type_name -> google.protobuf.Timestamp
 	2,  // 1: lattice.v1.DaemonEvent.network_added:type_name -> lattice.v1.NetworkAdded
 	3,  // 2: lattice.v1.DaemonEvent.network_updated:type_name -> lattice.v1.NetworkUpdated
 	4,  // 3: lattice.v1.DaemonEvent.network_removed:type_name -> lattice.v1.NetworkRemoved
@@ -988,21 +1181,25 @@ var file_lattice_v1_events_proto_depIdxs = []int32{
 	10, // 9: lattice.v1.DaemonEvent.peer_updated:type_name -> lattice.v1.PeerUpdated
 	11, // 10: lattice.v1.DaemonEvent.peer_removed:type_name -> lattice.v1.PeerRemoved
 	12, // 11: lattice.v1.DaemonEvent.daemon_warning:type_name -> lattice.v1.DaemonWarning
-	14, // 12: lattice.v1.NetworkAdded.network:type_name -> lattice.v1.Network
-	14, // 13: lattice.v1.NetworkUpdated.network:type_name -> lattice.v1.Network
-	15, // 14: lattice.v1.NetworkStateChanged.state:type_name -> lattice.v1.NetworkConnectionState
-	16, // 15: lattice.v1.AuthenticationRequired.provider:type_name -> lattice.v1.ProviderType
-	16, // 16: lattice.v1.ApprovalRequired.provider:type_name -> lattice.v1.ProviderType
-	17, // 17: lattice.v1.PeerAdded.device:type_name -> lattice.v1.Device
-	17, // 18: lattice.v1.PeerUpdated.device:type_name -> lattice.v1.Device
-	18, // 19: lattice.v1.PeerRemoved.id:type_name -> lattice.v1.DeviceIdentity
-	0,  // 20: lattice.v1.EventService.WatchEvents:input_type -> lattice.v1.WatchEventsRequest
-	1,  // 21: lattice.v1.EventService.WatchEvents:output_type -> lattice.v1.DaemonEvent
-	21, // [21:22] is the sub-list for method output_type
-	20, // [20:21] is the sub-list for method input_type
-	20, // [20:20] is the sub-list for extension type_name
-	20, // [20:20] is the sub-list for extension extendee
-	0,  // [0:20] is the sub-list for field type_name
+	13, // 12: lattice.v1.DaemonEvent.workspace_changed:type_name -> lattice.v1.WorkspaceChanged
+	14, // 13: lattice.v1.DaemonEvent.workspace_removed:type_name -> lattice.v1.WorkspaceRemoved
+	15, // 14: lattice.v1.DaemonEvent.active_workspace_changed:type_name -> lattice.v1.ActiveWorkspaceChanged
+	17, // 15: lattice.v1.NetworkAdded.network:type_name -> lattice.v1.Network
+	17, // 16: lattice.v1.NetworkUpdated.network:type_name -> lattice.v1.Network
+	18, // 17: lattice.v1.NetworkStateChanged.state:type_name -> lattice.v1.NetworkConnectionState
+	19, // 18: lattice.v1.AuthenticationRequired.provider:type_name -> lattice.v1.ProviderType
+	19, // 19: lattice.v1.ApprovalRequired.provider:type_name -> lattice.v1.ProviderType
+	20, // 20: lattice.v1.PeerAdded.device:type_name -> lattice.v1.Device
+	20, // 21: lattice.v1.PeerUpdated.device:type_name -> lattice.v1.Device
+	21, // 22: lattice.v1.PeerRemoved.id:type_name -> lattice.v1.DeviceIdentity
+	22, // 23: lattice.v1.WorkspaceChanged.workspace:type_name -> lattice.v1.Workspace
+	0,  // 24: lattice.v1.EventService.WatchEvents:input_type -> lattice.v1.WatchEventsRequest
+	1,  // 25: lattice.v1.EventService.WatchEvents:output_type -> lattice.v1.DaemonEvent
+	25, // [25:26] is the sub-list for method output_type
+	24, // [24:25] is the sub-list for method input_type
+	24, // [24:24] is the sub-list for extension type_name
+	24, // [24:24] is the sub-list for extension extendee
+	0,  // [0:24] is the sub-list for field type_name
 }
 
 func init() { file_lattice_v1_events_proto_init() }
@@ -1013,6 +1210,7 @@ func file_lattice_v1_events_proto_init() {
 	file_lattice_v1_common_proto_init()
 	file_lattice_v1_device_proto_init()
 	file_lattice_v1_network_proto_init()
+	file_lattice_v1_workspaces_proto_init()
 	file_lattice_v1_events_proto_msgTypes[1].OneofWrappers = []any{
 		(*DaemonEvent_NetworkAdded)(nil),
 		(*DaemonEvent_NetworkUpdated)(nil),
@@ -1025,6 +1223,9 @@ func file_lattice_v1_events_proto_init() {
 		(*DaemonEvent_PeerUpdated)(nil),
 		(*DaemonEvent_PeerRemoved)(nil),
 		(*DaemonEvent_DaemonWarning)(nil),
+		(*DaemonEvent_WorkspaceChanged)(nil),
+		(*DaemonEvent_WorkspaceRemoved)(nil),
+		(*DaemonEvent_ActiveWorkspaceChanged)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1032,7 +1233,7 @@ func file_lattice_v1_events_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_lattice_v1_events_proto_rawDesc), len(file_lattice_v1_events_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   13,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

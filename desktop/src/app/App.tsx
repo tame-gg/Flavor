@@ -10,6 +10,7 @@ import { InspectorPage } from "../features/inspector/InspectorPage";
 import { NetworksPage } from "../features/networks/NetworksPage";
 import { Welcome } from "../features/onboarding/Welcome";
 import { SettingsPage } from "../features/settings/SettingsPage";
+import { WorkspacesPage } from "../features/workspaces/WorkspacesPage";
 import { getSettings, setSettings, setTraySummary } from "../lib/api/daemon";
 import { errorMessage } from "../lib/api/errors";
 import type { LoadedSettings, Settings } from "../lib/api/types";
@@ -18,7 +19,7 @@ import { deviceKey } from "./sync/controller";
 import { useDaemon } from "./sync/useDaemon";
 
 export function App() {
-  const { status, info, networks, devices, controller } = useDaemon();
+  const { status, info, networks, devices, workspaces, activeWorkspaceId, controller } = useDaemon();
   const [page, setPage] = useState<Page>("networks");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deviceNetwork, setDeviceNetwork] = useState("");
@@ -122,6 +123,12 @@ export function App() {
           ))}
         </nav>
         <span className="spacer" />
+        {workspaces.get(activeWorkspaceId) && (
+          <button type="button" className="sidebar-workspace nav-plain" onClick={() => setPage("workspaces")}>
+            <span className="hint">Workspace</span>
+            <strong>{workspaces.get(activeWorkspaceId)?.name}</strong>
+          </button>
+        )}
         <p className="small muted">{summary}</p>
       </aside>
       <div className="topline" aria-live="polite">
@@ -141,6 +148,7 @@ export function App() {
             }}
           />
         )}
+        {page === "workspaces" && info.capabilities.includes(Capability.WORKSPACES) && <WorkspacesPage onOpenNetwork={openNetwork} />}
         {page === "devices" && (
           <DevicesPage
             networkId={deviceNetwork}

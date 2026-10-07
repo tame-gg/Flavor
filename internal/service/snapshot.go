@@ -11,11 +11,13 @@ import (
 )
 
 type Snapshot struct {
-	Sequence   uint64
-	Info       DaemonInfo
-	Networks   []NetworkView
-	Devices    []domain.Device
-	CapturedAt time.Time
+	Sequence        uint64
+	Info            DaemonInfo
+	Networks        []NetworkView
+	Devices         []domain.Device
+	Workspaces      []domain.Workspace
+	ActiveWorkspace domain.WorkspaceID
+	CapturedAt      time.Time
 }
 
 func (s *Service) Snapshot(ctx context.Context) (Snapshot, error) {
@@ -28,6 +30,12 @@ func (s *Service) Snapshot(ctx context.Context) (Snapshot, error) {
 	for _, n := range all {
 		snap.Networks = append(snap.Networks, s.view(n))
 		snap.Devices = append(snap.Devices, s.devices(n.ID)...)
+	}
+	if snap.Workspaces, err = s.cfg.Store.Workspaces().List(ctx); err != nil {
+		return Snapshot{}, s.storeErr(err)
+	}
+	if snap.ActiveWorkspace, err = s.cfg.Store.Workspaces().Active(ctx); err != nil {
+		return Snapshot{}, s.storeErr(err)
 	}
 	return snap, nil
 }

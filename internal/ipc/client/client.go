@@ -18,6 +18,7 @@ type Client struct {
 	Events      latticev1connect.EventServiceClient
 	Inspector   latticev1connect.InspectorServiceClient
 	Conflicts   latticev1connect.ConflictServiceClient
+	Workspaces  latticev1connect.WorkspaceServiceClient
 }
 
 func HTTPClient(socket string) *http.Client {
@@ -42,5 +43,6 @@ func New(socket string) *Client {
 		Events:      latticev1connect.NewEventServiceClient(h, BaseURL),
 		Inspector:   latticev1connect.NewInspectorServiceClient(h, BaseURL),
 		Conflicts:   latticev1connect.NewConflictServiceClient(h, BaseURL),
+		Workspaces:  latticev1connect.NewWorkspaceServiceClient(h, BaseURL),
 	}
 }

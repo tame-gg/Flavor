@@ -177,6 +177,76 @@ pub async fn list_conflicts(daemon: State<'_, Daemon>) -> Result<ListConflictsRe
 }
 
 #[tauri::command]
+pub async fn create_workspace(
+    daemon: State<'_, Daemon>,
+    name: String,
+    description: String,
+    network_ids: Vec<String>,
+) -> Result<Workspace> {
+    let res = daemon
+        .client()?
+        .workspaces
+        .create_workspace(CreateWorkspaceRequest { name, description, network_ids, ..Default::default() })
+        .await?
+        .into_owned();
+    Ok(res.workspace.into_option().unwrap_or_default())
+}
+
+#[tauri::command]
+pub async fn update_workspace(
+    daemon: State<'_, Daemon>,
+    workspace_id: String,
+    name: Option<String>,
+    description: Option<String>,
+    network_ids: Option<Vec<String>>,
+) -> Result<Workspace> {
+    let networks = network_ids.map(|network_ids| NetworkIDList { network_ids, ..Default::default() });
+    let res = daemon
+        .client()?
+        .workspaces
+        .update_workspace(UpdateWorkspaceRequest {
+            workspace_id,
+            name,
+            description,
+            networks: networks.into(),
+            ..Default::default()
+        })
+        .await?
+        .into_owned();
+    Ok(res.workspace.into_option().unwrap_or_default())
+}
+
+#[tauri::command]
+pub async fn delete_workspace(daemon: State<'_, Daemon>, workspace_id: String) -> Result<()> {
+    daemon
+        .client()?
+        .workspaces
+        .delete_workspace(DeleteWorkspaceRequest { workspace_id, ..Default::default() })
+        .await?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn activate_workspace(
+    daemon: State<'_, Daemon>,
+    workspace_id: String,
+    disconnect_others: bool,
+) -> Result<ActivateWorkspaceResponse> {
+    Ok(daemon
+        .client()?
+        .workspaces
+        .activate_workspace(ActivateWorkspaceRequest { workspace_id, disconnect_others, ..Default::default() })
+        .await?
+        .into_owned())
+}
+
+#[tauri::command]
+pub async fn deactivate_workspace(daemon: State<'_, Daemon>) -> Result<()> {
+    daemon.client()?.workspaces.deactivate_workspace(Default::default()).await?;
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn open_auth_url(
     app: AppHandle,
     daemon: State<'_, Daemon>,

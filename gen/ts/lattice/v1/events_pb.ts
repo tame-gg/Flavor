@@ -12,13 +12,15 @@ import type { Device, DeviceIdentity } from "./device_pb";
 import { file_lattice_v1_device } from "./device_pb";
 import type { Network } from "./network_pb";
 import { file_lattice_v1_network } from "./network_pb";
+import type { Workspace } from "./workspaces_pb";
+import { file_lattice_v1_workspaces } from "./workspaces_pb";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file lattice/v1/events.proto.
  */
 export const file_lattice_v1_events: GenFile = /*@__PURE__*/
-  fileDesc("ChdsYXR0aWNlL3YxL2V2ZW50cy5wcm90bxIKbGF0dGljZS52MSJIChJXYXRjaEV2ZW50c1JlcXVlc3QSGgoSZGFlbW9uX2luc3RhbmNlX2lkGAEgASgJEhYKDmFmdGVyX3NlcXVlbmNlGAIgASgEIuoFCgtEYWVtb25FdmVudBIaChJkYWVtb25faW5zdGFuY2VfaWQYASABKAkSEwoLc2VxdWVuY2VfaWQYAiABKAQSLQoJdGltZXN0YW1wGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIxCg1uZXR3b3JrX2FkZGVkGAogASgLMhgubGF0dGljZS52MS5OZXR3b3JrQWRkZWRIABI1Cg9uZXR3b3JrX3VwZGF0ZWQYCyABKAsyGi5sYXR0aWNlLnYxLk5ldHdvcmtVcGRhdGVkSAASNQoPbmV0d29ya19yZW1vdmVkGAwgASgLMhoubGF0dGljZS52MS5OZXR3b3JrUmVtb3ZlZEgAEkAKFW5ldHdvcmtfc3RhdGVfY2hhbmdlZBgNIAEoCzIfLmxhdHRpY2UudjEuTmV0d29ya1N0YXRlQ2hhbmdlZEgAEkUKF2F1dGhlbnRpY2F0aW9uX3JlcXVpcmVkGA4gASgLMiIubGF0dGljZS52MS5BdXRoZW50aWNhdGlvblJlcXVpcmVkSAASRwoYYXV0aGVudGljYXRpb25fY29tcGxldGVkGA8gASgLMiMubGF0dGljZS52MS5BdXRoZW50aWNhdGlvbkNvbXBsZXRlZEgAEjkKEWFwcHJvdmFsX3JlcXVpcmVkGBAgASgLMhwubGF0dGljZS52MS5BcHByb3ZhbFJlcXVpcmVkSAASKwoKcGVlcl9hZGRlZBgRIAEoCzIVLmxhdHRpY2UudjEuUGVlckFkZGVkSAASLwoMcGVlcl91cGRhdGVkGBIgASgLMhcubGF0dGljZS52MS5QZWVyVXBkYXRlZEgAEi8KDHBlZXJfcmVtb3ZlZBgTIAEoCzIXLmxhdHRpY2UudjEuUGVlclJlbW92ZWRIABIzCg5kYWVtb25fd2FybmluZxgUIAEoCzIZLmxhdHRpY2UudjEuRGFlbW9uV2FybmluZ0gAQgkKB3BheWxvYWQiNAoMTmV0d29ya0FkZGVkEiQKB25ldHdvcmsYASABKAsyEy5sYXR0aWNlLnYxLk5ldHdvcmsiNgoOTmV0d29ya1VwZGF0ZWQSJAoHbmV0d29yaxgBIAEoCzITLmxhdHRpY2UudjEuTmV0d29yayIkCg5OZXR3b3JrUmVtb3ZlZBISCgpuZXR3b3JrX2lkGAEgASgJInIKE05ldHdvcmtTdGF0ZUNoYW5nZWQSEgoKbmV0d29ya19pZBgBIAEoCRIxCgVzdGF0ZRgCIAEoDjIiLmxhdHRpY2UudjEuTmV0d29ya0Nvbm5lY3Rpb25TdGF0ZRIUCgxzYWZlX21lc3NhZ2UYAyABKAkiewoWQXV0aGVudGljYXRpb25SZXF1aXJlZBISCgpuZXR3b3JrX2lkGAEgASgJEioKCHByb3ZpZGVyGAIgASgOMhgubGF0dGljZS52MS5Qcm92aWRlclR5cGUSEAoIYXV0aF91cmwYAyABKAkSDwoHZmxvd19pZBgEIAEoCSItChdBdXRoZW50aWNhdGlvbkNvbXBsZXRlZBISCgpuZXR3b3JrX2lkGAEgASgJImgKEEFwcHJvdmFsUmVxdWlyZWQSEgoKbmV0d29ya19pZBgBIAEoCRIqCghwcm92aWRlchgCIAEoDjIYLmxhdHRpY2UudjEuUHJvdmlkZXJUeXBlEhQKDHNhZmVfbWVzc2FnZRgDIAEoCSIvCglQZWVyQWRkZWQSIgoGZGV2aWNlGAEgASgLMhIubGF0dGljZS52MS5EZXZpY2UiMQoLUGVlclVwZGF0ZWQSIgoGZGV2aWNlGAEgASgLMhIubGF0dGljZS52MS5EZXZpY2UiNQoLUGVlclJlbW92ZWQSJgoCaWQYASABKAsyGi5sYXR0aWNlLnYxLkRldmljZUlkZW50aXR5IjMKDURhZW1vbldhcm5pbmcSDAoEY29kZRgBIAEoCRIUCgxzYWZlX21lc3NhZ2UYAiABKAkyWAoMRXZlbnRTZXJ2aWNlEkgKC1dhdGNoRXZlbnRzEh4ubGF0dGljZS52MS5XYXRjaEV2ZW50c1JlcXVlc3QaFy5sYXR0aWNlLnYxLkRhZW1vbkV2ZW50MAFCpQEKDmNvbS5sYXR0aWNlLnYxQgtFdmVudHNQcm90b1ABWj1naXQubHVuYXJsYWJzLmRldi9sYXR0aWNlL2xhdHRpY2UvZ2VuL2dvL2xhdHRpY2UvdjE7bGF0dGljZXYxogIDTFhYqgIKTGF0dGljZS5WMcoCCkxhdHRpY2VcVjHiAhZMYXR0aWNlXFYxXEdQQk1ldGFkYXRh6gILTGF0dGljZTo6VjFiBnByb3RvMw", [file_google_protobuf_timestamp, file_lattice_v1_common, file_lattice_v1_device, file_lattice_v1_network]);
+  fileDesc("ChdsYXR0aWNlL3YxL2V2ZW50cy5wcm90bxIKbGF0dGljZS52MSJIChJXYXRjaEV2ZW50c1JlcXVlc3QSGgoSZGFlbW9uX2luc3RhbmNlX2lkGAEgASgJEhYKDmFmdGVyX3NlcXVlbmNlGAIgASgEIqgHCgtEYWVtb25FdmVudBIaChJkYWVtb25faW5zdGFuY2VfaWQYASABKAkSEwoLc2VxdWVuY2VfaWQYAiABKAQSLQoJdGltZXN0YW1wGAMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIxCg1uZXR3b3JrX2FkZGVkGAogASgLMhgubGF0dGljZS52MS5OZXR3b3JrQWRkZWRIABI1Cg9uZXR3b3JrX3VwZGF0ZWQYCyABKAsyGi5sYXR0aWNlLnYxLk5ldHdvcmtVcGRhdGVkSAASNQoPbmV0d29ya19yZW1vdmVkGAwgASgLMhoubGF0dGljZS52MS5OZXR3b3JrUmVtb3ZlZEgAEkAKFW5ldHdvcmtfc3RhdGVfY2hhbmdlZBgNIAEoCzIfLmxhdHRpY2UudjEuTmV0d29ya1N0YXRlQ2hhbmdlZEgAEkUKF2F1dGhlbnRpY2F0aW9uX3JlcXVpcmVkGA4gASgLMiIubGF0dGljZS52MS5BdXRoZW50aWNhdGlvblJlcXVpcmVkSAASRwoYYXV0aGVudGljYXRpb25fY29tcGxldGVkGA8gASgLMiMubGF0dGljZS52MS5BdXRoZW50aWNhdGlvbkNvbXBsZXRlZEgAEjkKEWFwcHJvdmFsX3JlcXVpcmVkGBAgASgLMhwubGF0dGljZS52MS5BcHByb3ZhbFJlcXVpcmVkSAASKwoKcGVlcl9hZGRlZBgRIAEoCzIVLmxhdHRpY2UudjEuUGVlckFkZGVkSAASLwoMcGVlcl91cGRhdGVkGBIgASgLMhcubGF0dGljZS52MS5QZWVyVXBkYXRlZEgAEi8KDHBlZXJfcmVtb3ZlZBgTIAEoCzIXLmxhdHRpY2UudjEuUGVlclJlbW92ZWRIABIzCg5kYWVtb25fd2FybmluZxgUIAEoCzIZLmxhdHRpY2UudjEuRGFlbW9uV2FybmluZ0gAEjkKEXdvcmtzcGFjZV9jaGFuZ2VkGBUgASgLMhwubGF0dGljZS52MS5Xb3Jrc3BhY2VDaGFuZ2VkSAASOQoRd29ya3NwYWNlX3JlbW92ZWQYFiABKAsyHC5sYXR0aWNlLnYxLldvcmtzcGFjZVJlbW92ZWRIABJGChhhY3RpdmVfd29ya3NwYWNlX2NoYW5nZWQYFyABKAsyIi5sYXR0aWNlLnYxLkFjdGl2ZVdvcmtzcGFjZUNoYW5nZWRIAEIJCgdwYXlsb2FkIjQKDE5ldHdvcmtBZGRlZBIkCgduZXR3b3JrGAEgASgLMhMubGF0dGljZS52MS5OZXR3b3JrIjYKDk5ldHdvcmtVcGRhdGVkEiQKB25ldHdvcmsYASABKAsyEy5sYXR0aWNlLnYxLk5ldHdvcmsiJAoOTmV0d29ya1JlbW92ZWQSEgoKbmV0d29ya19pZBgBIAEoCSJyChNOZXR3b3JrU3RhdGVDaGFuZ2VkEhIKCm5ldHdvcmtfaWQYASABKAkSMQoFc3RhdGUYAiABKA4yIi5sYXR0aWNlLnYxLk5ldHdvcmtDb25uZWN0aW9uU3RhdGUSFAoMc2FmZV9tZXNzYWdlGAMgASgJInsKFkF1dGhlbnRpY2F0aW9uUmVxdWlyZWQSEgoKbmV0d29ya19pZBgBIAEoCRIqCghwcm92aWRlchgCIAEoDjIYLmxhdHRpY2UudjEuUHJvdmlkZXJUeXBlEhAKCGF1dGhfdXJsGAMgASgJEg8KB2Zsb3dfaWQYBCABKAkiLQoXQXV0aGVudGljYXRpb25Db21wbGV0ZWQSEgoKbmV0d29ya19pZBgBIAEoCSJoChBBcHByb3ZhbFJlcXVpcmVkEhIKCm5ldHdvcmtfaWQYASABKAkSKgoIcHJvdmlkZXIYAiABKA4yGC5sYXR0aWNlLnYxLlByb3ZpZGVyVHlwZRIUCgxzYWZlX21lc3NhZ2UYAyABKAkiLwoJUGVlckFkZGVkEiIKBmRldmljZRgBIAEoCzISLmxhdHRpY2UudjEuRGV2aWNlIjEKC1BlZXJVcGRhdGVkEiIKBmRldmljZRgBIAEoCzISLmxhdHRpY2UudjEuRGV2aWNlIjUKC1BlZXJSZW1vdmVkEiYKAmlkGAEgASgLMhoubGF0dGljZS52MS5EZXZpY2VJZGVudGl0eSIzCg1EYWVtb25XYXJuaW5nEgwKBGNvZGUYASABKAkSFAoMc2FmZV9tZXNzYWdlGAIgASgJIjwKEFdvcmtzcGFjZUNoYW5nZWQSKAoJd29ya3NwYWNlGAEgASgLMhUubGF0dGljZS52MS5Xb3Jrc3BhY2UiKAoQV29ya3NwYWNlUmVtb3ZlZBIUCgx3b3Jrc3BhY2VfaWQYASABKAkiLgoWQWN0aXZlV29ya3NwYWNlQ2hhbmdlZBIUCgx3b3Jrc3BhY2VfaWQYASABKAkyWAoMRXZlbnRTZXJ2aWNlEkgKC1dhdGNoRXZlbnRzEh4ubGF0dGljZS52MS5XYXRjaEV2ZW50c1JlcXVlc3QaFy5sYXR0aWNlLnYxLkRhZW1vbkV2ZW50MAFCpQEKDmNvbS5sYXR0aWNlLnYxQgtFdmVudHNQcm90b1ABWj1naXQubHVuYXJsYWJzLmRldi9sYXR0aWNlL2xhdHRpY2UvZ2VuL2dvL2xhdHRpY2UvdjE7bGF0dGljZXYxogIDTFhYqgIKTGF0dGljZS5WMcoCCkxhdHRpY2VcVjHiAhZMYXR0aWNlXFYxXEdQQk1ldGFkYXRh6gILTGF0dGljZTo6VjFiBnByb3RvMw", [file_google_protobuf_timestamp, file_lattice_v1_common, file_lattice_v1_device, file_lattice_v1_network, file_lattice_v1_workspaces]);
 
 /**
  * @generated from message lattice.v1.WatchEventsRequest
@@ -130,6 +132,24 @@ export type DaemonEvent = Message<"lattice.v1.DaemonEvent"> & {
      */
     value: DaemonWarning;
     case: "daemonWarning";
+  } | {
+    /**
+     * @generated from field: lattice.v1.WorkspaceChanged workspace_changed = 21;
+     */
+    value: WorkspaceChanged;
+    case: "workspaceChanged";
+  } | {
+    /**
+     * @generated from field: lattice.v1.WorkspaceRemoved workspace_removed = 22;
+     */
+    value: WorkspaceRemoved;
+    case: "workspaceRemoved";
+  } | {
+    /**
+     * @generated from field: lattice.v1.ActiveWorkspaceChanged active_workspace_changed = 23;
+     */
+    value: ActiveWorkspaceChanged;
+    case: "activeWorkspaceChanged";
   } | { case: undefined; value?: undefined };
 };
 
@@ -366,6 +386,57 @@ export type DaemonWarning = Message<"lattice.v1.DaemonWarning"> & {
  */
 export const DaemonWarningSchema: GenMessage<DaemonWarning> = /*@__PURE__*/
   messageDesc(file_lattice_v1_events, 12);
+
+/**
+ * @generated from message lattice.v1.WorkspaceChanged
+ */
+export type WorkspaceChanged = Message<"lattice.v1.WorkspaceChanged"> & {
+  /**
+   * @generated from field: lattice.v1.Workspace workspace = 1;
+   */
+  workspace?: Workspace | undefined;
+};
+
+/**
+ * Describes the message lattice.v1.WorkspaceChanged.
+ * Use `create(WorkspaceChangedSchema)` to create a new message.
+ */
+export const WorkspaceChangedSchema: GenMessage<WorkspaceChanged> = /*@__PURE__*/
+  messageDesc(file_lattice_v1_events, 13);
+
+/**
+ * @generated from message lattice.v1.WorkspaceRemoved
+ */
+export type WorkspaceRemoved = Message<"lattice.v1.WorkspaceRemoved"> & {
+  /**
+   * @generated from field: string workspace_id = 1;
+   */
+  workspaceId: string;
+};
+
+/**
+ * Describes the message lattice.v1.WorkspaceRemoved.
+ * Use `create(WorkspaceRemovedSchema)` to create a new message.
+ */
+export const WorkspaceRemovedSchema: GenMessage<WorkspaceRemoved> = /*@__PURE__*/
+  messageDesc(file_lattice_v1_events, 14);
+
+/**
+ * @generated from message lattice.v1.ActiveWorkspaceChanged
+ */
+export type ActiveWorkspaceChanged = Message<"lattice.v1.ActiveWorkspaceChanged"> & {
+  /**
+   * @generated from field: string workspace_id = 1;
+   */
+  workspaceId: string;
+};
+
+/**
+ * Describes the message lattice.v1.ActiveWorkspaceChanged.
+ * Use `create(ActiveWorkspaceChangedSchema)` to create a new message.
+ */
+export const ActiveWorkspaceChangedSchema: GenMessage<ActiveWorkspaceChanged> = /*@__PURE__*/
+  messageDesc(file_lattice_v1_events, 15);
 
 /**
  * @generated from service lattice.v1.EventService

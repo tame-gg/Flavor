@@ -3,6 +3,7 @@ resolver = "2"
 members = [
   "crates/lattice-ipc",
   "crates/lattice-proto",
+  "desktop/src-tauri",
 ]
 
 [workspace.package]

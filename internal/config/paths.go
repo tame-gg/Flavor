@@ -19,7 +19,6 @@ type Paths struct {
 	NetworksRoot string
 	Socket       string
 	Lock         string
-	DesktopTOML  string
 }
 
 type Env struct {
@@ -73,7 +72,6 @@ func Resolve(env Env) (Paths, error) {
 		NetworksRoot: filepath.Join(dataHome, "lattice", "networks"),
 		Socket:       filepath.Join(runtimeParent, "lattice", "latticed.sock"),
 		Lock:         filepath.Join(runtimeParent, "lattice", "latticed.lock"),
-		DesktopTOML:  filepath.Join(configHome, "lattice", "config.toml"),
 	}
 	return p, nil
 }

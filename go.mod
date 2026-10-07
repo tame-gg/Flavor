@@ -4,7 +4,6 @@ go 1.27.1
 
 require (
 	connectrpc.com/connect v1.21.0
-	github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/zalando/go-keyring v0.2.6
 	google.golang.org/protobuf v1.36.12

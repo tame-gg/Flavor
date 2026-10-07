@@ -1,1 +1,1 @@
-pub const PACKAGE: &str = "lattice.v1";
+connectrpc::include_generated!();

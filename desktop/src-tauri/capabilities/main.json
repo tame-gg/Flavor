@@ -1,0 +1,26 @@
+{
+  "identifier": "main",
+  "description": "Lattice application commands and daemon event listening only",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:event:allow-listen",
+    "core:event:allow-unlisten",
+    "allow-get-snapshot",
+    "allow-watch-events",
+    "allow-add-network",
+    "allow-update-network",
+    "allow-connect-network",
+    "allow-disconnect-network",
+    "allow-enroll-network",
+    "allow-remove-network",
+    "allow-delete-network-identity",
+    "allow-run-diagnostics",
+    "allow-open-auth-url",
+    "allow-get-settings",
+    "allow-set-settings",
+    "allow-set-tray-summary",
+    "allow-app-version"
+  ]
+}

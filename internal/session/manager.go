@@ -15,7 +15,7 @@ type Manager struct {
 	sessions map[domain.NetworkID]*Session
 	bus      *events.Bus
 	log      *slog.Logger
-	newEng   engineFactory
+	newEng   EngineFactory
 }
 
 func NewManager(bus *events.Bus, log *slog.Logger) *Manager {
@@ -30,10 +30,10 @@ func NewManager(bus *events.Bus, log *slog.Logger) *Manager {
 	}
 }
 
-func (m *Manager) withEngineFactory(f engineFactory) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+func NewManagerWithFactory(bus *events.Bus, log *slog.Logger, f EngineFactory) *Manager {
+	m := NewManager(bus, log)
 	m.newEng = f
+	return m
 }
 
 func (m *Manager) GetOrCreate(cfg provider.ResolvedSessionConfig) (*Session, error) {
@@ -74,6 +74,40 @@ func (m *Manager) Stop(ctx context.Context, id domain.NetworkID) error {
 		return nil
 	}
 	return s.Stop(ctx)
+}
+
+func (m *Manager) Remove(id domain.NetworkID) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	s, ok := m.sessions[id]
+	if !ok {
+		return nil
+	}
+	if s.backendLifecycle() != backendStopped {
+		return ErrBusy
+	}
+	delete(m.sessions, id)
+	return nil
+}
+
+func (m *Manager) StopAll(ctx context.Context) error {
+	m.mu.Lock()
+	all := make([]*Session, 0, len(m.sessions))
+	for _, s := range m.sessions {
+		all = append(all, s)
+	}
+	m.mu.Unlock()
+	errs := make(chan error, len(all))
+	for _, s := range all {
+		go func() { errs <- s.Stop(ctx) }()
+	}
+	var first error
+	for range all {
+		if err := <-errs; err != nil && first == nil {
+			first = err
+		}
+	}
+	return first
 }
 
 func (m *Manager) Len() int {

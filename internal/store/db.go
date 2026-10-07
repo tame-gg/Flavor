@@ -18,9 +18,10 @@ type DB struct {
 }
 
 var (
-	ErrNotFound     = errors.New("not found")
-	ErrCorruptDB    = errors.New("database corrupt or unreadable")
-	ErrInvalidInput = errors.New("invalid input")
+	ErrNotFound              = errors.New("not found")
+	ErrCorruptDB             = errors.New("database corrupt or unreadable")
+	ErrInvalidInput          = errors.New("invalid input")
+	ErrIdentityDeletePending = errors.New("identity metadata deleted; directory removal pending")
 )
 
 func Open(ctx context.Context, path string) (*DB, error) {

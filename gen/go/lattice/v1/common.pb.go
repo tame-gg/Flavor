@@ -160,6 +160,8 @@ const (
 	LatticeErrorCode_LATTICE_ERROR_CODE_STATE_DIRECTORY_ERROR      LatticeErrorCode = 11
 	LatticeErrorCode_LATTICE_ERROR_CODE_RESYNC_REQUIRED            LatticeErrorCode = 12
 	LatticeErrorCode_LATTICE_ERROR_CODE_DAEMON_SHUTTING_DOWN       LatticeErrorCode = 13
+	LatticeErrorCode_LATTICE_ERROR_CODE_INVALID_ARGUMENT           LatticeErrorCode = 14
+	LatticeErrorCode_LATTICE_ERROR_CODE_INTERNAL                   LatticeErrorCode = 15
 )
 
 // Enum value maps for LatticeErrorCode.
@@ -179,6 +181,8 @@ var (
 		11: "LATTICE_ERROR_CODE_STATE_DIRECTORY_ERROR",
 		12: "LATTICE_ERROR_CODE_RESYNC_REQUIRED",
 		13: "LATTICE_ERROR_CODE_DAEMON_SHUTTING_DOWN",
+		14: "LATTICE_ERROR_CODE_INVALID_ARGUMENT",
+		15: "LATTICE_ERROR_CODE_INTERNAL",
 	}
 	LatticeErrorCode_value = map[string]int32{
 		"LATTICE_ERROR_CODE_UNSPECIFIED":                0,
@@ -195,6 +199,8 @@ var (
 		"LATTICE_ERROR_CODE_STATE_DIRECTORY_ERROR":      11,
 		"LATTICE_ERROR_CODE_RESYNC_REQUIRED":            12,
 		"LATTICE_ERROR_CODE_DAEMON_SHUTTING_DOWN":       13,
+		"LATTICE_ERROR_CODE_INVALID_ARGUMENT":           14,
+		"LATTICE_ERROR_CODE_INTERNAL":                   15,
 	}
 )
 
@@ -360,7 +366,7 @@ const file_lattice_v1_common_proto_rawDesc = "" +
 	"%NETWORK_CONNECTION_STATE_RECONNECTING\x10\b\x12%\n" +
 	"!NETWORK_CONNECTION_STATE_REMOVING\x10\t\x12\"\n" +
 	"\x1eNETWORK_CONNECTION_STATE_ERROR\x10\n" +
-	"*\x83\x05\n" +
+	"*\xcd\x05\n" +
 	"\x10LatticeErrorCode\x12\"\n" +
 	"\x1eLATTICE_ERROR_CODE_UNSPECIFIED\x10\x00\x12(\n" +
 	"$LATTICE_ERROR_CODE_NETWORK_NOT_FOUND\x10\x01\x12*\n" +
@@ -376,7 +382,9 @@ const file_lattice_v1_common_proto_rawDesc = "" +
 	"\x12,\n" +
 	"(LATTICE_ERROR_CODE_STATE_DIRECTORY_ERROR\x10\v\x12&\n" +
 	"\"LATTICE_ERROR_CODE_RESYNC_REQUIRED\x10\f\x12+\n" +
-	"'LATTICE_ERROR_CODE_DAEMON_SHUTTING_DOWN\x10\r*c\n" +
+	"'LATTICE_ERROR_CODE_DAEMON_SHUTTING_DOWN\x10\r\x12'\n" +
+	"#LATTICE_ERROR_CODE_INVALID_ARGUMENT\x10\x0e\x12\x1f\n" +
+	"\x1bLATTICE_ERROR_CODE_INTERNAL\x10\x0f*c\n" +
 	"\n" +
 	"Capability\x12\x1a\n" +
 	"\x16CAPABILITY_UNSPECIFIED\x10\x00\x12\x18\n" +

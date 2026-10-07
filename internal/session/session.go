@@ -19,6 +19,7 @@ type NetworkSession interface {
 	ID() domain.NetworkID
 	Provider() domain.ProviderType
 	Start(ctx context.Context, enrollment *EnrollmentInput) error
+	Begin(ctx context.Context, enrollment *EnrollmentInput) error
 	Stop(ctx context.Context) error
 	State() domain.NetworkConnectionState
 	LocalNode() domain.LocalNode
@@ -31,7 +32,7 @@ type Session struct {
 	cfg    provider.ResolvedSessionConfig
 	bus    *events.Bus
 	log    *slog.Logger
-	newEng engineFactory
+	newEng EngineFactory
 
 	lifeMu sync.Mutex
 	gen    *generation
@@ -49,7 +50,7 @@ type generation struct {
 	ctx       context.Context
 	cancel    context.CancelFunc
 	done      chan struct{}
-	eng       engine
+	eng       Engine
 	watchDone chan struct{}
 	final     domain.NetworkConnectionState
 	finalMsg  string
@@ -59,7 +60,7 @@ func NewSession(cfg provider.ResolvedSessionConfig, bus *events.Bus, log *slog.L
 	return newSession(cfg, bus, log, newTsnetEngine)
 }
 
-func newSession(cfg provider.ResolvedSessionConfig, bus *events.Bus, log *slog.Logger, factory engineFactory) (*Session, error) {
+func newSession(cfg provider.ResolvedSessionConfig, bus *events.Bus, log *slog.Logger, factory EngineFactory) (*Session, error) {
 	if cfg.NetworkID == "" || cfg.StateDir == "" || cfg.NodeHostname == "" {
 		return nil, ErrInvalidConfig
 	}
@@ -88,7 +89,26 @@ func (s *Session) Start(ctx context.Context, enrollment *EnrollmentInput) error 
 	if err != nil {
 		return err
 	}
+	return s.run(g, enrollment)
+}
 
+func (s *Session) Begin(ctx context.Context, enrollment *EnrollmentInput) error {
+	if err := enrollment.validate(); err != nil {
+		return err
+	}
+	g, err := s.reserve(ctx)
+	if err != nil {
+		return err
+	}
+	go func() {
+		if err := s.run(g, enrollment); err != nil {
+			s.log.Info("session start failed", "network_id", s.cfg.NetworkID, "err", err.Error())
+		}
+	}()
+	return nil
+}
+
+func (s *Session) run(g *generation, enrollment *EnrollmentInput) error {
 	authKey := ""
 	if enrollment != nil && enrollment.Method == EnrollmentAuthKey {
 		authKey = enrollment.Credential.Reveal()
@@ -221,7 +241,7 @@ func (s *Session) retire(g *generation) {
 }
 
 func (s *Session) watch(g *generation) {
-	err := g.eng.Watch(g.ctx, func(n notifySnap) { s.handleNotify(g, n) })
+	err := g.eng.Watch(g.ctx, func(n EngineNotify) { s.handleNotify(g, n) })
 	close(g.watchDone)
 	if g.ctx.Err() != nil {
 		return
@@ -256,7 +276,7 @@ func (s *Session) ifCurrent(g *generation, fn func()) {
 	}
 }
 
-func (s *Session) handleNotify(g *generation, n notifySnap) {
+func (s *Session) handleNotify(g *generation, n EngineNotify) {
 	if n.BrowseToURL != nil || n.LoginFinished {
 		s.ifCurrent(g, func() {
 			if n.BrowseToURL != nil {
@@ -280,7 +300,7 @@ func (s *Session) handleNotify(g *generation, n notifySnap) {
 	s.ifCurrent(g, func() { s.applyStatus(snap) })
 }
 
-func (s *Session) applyStatus(snap statusSnap) {
+func (s *Session) applyStatus(snap EngineStatus) {
 	if snap.BackendState == "NeedsLogin" && snap.AuthURL != "" {
 		s.setAuthPrompt(snap.AuthURL)
 	}

@@ -19,7 +19,7 @@ const (
 	backendStopping backendLifecycle = "stopping"
 )
 
-type peerSnap struct {
+type EnginePeer struct {
 	NodeID    domain.NodeID
 	Hostname  string
 	DNSName   string
@@ -28,28 +28,28 @@ type peerSnap struct {
 	LastSeen  time.Time
 }
 
-type statusSnap struct {
+type EngineStatus struct {
 	BackendState string
 	AuthURL      string
 	TailscaleIPs []netip.Addr
-	Self         *peerSnap
-	Peers        []peerSnap
+	Self         *EnginePeer
+	Peers        []EnginePeer
 	Health       []string
 }
 
-type notifySnap struct {
+type EngineNotify struct {
 	BackendState  *string
 	BrowseToURL   *string
 	LoginFinished bool
 	NetMapChanged bool
 }
 
-type engine interface {
+type Engine interface {
 	Start() error
 	Close() error
-	Status(ctx context.Context) (statusSnap, error)
-	Watch(ctx context.Context, emit func(notifySnap)) error
+	Status(ctx context.Context) (EngineStatus, error)
+	Watch(ctx context.Context, emit func(EngineNotify)) error
 	ClearAuthKey()
 }
 
-type engineFactory func(cfg provider.ResolvedSessionConfig, authKey string, log *slog.Logger) (engine, error)
+type EngineFactory func(cfg provider.ResolvedSessionConfig, authKey string, log *slog.Logger) (Engine, error)

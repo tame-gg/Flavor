@@ -17,7 +17,7 @@ type tsnetEngine struct {
 	lc  *local.Client
 }
 
-func newTsnetEngine(cfg provider.ResolvedSessionConfig, authKey string, log *slog.Logger) (engine, error) {
+func newTsnetEngine(cfg provider.ResolvedSessionConfig, authKey string, log *slog.Logger) (Engine, error) {
 	if cfg.StateDir == "" || cfg.NodeHostname == "" {
 		return nil, ErrInvalidConfig
 	}
@@ -65,18 +65,18 @@ func (e *tsnetEngine) ClearAuthKey() {
 	e.srv.AuthKey = ""
 }
 
-func (e *tsnetEngine) Status(ctx context.Context) (statusSnap, error) {
+func (e *tsnetEngine) Status(ctx context.Context) (EngineStatus, error) {
 	if e.lc == nil {
-		return statusSnap{}, fmt.Errorf("local client unavailable")
+		return EngineStatus{}, fmt.Errorf("local client unavailable")
 	}
 	st, err := e.lc.Status(ctx)
 	if err != nil {
-		return statusSnap{}, err
+		return EngineStatus{}, err
 	}
 	return projectStatus(st), nil
 }
 
-func (e *tsnetEngine) Watch(ctx context.Context, emit func(notifySnap)) error {
+func (e *tsnetEngine) Watch(ctx context.Context, emit func(EngineNotify)) error {
 	if e.lc == nil {
 		return fmt.Errorf("local client unavailable")
 	}
@@ -90,7 +90,7 @@ func (e *tsnetEngine) Watch(ctx context.Context, emit func(notifySnap)) error {
 		if err != nil {
 			return err
 		}
-		ev := notifySnap{LoginFinished: n.LoginFinished != nil, NetMapChanged: n.NetMap != nil}
+		ev := EngineNotify{LoginFinished: n.LoginFinished != nil, NetMapChanged: n.NetMap != nil}
 		if n.State != nil {
 			s := n.State.String()
 			ev.BackendState = &s

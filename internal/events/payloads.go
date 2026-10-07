@@ -52,3 +52,22 @@ type PeerRemoved struct {
 }
 
 func (PeerRemoved) eventPayload() {}
+
+type NetworkAdded struct {
+	Network domain.Network
+	State   domain.NetworkConnectionState
+}
+
+func (NetworkAdded) eventPayload() {}
+
+type NetworkUpdated struct {
+	Network domain.Network
+}
+
+func (NetworkUpdated) eventPayload() {}
+
+type NetworkRemoved struct {
+	NetworkID domain.NetworkID
+}
+
+func (NetworkRemoved) eventPayload() {}

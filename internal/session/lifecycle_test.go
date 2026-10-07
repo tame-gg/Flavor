@@ -1,4 +1,4 @@
-package session
+package session_test
 
 import (
 	"bytes"
@@ -6,7 +6,6 @@ import (
 	"errors"
 	"log/slog"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -14,6 +13,8 @@ import (
 	"git.lunarlabs.dev/lattice/lattice/internal/events"
 	"git.lunarlabs.dev/lattice/lattice/internal/logging"
 	"git.lunarlabs.dev/lattice/lattice/internal/provider"
+	"git.lunarlabs.dev/lattice/lattice/internal/session"
+	"git.lunarlabs.dev/lattice/lattice/internal/session/sessiontest"
 )
 
 func testCfg(t *testing.T) provider.ResolvedSessionConfig {
@@ -67,85 +68,56 @@ func count[T events.Payload](ps []events.Payload) int {
 	return n
 }
 
-type sequenceFactory struct {
-	mu      sync.Mutex
-	tracker liveTracker
-	made    []*fakeEngine
-	prepare func(i int, f *fakeEngine)
-}
-
-func (sf *sequenceFactory) factory(cfg provider.ResolvedSessionConfig, authKey string, _ *slog.Logger) (engine, error) {
-	sf.mu.Lock()
-	defer sf.mu.Unlock()
-	f := NewFakeEngine()
-	f.authKey = authKey
-	f.tracker = &sf.tracker
-	if sf.prepare != nil {
-		sf.prepare(len(sf.made), f)
+func filterState(ps []events.Payload, st domain.NetworkConnectionState) []events.Payload {
+	var out []events.Payload
+	for _, p := range ps {
+		if c, ok := p.(events.NetworkStateChanged); ok && c.State == st {
+			out = append(out, p)
+		}
 	}
-	sf.made = append(sf.made, f)
-	sf.tracker.add(1)
-	return f, nil
+	return out
 }
 
-func (sf *sequenceFactory) engine(i int) *fakeEngine {
-	sf.mu.Lock()
-	defer sf.mu.Unlock()
-	if i >= len(sf.made) {
-		return nil
+func newSession(t *testing.T, bus *events.Bus, log *slog.Logger, f session.EngineFactory) *session.Session {
+	t.Helper()
+	s, err := session.NewSessionWithFactory(testCfg(t), bus, log, f)
+	if err != nil {
+		t.Fatal(err)
 	}
-	return sf.made[i]
-}
-
-func (sf *sequenceFactory) count() int {
-	sf.mu.Lock()
-	defer sf.mu.Unlock()
-	return len(sf.made)
-}
-
-func (s *Session) activeEngine() engine {
-	s.lifeMu.Lock()
-	defer s.lifeMu.Unlock()
-	if s.gen == nil || s.gen.phase != backendStarted {
-		return nil
-	}
-	return s.gen.eng
+	return s
 }
 
 func TestStartStopStartCannotResurrectStaleGeneration(t *testing.T) {
 	for i := 0; i < 50; i++ {
-		gateA := make(chan struct{})
-		enteredA := make(chan struct{})
-		sf := &sequenceFactory{prepare: func(i int, f *fakeEngine) {
-			f.status = StatusSelf("node-"+string(rune('a'+i)), "100.64.0.1")
+		var enteredA <-chan struct{}
+		var releaseA func()
+		seq := &sessiontest.Sequence{Prepare: func(i int, _ provider.ResolvedSessionConfig, e *sessiontest.Engine) {
+			e.SetStatus(sessiontest.StatusSelf("node-"+string(rune('a'+i)), "100.64.0.1"))
 			if i == 0 {
-				f.startGate = gateA
-				f.startEntered = enteredA
+				enteredA, releaseA = e.GateStart()
 			}
 		}}
-		s, err := newSession(testCfg(t), nil, nil, sf.factory)
-		if err != nil {
-			t.Fatal(err)
-		}
+		s := newSession(t, nil, nil, seq.Factory)
 		ctx := context.Background()
 
 		errA := make(chan error, 1)
 		go func() { errA <- s.Start(ctx, nil) }()
+		eventually(t, "engine A created", func() bool { return seq.Count() == 1 })
 		<-enteredA
 
 		errStop := make(chan error, 1)
 		go func() { errStop <- s.Stop(ctx) }()
-		eventually(t, "stop to mark generation stopping", func() bool { return s.backendLifecycle() == backendStopping })
+		eventually(t, "stop to mark generation stopping", func() bool { return s.Lifecycle() == "stopping" })
 
 		errB := make(chan error, 1)
 		go func() { errB <- s.Start(ctx, nil) }()
 		time.Sleep(5 * time.Millisecond)
-		if n := sf.count(); n != 1 {
+		if n := seq.Count(); n != 1 {
 			t.Fatalf("start B created an engine before A finished cleanup: engines=%d", n)
 		}
 
-		close(gateA)
-		if err := <-errA; !errors.Is(err, ErrStopped) {
+		releaseA()
+		if err := <-errA; !errors.Is(err, session.ErrStopped) {
 			t.Fatalf("start A: got %v want ErrStopped", err)
 		}
 		if err := <-errStop; err != nil {
@@ -155,14 +127,14 @@ func TestStartStopStartCannotResurrectStaleGeneration(t *testing.T) {
 			t.Fatalf("start B: %v", err)
 		}
 
-		engA, engB := sf.engine(0), sf.engine(1)
-		if !engA.isClosed() {
+		engA, engB := seq.Engine(0), seq.Engine(1)
+		if !engA.Closed() {
 			t.Fatal("engine A not closed")
 		}
-		if engB == nil || s.activeEngine() != engine(engB) {
+		if engB == nil || s.ActiveEngine() != session.Engine(engB) {
 			t.Fatal("live generation is not B")
 		}
-		if peak := sf.tracker.peak(); peak != 1 {
+		if peak := seq.Peak(); peak != 1 {
 			t.Fatalf("engines alive at once on one state dir: %d", peak)
 		}
 		eventually(t, "B connected", func() bool { return s.State() == domain.StateConnected })
@@ -178,55 +150,39 @@ func TestStartStopStartCannotResurrectStaleGeneration(t *testing.T) {
 func TestWatcherErrorAlwaysReachesError(t *testing.T) {
 	for i := 0; i < 50; i++ {
 		bus := events.NewBus(256, 64)
-		eng := NewFakeEngine()
-		s, err := newSession(testCfg(t), bus, nil, newFakeFactory(eng, nil))
-		if err != nil {
-			t.Fatal(err)
-		}
+		eng := sessiontest.NewEngine()
+		s := newSession(t, bus, nil, sessiontest.Shared(eng))
 		if err := s.Start(context.Background(), nil); err != nil {
 			t.Fatal(err)
 		}
 		eventually(t, "connected", func() bool { return s.State() == domain.StateConnected })
-		eng.watchErr <- errors.New("unexpected EOF")
-		eventually(t, "cleanup after watcher failure", func() bool { return s.backendLifecycle() == backendStopped })
+		eng.FailWatch(errors.New("unexpected EOF"))
+		eventually(t, "cleanup after watcher failure", func() bool { return s.Lifecycle() == "stopped" })
 		if s.State() != domain.StateError {
 			t.Fatalf("iteration %d: state=%s want error", i, s.State())
 		}
-		if !eng.isClosed() {
+		if !eng.Closed() {
 			t.Fatal("engine not closed after watcher failure")
 		}
-		if n := eng.watchers(); n != 0 {
+		if n := eng.Watchers(); n != 0 {
 			t.Fatalf("watcher goroutines still running: %d", n)
 		}
-		if n := count[events.NetworkStateChanged](filterState(history(t, bus), domain.StateError)); n != 1 {
+		if n := len(filterState(history(t, bus), domain.StateError)); n != 1 {
 			t.Fatalf("error transitions=%d want 1", n)
 		}
 		bus.Close()
 	}
 }
 
-func filterState(ps []events.Payload, st domain.NetworkConnectionState) []events.Payload {
-	var out []events.Payload
-	for _, p := range ps {
-		if c, ok := p.(events.NetworkStateChanged); ok && c.State == st {
-			out = append(out, p)
-		}
-	}
-	return out
-}
-
 func TestSessionRestartsAfterWatcherFailure(t *testing.T) {
-	sf := &sequenceFactory{}
-	s, err := newSession(testCfg(t), nil, nil, sf.factory)
-	if err != nil {
-		t.Fatal(err)
-	}
+	seq := &sessiontest.Sequence{}
+	s := newSession(t, nil, nil, seq.Factory)
 	ctx := context.Background()
 	if err := s.Start(ctx, nil); err != nil {
 		t.Fatal(err)
 	}
-	sf.engine(0).watchErr <- errors.New("boom")
-	eventually(t, "stopped", func() bool { return s.backendLifecycle() == backendStopped })
+	seq.Engine(0).FailWatch(errors.New("boom"))
+	eventually(t, "stopped", func() bool { return s.Lifecycle() == "stopped" })
 	if err := s.Start(ctx, nil); err != nil {
 		t.Fatalf("restart after watcher failure: %v", err)
 	}
@@ -234,12 +190,12 @@ func TestSessionRestartsAfterWatcherFailure(t *testing.T) {
 	if err := s.Stop(ctx); err != nil {
 		t.Fatal(err)
 	}
-	for i := 0; i < sf.count(); i++ {
-		if n := sf.engine(i).watchers(); n != 0 {
+	for i := 0; i < seq.Count(); i++ {
+		if n := seq.Engine(i).Watchers(); n != 0 {
 			t.Fatalf("engine %d leaked watcher", i)
 		}
 	}
-	if sf.tracker.peak() != 1 {
+	if seq.Peak() != 1 {
 		t.Fatal("dual engines")
 	}
 }
@@ -247,10 +203,7 @@ func TestSessionRestartsAfterWatcherFailure(t *testing.T) {
 func TestStopCancellationIsNotWatcherFailure(t *testing.T) {
 	bus := events.NewBus(256, 64)
 	defer bus.Close()
-	s, err := newSession(testCfg(t), bus, nil, newFakeFactory(nil, nil))
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := newSession(t, bus, nil, (&sessiontest.Sequence{}).Factory)
 	if err := s.Start(context.Background(), nil); err != nil {
 		t.Fatal(err)
 	}
@@ -267,18 +220,13 @@ func TestStopCancellationIsNotWatcherFailure(t *testing.T) {
 }
 
 func TestStaleGenerationWatcherFailureIgnored(t *testing.T) {
-	sf := &sequenceFactory{}
-	s, err := newSession(testCfg(t), nil, nil, sf.factory)
-	if err != nil {
-		t.Fatal(err)
-	}
+	seq := &sessiontest.Sequence{}
+	s := newSession(t, nil, nil, seq.Factory)
 	ctx := context.Background()
 	if err := s.Start(ctx, nil); err != nil {
 		t.Fatal(err)
 	}
-	s.lifeMu.Lock()
-	stale := s.gen
-	s.lifeMu.Unlock()
+	stale := s.Generation()
 	if err := s.Stop(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -286,27 +234,24 @@ func TestStaleGenerationWatcherFailureIgnored(t *testing.T) {
 		t.Fatal(err)
 	}
 	eventually(t, "connected", func() bool { return s.State() == domain.StateConnected })
-	s.watcherFailed(stale, errors.New("late failure"))
-	if s.State() != domain.StateConnected || s.backendLifecycle() != backendStarted {
-		t.Fatalf("stale watcher affected live generation: state=%s backend=%s", s.State(), s.backendLifecycle())
+	s.FailWatcher(stale, errors.New("late failure"))
+	if s.State() != domain.StateConnected || s.Lifecycle() != "started" {
+		t.Fatalf("stale watcher affected live generation: state=%s backend=%s", s.State(), s.Lifecycle())
 	}
-	if sf.engine(1).isClosed() {
+	if seq.Engine(1).Closed() {
 		t.Fatal("live engine closed by stale failure")
 	}
 	_ = s.Stop(ctx)
 }
 
 func TestStopTimeoutDoesNotWedge(t *testing.T) {
-	gate := make(chan struct{})
-	sf := &sequenceFactory{prepare: func(i int, f *fakeEngine) {
+	var release func()
+	seq := &sessiontest.Sequence{Prepare: func(i int, _ provider.ResolvedSessionConfig, e *sessiontest.Engine) {
 		if i == 0 {
-			f.closeGate = gate
+			release = e.GateClose()
 		}
 	}}
-	s, err := newSession(testCfg(t), nil, nil, sf.factory)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := newSession(t, nil, nil, seq.Factory)
 	if err := s.Start(context.Background(), nil); err != nil {
 		t.Fatal(err)
 	}
@@ -316,8 +261,8 @@ func TestStopTimeoutDoesNotWedge(t *testing.T) {
 	if err := s.Stop(short); !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("stop: got %v want deadline", err)
 	}
-	if s.backendLifecycle() != backendStopping {
-		t.Fatalf("backend=%s", s.backendLifecycle())
+	if s.Lifecycle() != "stopping" {
+		t.Fatalf("backend=%s", s.Lifecycle())
 	}
 
 	short2, cancel2 := context.WithTimeout(context.Background(), 20*time.Millisecond)
@@ -329,20 +274,20 @@ func TestStopTimeoutDoesNotWedge(t *testing.T) {
 	secondStop := make(chan error, 1)
 	go func() { secondStop <- s.Stop(context.Background()) }()
 
-	close(gate)
+	release()
 	if err := <-secondStop; err != nil {
 		t.Fatalf("second stop should join in-flight cleanup: %v", err)
 	}
-	if s.backendLifecycle() != backendStopped || s.State() != domain.StateDisconnected {
-		t.Fatalf("backend=%s state=%s", s.backendLifecycle(), s.State())
+	if s.Lifecycle() != "stopped" || s.State() != domain.StateDisconnected {
+		t.Fatalf("backend=%s state=%s", s.Lifecycle(), s.State())
 	}
-	if !sf.engine(0).isClosed() || sf.engine(0).watchers() != 0 {
+	if !seq.Engine(0).Closed() || seq.Engine(0).Watchers() != 0 {
 		t.Fatal("engine A not fully cleaned up")
 	}
 	if err := s.Start(context.Background(), nil); err != nil {
 		t.Fatalf("start after recovered cleanup: %v", err)
 	}
-	if sf.tracker.peak() != 1 {
+	if seq.Peak() != 1 {
 		t.Fatal("dual engines")
 	}
 	_ = s.Stop(context.Background())
@@ -351,30 +296,27 @@ func TestStopTimeoutDoesNotWedge(t *testing.T) {
 func TestStaleStatusCannotOverwriteNewerGeneration(t *testing.T) {
 	bus := events.NewBus(256, 64)
 	defer bus.Close()
-	statusGate := make(chan struct{})
-	sf := &sequenceFactory{prepare: func(i int, f *fakeEngine) {
+	var release func()
+	seq := &sessiontest.Sequence{Prepare: func(i int, _ provider.ResolvedSessionConfig, e *sessiontest.Engine) {
 		if i == 0 {
-			f.status = StatusWithPeer("stale-peer", "100.64.0.9")
-			f.statusGate = statusGate
+			e.SetStatus(sessiontest.StatusWithPeer("stale-peer", "100.64.0.9"))
+			release = e.GateStatus()
 			return
 		}
-		f.status = StatusWithPeer("fresh-peer", "100.64.0.2")
+		e.SetStatus(sessiontest.StatusWithPeer("fresh-peer", "100.64.0.2"))
 	}}
-	s, err := newSession(testCfg(t), bus, nil, sf.factory)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s := newSession(t, bus, nil, seq.Factory)
 	ctx := context.Background()
 	if err := s.Start(ctx, nil); err != nil {
 		t.Fatal(err)
 	}
 	stopDone := make(chan error, 1)
 	go func() { stopDone <- s.Stop(ctx) }()
-	eventually(t, "stopping", func() bool { return s.backendLifecycle() == backendStopping })
+	eventually(t, "stopping", func() bool { return s.Lifecycle() == "stopping" })
 	startB := make(chan error, 1)
 	go func() { startB <- s.Start(ctx, nil) }()
 
-	close(statusGate)
+	release()
 	if err := <-stopDone; err != nil {
 		t.Fatal(err)
 	}
@@ -405,18 +347,15 @@ func TestStaleStatusCannotOverwriteNewerGeneration(t *testing.T) {
 func TestApprovalRequiredEmittedOncePerTransition(t *testing.T) {
 	bus := events.NewBus(256, 64)
 	defer bus.Close()
-	eng := NewFakeEngine()
-	eng.status = StatusNeedsMachineAuth()
-	s, err := newSession(testCfg(t), bus, nil, newFakeFactory(eng, nil))
-	if err != nil {
-		t.Fatal(err)
-	}
+	eng := sessiontest.NewEngine()
+	eng.SetStatus(sessiontest.StatusNeedsMachineAuth())
+	s := newSession(t, bus, nil, sessiontest.Shared(eng))
 	if err := s.Start(context.Background(), nil); err != nil {
 		t.Fatal(err)
 	}
 	eventually(t, "awaiting approval", func() bool { return s.State() == domain.StateAwaitingApproval })
 	for i := 0; i < 5; i++ {
-		eng.push(notifySnap{NetMapChanged: true})
+		eng.PushNetMap()
 	}
 	time.Sleep(50 * time.Millisecond)
 	ps := history(t, bus)
@@ -433,23 +372,18 @@ func TestInteractiveLoginSingleFlow(t *testing.T) {
 	bus := events.NewBus(256, 64)
 	defer bus.Close()
 	const url = "https://login.example.com/a/flow1"
-	eng := NewFakeEngine()
-	eng.status = statusSnap{BackendState: "NeedsLogin", AuthURL: url}
-	s, err := newSession(testCfg(t), bus, nil, newFakeFactory(eng, nil))
-	if err != nil {
-		t.Fatal(err)
-	}
+	eng := sessiontest.NewEngine()
+	eng.SetStatus(sessiontest.StatusNeedsLogin(url))
+	s := newSession(t, bus, nil, sessiontest.Shared(eng))
 	if err := s.Start(context.Background(), nil); err != nil {
 		t.Fatal(err)
 	}
 	eventually(t, "authenticating", func() bool { return s.State() == domain.StateAuthenticating })
 	first := s.AuthPrompt()
-	state := "NeedsLogin"
-	u := url
 	for i := 0; i < 3; i++ {
-		eng.push(notifySnap{BackendState: &state})
-		eng.push(notifySnap{BrowseToURL: &u})
-		eng.push(notifySnap{NetMapChanged: true})
+		eng.PushState("NeedsLogin")
+		eng.PushBrowse(url)
+		eng.PushNetMap()
 	}
 	time.Sleep(50 * time.Millisecond)
 	if n := count[events.AuthenticationRequired](history(t, bus)); n != 1 {
@@ -465,17 +399,13 @@ func TestSessionLogsOnlyAuthHost(t *testing.T) {
 	const token = "LATTICE_CANARY_TOKEN_91c2"
 	var buf bytes.Buffer
 	log := logging.New(&buf, slog.LevelDebug)
-	eng := NewFakeEngine()
-	eng.status = statusSnap{BackendState: "NeedsLogin"}
-	s, err := newSession(testCfg(t), nil, log, newFakeFactory(eng, nil))
-	if err != nil {
-		t.Fatal(err)
-	}
+	eng := sessiontest.NewEngine()
+	eng.SetStatus(sessiontest.StatusNeedsLogin(""))
+	s := newSession(t, nil, log, sessiontest.Shared(eng))
 	if err := s.Start(context.Background(), nil); err != nil {
 		t.Fatal(err)
 	}
-	u := "https://login.example.com/a/" + token + "?token=" + token
-	eng.push(notifySnap{BrowseToURL: &u})
+	eng.PushBrowse("https://login.example.com/a/" + token + "?token=" + token)
 	eventually(t, "prompt", func() bool { return s.AuthPrompt() != nil })
 	_ = s.Stop(context.Background())
 	out := buf.String()
@@ -485,4 +415,23 @@ func TestSessionLogsOnlyAuthHost(t *testing.T) {
 	if !strings.Contains(out, "auth_host=login.example.com") {
 		t.Fatalf("expected auth host in logs: %s", out)
 	}
+}
+
+func TestBeginAcceptsThenStreams(t *testing.T) {
+	eng := sessiontest.NewEngine()
+	entered, release := eng.GateStart()
+	s := newSession(t, nil, nil, sessiontest.Shared(eng))
+	if err := s.Begin(context.Background(), nil); err != nil {
+		t.Fatal(err)
+	}
+	<-entered
+	if err := s.Begin(context.Background(), nil); !errors.Is(err, session.ErrBusy) {
+		t.Fatalf("second begin while starting: %v", err)
+	}
+	release()
+	eventually(t, "connected", func() bool { return s.State() == domain.StateConnected })
+	if err := s.Begin(context.Background(), nil); !errors.Is(err, session.ErrAlreadyActive) {
+		t.Fatalf("begin while active: %v", err)
+	}
+	_ = s.Stop(context.Background())
 }

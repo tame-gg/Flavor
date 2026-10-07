@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"git.lunarlabs.dev/lattice/lattice/internal/domain"
@@ -72,6 +73,8 @@ VALUES (?, ?, ?, ?, ?, ?)`,
 	return tx.Commit()
 }
 
+const tombstonePrefix = ".deleting-"
+
 func (db *DB) HardDeleteIdentity(ctx context.Context, id domain.NetworkID, dirs DirResolver) error {
 	if dirs == nil {
 		return fmt.Errorf("%w: directory resolver required", ErrInvalidInput)
@@ -85,28 +88,66 @@ func (db *DB) HardDeleteIdentity(ctx context.Context, id domain.NetworkID, dirs 
 	if clean != filepath.Clean(dirs.NetworksRoot()) && !(len(clean) >= len(root) && clean[:len(root)] == root) {
 		return fmt.Errorf("%w: path escapes networks root", ErrInvalidInput)
 	}
-	if err := validateNetworkDirForDelete(netDir, dirs.NetworksRoot()); err != nil && !os.IsNotExist(err) {
+
+	tomb := ""
+	switch err := validateNetworkDirForDelete(netDir, dirs.NetworksRoot()); {
+	case err == nil:
+		tomb = filepath.Join(filepath.Dir(netDir), tombstonePrefix+string(id))
+		if err := os.Rename(netDir, tomb); err != nil {
+			return err
+		}
+	case !os.IsNotExist(err):
 		return err
+	}
+	restore := func() {
+		if tomb != "" {
+			_ = os.Rename(tomb, netDir)
+		}
 	}
 
 	tx, err := db.sql.BeginTx(ctx, nil)
 	if err != nil {
+		restore()
 		return err
 	}
 	defer func() { _ = tx.Rollback() }()
 
 	if _, err := tx.ExecContext(ctx, `DELETE FROM networks WHERE id = ?`, string(id)); err != nil {
+		restore()
 		return err
 	}
 	if _, err := tx.ExecContext(ctx, `DELETE FROM retained_identities WHERE network_id = ?`, string(id)); err != nil {
+		restore()
 		return err
 	}
 	if err := tx.Commit(); err != nil {
+		restore()
 		return err
 	}
 
-	if err := removeNetworkDir(netDir, dirs.NetworksRoot()); err != nil && !os.IsNotExist(err) {
+	if tomb != "" {
+		if err := os.RemoveAll(tomb); err != nil {
+			return fmt.Errorf("%w: %v", ErrIdentityDeletePending, err)
+		}
+	}
+	return nil
+}
+
+func SweepDeletedIdentities(networksRoot string) error {
+	entries, err := os.ReadDir(networksRoot)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
 		return err
+	}
+	for _, e := range entries {
+		if !e.IsDir() || !strings.HasPrefix(e.Name(), tombstonePrefix) {
+			continue
+		}
+		if err := os.RemoveAll(filepath.Join(networksRoot, e.Name())); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -127,11 +168,4 @@ func validateNetworkDirForDelete(netDir, networksRoot string) error {
 		return fmt.Errorf("%w: unexpected parent directory", ErrInvalidInput)
 	}
 	return nil
-}
-
-func removeNetworkDir(netDir, networksRoot string) error {
-	if err := validateNetworkDirForDelete(netDir, networksRoot); err != nil {
-		return err
-	}
-	return os.RemoveAll(netDir)
 }

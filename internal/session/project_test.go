@@ -9,18 +9,18 @@ import (
 
 func TestConnectedInvariant(t *testing.T) {
 	addr := netip.MustParseAddr("100.64.0.1")
-	ok := statusSnap{
+	ok := EngineStatus{
 		BackendState: "Running",
 		TailscaleIPs: []netip.Addr{addr},
-		Self:         &peerSnap{NodeID: "n1", Addresses: []netip.Addr{addr}},
+		Self:         &EnginePeer{NodeID: "n1", Addresses: []netip.Addr{addr}},
 	}
 	if !connectedInvariant(ok) {
 		t.Fatal("expected connected")
 	}
-	if connectedInvariant(statusSnap{BackendState: "Running", TailscaleIPs: []netip.Addr{addr}}) {
+	if connectedInvariant(EngineStatus{BackendState: "Running", TailscaleIPs: []netip.Addr{addr}}) {
 		t.Fatal("missing self")
 	}
-	if connectedInvariant(statusSnap{BackendState: "Running", Self: &peerSnap{NodeID: "n1"}}) {
+	if connectedInvariant(EngineStatus{BackendState: "Running", Self: &EnginePeer{NodeID: "n1"}}) {
 		t.Fatal("missing ips")
 	}
 	if mapConnectionState(ok, false) != domain.StateConnected {
@@ -31,7 +31,7 @@ func TestConnectedInvariant(t *testing.T) {
 	if mapConnectionState(degraded, false) != domain.StateDegraded {
 		t.Fatal("degraded")
 	}
-	if mapConnectionState(statusSnap{BackendState: "NeedsMachineAuth"}, false) != domain.StateAwaitingApproval {
+	if mapConnectionState(EngineStatus{BackendState: "NeedsMachineAuth"}, false) != domain.StateAwaitingApproval {
 		t.Fatal("approval")
 	}
 }

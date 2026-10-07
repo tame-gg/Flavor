@@ -3,7 +3,6 @@ package session_test
 import (
 	"context"
 	"errors"
-	"log/slog"
 	"net/netip"
 	"sync"
 	"testing"
@@ -14,6 +13,7 @@ import (
 	"git.lunarlabs.dev/lattice/lattice/internal/provider"
 	"git.lunarlabs.dev/lattice/lattice/internal/secret"
 	"git.lunarlabs.dev/lattice/lattice/internal/session"
+	"git.lunarlabs.dev/lattice/lattice/internal/session/sessiontest"
 )
 
 func cfgFor(id domain.NetworkID, name string) provider.ResolvedSessionConfig {
@@ -31,7 +31,7 @@ func TestSessionBoundToNetworkID(t *testing.T) {
 	id := domain.NewNetworkID()
 	bus := events.NewBus(32, 8)
 	defer bus.Close()
-	s, err := session.NewSessionWithFactory(cfgFor(id, "host-a"), bus, nil, session.FakeFactory(nil, nil))
+	s, err := session.NewSessionWithFactory(cfgFor(id, "host-a"), bus, nil, (&sessiontest.Sequence{}).Factory)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,8 +47,8 @@ func TestStartStopLifecycle(t *testing.T) {
 	id := domain.NewNetworkID()
 	bus := events.NewBus(64, 8)
 	defer bus.Close()
-	var n int
-	s, err := session.NewSessionWithFactory(cfgFor(id, "host-a"), bus, nil, session.FakeFactory(nil, &n))
+	seq := &sessiontest.Sequence{}
+	s, err := session.NewSessionWithFactory(cfgFor(id, "host-a"), bus, nil, seq.Factory)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +59,7 @@ func TestStartStopLifecycle(t *testing.T) {
 	if err := s.Start(ctx, nil); !errors.Is(err, session.ErrAlreadyActive) {
 		t.Fatalf("got %v", err)
 	}
-	if n != 1 {
+	if n := seq.Count(); n != 1 {
 		t.Fatalf("engines=%d", n)
 	}
 	deadline := time.Now().Add(2 * time.Second)
@@ -94,9 +94,9 @@ func TestPartialStartCleanup(t *testing.T) {
 	id := domain.NewNetworkID()
 	bus := events.NewBus(32, 8)
 	defer bus.Close()
-	eng := session.NewFakeEngine()
+	eng := sessiontest.NewEngine()
 	eng.SetStartErr(errors.New("boom"))
-	s, err := session.NewSessionWithFactory(cfgFor(id, "host-a"), bus, nil, session.FakeFactory(eng, nil))
+	s, err := session.NewSessionWithFactory(cfgFor(id, "host-a"), bus, nil, sessiontest.Shared(eng))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +107,7 @@ func TestPartialStartCleanup(t *testing.T) {
 		t.Fatal(s.State())
 	}
 	eng.SetStartErr(nil)
-	eng.SetStatus(session.StatusSelf("node-self", "100.64.0.1"))
+	eng.SetStatus(sessiontest.StatusSelf("node-self", "100.64.0.1"))
 	if err := s.Start(context.Background(), nil); err != nil {
 		t.Fatal(err)
 	}
@@ -122,9 +122,9 @@ func TestAuthPromptAndMalformedURL(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer sub.Close()
-	eng := session.NewFakeEngine()
-	eng.SetStatus(session.StatusNeedsLogin())
-	s, err := session.NewSessionWithFactory(cfgFor(id, "host-a"), bus, nil, session.FakeFactory(eng, nil))
+	eng := sessiontest.NewEngine()
+	eng.SetStatus(sessiontest.StatusNeedsLogin(""))
+	s, err := session.NewSessionWithFactory(cfgFor(id, "host-a"), bus, nil, sessiontest.Shared(eng))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -181,8 +181,8 @@ func TestEnrollmentClearedAndNotInEvents(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer sub.Close()
-	eng := session.NewFakeEngine()
-	s, err := session.NewSessionWithFactory(cfgFor(id, "host-a"), bus, nil, session.FakeFactory(eng, nil))
+	eng := sessiontest.NewEngine()
+	s, err := session.NewSessionWithFactory(cfgFor(id, "host-a"), bus, nil, sessiontest.Shared(eng))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -233,9 +233,9 @@ func TestDeviceDiffAndSnapshotIsolation(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer sub.Close()
-	eng := session.NewFakeEngine()
-	eng.SetStatus(session.StatusWithPeer("peer-a", "100.64.0.2"))
-	s, err := session.NewSessionWithFactory(cfgFor(id, "host-a"), bus, nil, session.FakeFactory(eng, nil))
+	eng := sessiontest.NewEngine()
+	eng.SetStatus(sessiontest.StatusWithPeer("peer-a", "100.64.0.2"))
+	s, err := session.NewSessionWithFactory(cfgFor(id, "host-a"), bus, nil, sessiontest.Shared(eng))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -255,7 +255,7 @@ func TestDeviceDiffAndSnapshotIsolation(t *testing.T) {
 			t.Fatal("internal mutated")
 		}
 	}
-	eng.SetStatus(session.StatusWithPeer("peer-a", "100.64.0.2"))
+	eng.SetStatus(sessiontest.StatusWithPeer("peer-a", "100.64.0.2"))
 	eng.PushNetMap()
 	time.Sleep(50 * time.Millisecond)
 	updated := 0
@@ -273,7 +273,7 @@ done:
 	if updated != 0 {
 		t.Fatalf("unexpected updates=%d", updated)
 	}
-	eng.SetStatus(session.StatusWithPeer("peer-a", "100.64.0.3"))
+	eng.SetStatus(sessiontest.StatusWithPeer("peer-a", "100.64.0.3"))
 	eng.PushNetMap()
 	deadline := time.Now().Add(2 * time.Second)
 	for time.Now().Before(deadline) {
@@ -292,15 +292,15 @@ func TestDuplicateIPDistinctIdentity(t *testing.T) {
 	defer bus.Close()
 	idA := domain.NewNetworkID()
 	idB := domain.NewNetworkID()
-	engA := session.NewFakeEngine()
-	engB := session.NewFakeEngine()
-	engA.SetStatus(session.StatusSelf("alpha", "100.64.0.1"))
-	engB.SetStatus(session.StatusSelf("beta", "100.64.0.1"))
-	a, err := session.NewSessionWithFactory(cfgFor(idA, "a"), bus, nil, session.FakeFactory(engA, nil))
+	engA := sessiontest.NewEngine()
+	engB := sessiontest.NewEngine()
+	engA.SetStatus(sessiontest.StatusSelf("alpha", "100.64.0.1"))
+	engB.SetStatus(sessiontest.StatusSelf("beta", "100.64.0.1"))
+	a, err := session.NewSessionWithFactory(cfgFor(idA, "a"), bus, nil, sessiontest.Shared(engA))
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, err := session.NewSessionWithFactory(cfgFor(idB, "b"), bus, nil, session.FakeFactory(engB, nil))
+	b, err := session.NewSessionWithFactory(cfgFor(idB, "b"), bus, nil, sessiontest.Shared(engB))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -336,8 +336,7 @@ func TestDuplicateIPDistinctIdentity(t *testing.T) {
 func TestManagerOnePerNetwork(t *testing.T) {
 	bus := events.NewBus(32, 8)
 	defer bus.Close()
-	m := session.NewManager(bus, nil)
-	m.SetEngineFactory(session.FakeFactory(nil, nil))
+	m := session.NewManagerWithFactory(bus, nil, (&sessiontest.Sequence{}).Factory)
 	id := domain.NewNetworkID()
 	c := cfgFor(id, "host")
 	s1, err := m.GetOrCreate(c)
@@ -364,21 +363,13 @@ func TestManagerOnePerNetwork(t *testing.T) {
 func TestManagerLockDoesNotSerializeWork(t *testing.T) {
 	bus := events.NewBus(32, 8)
 	defer bus.Close()
-	m := session.NewManager(bus, nil)
-	engA := session.NewFakeEngine()
-	engA.SetSlowStart(200 * time.Millisecond)
-	engB := session.NewFakeEngine()
-	var mu sync.Mutex
-	factories := map[domain.NetworkID]*session.FakeEngineHolder{}
 	idA, idB := domain.NewNetworkID(), domain.NewNetworkID()
-	factories[idA] = &session.FakeEngineHolder{E: engA}
-	factories[idB] = &session.FakeEngineHolder{E: engB}
-	m.SetEngineFactory(func(cfg provider.ResolvedSessionConfig, authKey string, _ *slog.Logger) (session.Engine, error) {
-		mu.Lock()
-		h := factories[cfg.NetworkID]
-		mu.Unlock()
-		return session.WrapFakeEngine(h.E, authKey)
-	})
+	seq := &sessiontest.Sequence{Prepare: func(_ int, cfg provider.ResolvedSessionConfig, e *sessiontest.Engine) {
+		if cfg.NetworkID == idA {
+			e.SetSlowStart(200 * time.Millisecond)
+		}
+	}}
+	m := session.NewManagerWithFactory(bus, nil, seq.Factory)
 	start := time.Now()
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -399,9 +390,9 @@ func TestManagerLockDoesNotSerializeWork(t *testing.T) {
 func TestConcurrentStart(t *testing.T) {
 	bus := events.NewBus(32, 8)
 	defer bus.Close()
-	eng := session.NewFakeEngine()
+	eng := sessiontest.NewEngine()
 	eng.SetSlowStart(100 * time.Millisecond)
-	s, err := session.NewSessionWithFactory(cfgFor(domain.NewNetworkID(), "h"), bus, nil, session.FakeFactory(eng, nil))
+	s, err := session.NewSessionWithFactory(cfgFor(domain.NewNetworkID(), "h"), bus, nil, sessiontest.Shared(eng))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -435,9 +426,9 @@ func TestConcurrentStart(t *testing.T) {
 func TestApprovalMapping(t *testing.T) {
 	bus := events.NewBus(64, 8)
 	defer bus.Close()
-	eng := session.NewFakeEngine()
-	eng.SetStatus(session.StatusNeedsMachineAuth())
-	s, err := session.NewSessionWithFactory(cfgFor(domain.NewNetworkID(), "h"), bus, nil, session.FakeFactory(eng, nil))
+	eng := sessiontest.NewEngine()
+	eng.SetStatus(sessiontest.StatusNeedsMachineAuth())
+	s, err := session.NewSessionWithFactory(cfgFor(domain.NewNetworkID(), "h"), bus, nil, sessiontest.Shared(eng))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -453,7 +444,7 @@ func TestStateDirFromConfigNotCaller(t *testing.T) {
 	cfg.StateDir = "/trusted/path/tsnet"
 	bus := events.NewBus(8, 4)
 	defer bus.Close()
-	s, err := session.NewSessionWithFactory(cfg, bus, nil, session.FakeFactory(nil, nil))
+	s, err := session.NewSessionWithFactory(cfg, bus, nil, (&sessiontest.Sequence{}).Factory)
 	if err != nil {
 		t.Fatal(err)
 	}

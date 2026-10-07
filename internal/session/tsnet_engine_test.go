@@ -2,22 +2,31 @@ package session
 
 import (
 	"bytes"
-	"context"
 	"errors"
-	"fmt"
 	"log/slog"
 	"os"
 	"strings"
 	"testing"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/events"
+	"git.lunarlabs.dev/lattice/lattice/internal/domain"
 	"git.lunarlabs.dev/lattice/lattice/internal/logging"
+	"git.lunarlabs.dev/lattice/lattice/internal/provider"
 	"tailscale.com/envknob"
 )
 
+func tsnetCfg(t *testing.T) provider.ResolvedSessionConfig {
+	return provider.ResolvedSessionConfig{
+		NetworkID:    domain.NewNetworkID(),
+		Provider:     domain.ProviderHeadscale,
+		ControlURL:   "https://hs.example.com",
+		NodeHostname: "h",
+		StateDir:     t.TempDir(),
+	}
+}
+
 func TestTsnetEngineRefusesUnpreparedEnv(t *testing.T) {
 	t.Setenv("TS_NO_LOGS_NO_SUPPORT", "")
-	if _, err := newTsnetEngine(testCfg(t), "", slog.Default()); !errors.Is(err, ErrUnpreparedEnv) {
+	if _, err := newTsnetEngine(tsnetCfg(t), "", slog.Default()); !errors.Is(err, ErrUnpreparedEnv) {
 		t.Fatalf("got %v want ErrUnpreparedEnv", err)
 	}
 	if err := PrepareProcessEnv(); err != nil {
@@ -26,7 +35,7 @@ func TestTsnetEngineRefusesUnpreparedEnv(t *testing.T) {
 	if !envknob.NoLogsNoSupport() {
 		t.Fatal("log upload not disabled after PrepareProcessEnv")
 	}
-	if _, err := newTsnetEngine(testCfg(t), "", slog.Default()); err != nil {
+	if _, err := newTsnetEngine(tsnetCfg(t), "", slog.Default()); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -38,7 +47,7 @@ func TestAmbientAuthKeysNeverReachTsnet(t *testing.T) {
 	var buf bytes.Buffer
 	log := logging.New(&buf, slog.LevelDebug)
 
-	if _, err := newTsnetEngine(testCfg(t), "", log); !errors.Is(err, ErrUnpreparedEnv) {
+	if _, err := newTsnetEngine(tsnetCfg(t), "", log); !errors.Is(err, ErrUnpreparedEnv) {
 		t.Fatalf("ambient key accepted: %v", err)
 	}
 	if err := PrepareProcessEnv(); err != nil {
@@ -49,32 +58,16 @@ func TestAmbientAuthKeysNeverReachTsnet(t *testing.T) {
 			t.Fatalf("%s still set", k)
 		}
 	}
-	e, err := newTsnetEngine(testCfg(t), "", log)
+	e, err := newTsnetEngine(tsnetCfg(t), "", log)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if e.(*tsnetEngine).srv.AuthKey != "" {
 		t.Fatal("tsnet server received an auth key")
 	}
-
-	bus := events.NewBus(256, 64)
-	defer bus.Close()
-	s, err := newSession(testCfg(t), bus, log, newFakeFactory(nil, nil))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := s.Start(context.Background(), nil); err != nil {
-		t.Fatal(err)
-	}
-	_ = s.Stop(context.Background())
-	var dump strings.Builder
-	dump.WriteString(buf.String())
-	for _, p := range history(t, bus) {
-		fmt.Fprintf(&dump, "%+v", p)
-	}
 	for _, secret := range []string{a, b} {
-		if strings.Contains(dump.String(), secret) {
-			t.Fatalf("ambient secret %s leaked", secret)
+		if strings.Contains(buf.String(), secret) {
+			t.Fatalf("ambient secret %s leaked into logs", secret)
 		}
 	}
 }
@@ -86,7 +79,7 @@ func TestTsnetLogAdapterDropsAuthURL(t *testing.T) {
 	const token = "LATTICE_CANARY_TOKEN_5e7d"
 	canary := "https://login.example.com/a/" + token + "?token=" + token
 	var buf bytes.Buffer
-	e, err := newTsnetEngine(testCfg(t), "", logging.New(&buf, slog.LevelDebug))
+	e, err := newTsnetEngine(tsnetCfg(t), "", logging.New(&buf, slog.LevelDebug))
 	if err != nil {
 		t.Fatal(err)
 	}

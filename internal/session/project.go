@@ -9,11 +9,11 @@ import (
 	"tailscale.com/ipn/ipnstate"
 )
 
-func projectStatus(st *ipnstate.Status) statusSnap {
+func projectStatus(st *ipnstate.Status) EngineStatus {
 	if st == nil {
-		return statusSnap{}
+		return EngineStatus{}
 	}
-	out := statusSnap{
+	out := EngineStatus{
 		BackendState: st.BackendState,
 		AuthURL:      st.AuthURL,
 		TailscaleIPs: append([]netip.Addr(nil), st.TailscaleIPs...),
@@ -32,9 +32,9 @@ func projectStatus(st *ipnstate.Status) statusSnap {
 	return out
 }
 
-func projectPeer(p *ipnstate.PeerStatus) peerSnap {
+func projectPeer(p *ipnstate.PeerStatus) EnginePeer {
 	id := domain.NodeID(strings.TrimSpace(string(p.ID)))
-	return peerSnap{
+	return EnginePeer{
 		NodeID:    id,
 		Hostname:  p.HostName,
 		DNSName:   strings.TrimSuffix(p.DNSName, "."),
@@ -44,7 +44,7 @@ func projectPeer(p *ipnstate.PeerStatus) peerSnap {
 	}
 }
 
-func connectedInvariant(snap statusSnap) bool {
+func connectedInvariant(snap EngineStatus) bool {
 	if snap.BackendState != "Running" {
 		return false
 	}
@@ -57,7 +57,7 @@ func connectedInvariant(snap statusSnap) bool {
 	return true
 }
 
-func mapConnectionState(snap statusSnap, hadAuthPrompt bool) domain.NetworkConnectionState {
+func mapConnectionState(snap EngineStatus, hadAuthPrompt bool) domain.NetworkConnectionState {
 	switch snap.BackendState {
 	case "NeedsLogin":
 		if hadAuthPrompt || snap.AuthURL != "" {

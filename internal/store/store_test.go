@@ -354,3 +354,52 @@ func TestPathResolverRejectsTraversal(t *testing.T) {
 		t.Fatal("expected error")
 	}
 }
+
+func TestHardDeleteFSFailureLeavesSweepableTombstone(t *testing.T) {
+	if os.Getuid() == 0 {
+		t.Skip("root ignores directory permissions")
+	}
+	ctx := context.Background()
+	db := openTestDB(t)
+	root := filepath.Join(t.TempDir(), "networks")
+	if err := os.MkdirAll(root, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	n := sampleNetwork(domain.ProviderTailscale, "Personal", "host-p", "")
+	if err := db.Networks().Create(ctx, n); err != nil {
+		t.Fatal(err)
+	}
+	dirs := store.PathResolver{Root: root}
+	netDir, _ := dirs.NetworkDir(n.ID)
+	locked := filepath.Join(netDir, "tsnet")
+	if err := os.MkdirAll(filepath.Join(locked, "state"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(locked, 0o500); err != nil {
+		t.Fatal(err)
+	}
+	tomb := filepath.Join(root, ".deleting-"+string(n.ID))
+	t.Cleanup(func() { _ = os.Chmod(filepath.Join(tomb, "tsnet"), 0o700) })
+
+	err := db.HardDeleteIdentity(ctx, n.ID, dirs)
+	if !errors.Is(err, store.ErrIdentityDeletePending) {
+		t.Fatalf("got %v want ErrIdentityDeletePending", err)
+	}
+	if _, err := os.Stat(netDir); !os.IsNotExist(err) {
+		t.Fatal("identity dir must not remain under its network id")
+	}
+	if _, err := os.Stat(tomb); err != nil {
+		t.Fatalf("tombstone missing: %v", err)
+	}
+	if _, err := db.Networks().Get(ctx, n.ID); !errors.Is(err, store.ErrNotFound) {
+		t.Fatal("metadata should be gone")
+	}
+
+	_ = os.Chmod(filepath.Join(tomb, "tsnet"), 0o700)
+	if err := store.SweepDeletedIdentities(root); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(tomb); !os.IsNotExist(err) {
+		t.Fatal("tombstone not swept")
+	}
+}

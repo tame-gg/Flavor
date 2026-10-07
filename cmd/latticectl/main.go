@@ -280,13 +280,13 @@ func printExplain(out io.Writer, r *v1.InspectDestinationResponse) error {
 	if len(r.Candidates) > 0 {
 		fmt.Fprintln(out)
 		w := tabwriter.NewWriter(out, 0, 4, 2, ' ', 0)
-		fmt.Fprintln(w, "NETWORK\tDEVICE\tMATCH\tSTATUS\tADDRESSES\tNETWORK ID\tNODE ID")
+		fmt.Fprintln(w, "NETWORK\tDEVICE\tMATCH\tSTATUS\tADDRESSES")
 		for _, c := range r.Candidates {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
 				c.Network.GetDisplayName(), c.Device.GetHostname(),
 				strings.ReplaceAll(enumName(c.Match.String(), "MATCH_KIND_"), "_", " "),
 				enumName(c.Status.String(), "CANDIDATE_STATUS_"),
-				strings.Join(c.Device.GetAddresses(), ","), c.Network.GetId(), c.Device.GetId().GetNodeId())
+				strings.Join(c.Device.GetAddresses(), ","))
 		}
 		if err := w.Flush(); err != nil {
 			return err

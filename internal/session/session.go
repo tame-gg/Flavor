@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/netip"
+	"slices"
 	"sync"
 
 	"git.lunarlabs.dev/lattice/lattice/internal/domain"
@@ -332,6 +333,8 @@ func (s *Session) applyStatus(snap EngineStatus) {
 			Addresses: append([]netip.Addr(nil), p.Addresses...),
 			Online:    p.Online,
 			LastSeen:  p.LastSeen,
+			OS:        p.OS,
+			Tags:      slices.Clone(p.Tags),
 		}
 	}
 	if snap.Self != nil && snap.Self.NodeID != "" {
@@ -343,6 +346,8 @@ func (s *Session) applyStatus(snap EngineStatus) {
 			Online:    snap.Self.Online,
 			LastSeen:  snap.Self.LastSeen,
 			Local:     true,
+			OS:        snap.Self.OS,
+			Tags:      slices.Clone(snap.Self.Tags),
 		}
 	}
 

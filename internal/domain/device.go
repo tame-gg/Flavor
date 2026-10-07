@@ -23,4 +23,6 @@ type Device struct {
 	Online    bool
 	LastSeen  time.Time
 	Local     bool
+	OS        string
+	Tags      []string
 }

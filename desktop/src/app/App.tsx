@@ -14,6 +14,7 @@ import { getSettings, setSettings, setTraySummary } from "../lib/api/daemon";
 import { errorMessage } from "../lib/api/errors";
 import type { LoadedSettings, Settings } from "../lib/api/types";
 import { visiblePages, type Page } from "./navigation";
+import { deviceKey } from "./sync/controller";
 import { useDaemon } from "./sync/useDaemon";
 
 export function App() {
@@ -22,6 +23,7 @@ export function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [deviceNetwork, setDeviceNetwork] = useState("");
   const [deviceQuery, setDeviceQuery] = useState("");
+  const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
   const [inspectorQuery, setInspectorQuery] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [welcomeDone, setWelcomeDone] = useState(false);
@@ -92,9 +94,10 @@ export function App() {
     setSelectedId(id);
     setPage("networks");
   };
-  const showDevice = (networkId: string, search: string) => {
-    setDeviceNetwork(networkId);
-    setDeviceQuery(search);
+  const showDevice = (networkId: string, nodeId: string) => {
+    setDeviceNetwork("");
+    setDeviceQuery("");
+    setSelectedDevice(deviceKey(networkId, nodeId));
     setPage("devices");
   };
   const inspect = (destination: string) => {
@@ -139,7 +142,17 @@ export function App() {
           />
         )}
         {page === "devices" && (
-          <DevicesPage networkId={deviceNetwork} onNetworkChange={setDeviceNetwork} query={deviceQuery} onQueryChange={setDeviceQuery} />
+          <DevicesPage
+            networkId={deviceNetwork}
+            onNetworkChange={setDeviceNetwork}
+            query={deviceQuery}
+            onQueryChange={setDeviceQuery}
+            selected={selectedDevice}
+            onSelect={setSelectedDevice}
+            onInspect={inspect}
+            onOpenNetwork={openNetwork}
+            canInspect={info.capabilities.includes(Capability.CONNECTION_INSPECTOR)}
+          />
         )}
         {page === "inspector" && info.capabilities.includes(Capability.CONNECTION_INSPECTOR) && (
           <InspectorPage query={inspectorQuery} onQueryChange={setInspectorQuery} onOpenNetwork={openNetwork} onShowDevice={showDevice} />

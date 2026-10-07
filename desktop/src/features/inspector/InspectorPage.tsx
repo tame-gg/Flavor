@@ -21,7 +21,7 @@ type Props = {
   query: string;
   onQueryChange: (q: string) => void;
   onOpenNetwork: (networkId: string) => void;
-  onShowDevice: (networkId: string, search: string) => void;
+  onShowDevice: (networkId: string, nodeId: string) => void;
 };
 
 const decisionTone: Record<ResolutionDecision, string> = {
@@ -164,7 +164,7 @@ function CandidateRow({
 }: {
   candidate: ResolutionCandidate;
   onOpenNetwork: (id: string) => void;
-  onShowDevice: (networkId: string, search: string) => void;
+  onShowDevice: (networkId: string, nodeId: string) => void;
 }) {
   const d = c.device;
   const n = c.network;
@@ -203,7 +203,7 @@ function CandidateRow({
         {address && <CopyButton value={address} label="Copy address" />}
         {d.dnsName && <CopyButton value={d.dnsName} label="Copy DNS name" />}
         <span className="spacer" />
-        <Button onClick={() => onShowDevice(n.id, name)}>Show device</Button>
+        {d.id && <Button onClick={() => onShowDevice(n.id, d.id!.nodeId)}>Show device</Button>}
         <Button onClick={() => onOpenNetwork(n.id)}>Open network</Button>
       </div>
     </li>

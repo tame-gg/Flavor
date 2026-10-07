@@ -2,6 +2,7 @@ package session
 
 import (
 	"net/netip"
+	"slices"
 	"strings"
 	"time"
 
@@ -41,7 +42,16 @@ func projectPeer(p *ipnstate.PeerStatus) EnginePeer {
 		Addresses: append([]netip.Addr(nil), p.TailscaleIPs...),
 		Online:    p.Online,
 		LastSeen:  p.LastSeen.UTC(),
+		OS:        p.OS,
+		Tags:      tags(p),
 	}
+}
+
+func tags(p *ipnstate.PeerStatus) []string {
+	if p.Tags == nil || p.Tags.Len() == 0 {
+		return nil
+	}
+	return p.Tags.AsSlice()
 }
 
 func connectedInvariant(snap EngineStatus) bool {
@@ -86,7 +96,7 @@ func mapConnectionState(snap EngineStatus, hadAuthPrompt bool) domain.NetworkCon
 }
 
 func deviceEqual(a, b domain.Device) bool {
-	if a.ID != b.ID || a.Hostname != b.Hostname || a.DNSName != b.DNSName || a.Online != b.Online || a.Local != b.Local {
+	if a.ID != b.ID || a.Hostname != b.Hostname || a.DNSName != b.DNSName || a.Online != b.Online || a.Local != b.Local || a.OS != b.OS || !slices.Equal(a.Tags, b.Tags) {
 		return false
 	}
 	if !a.LastSeen.Equal(b.LastSeen) {
@@ -108,6 +118,7 @@ func cloneDevice(d domain.Device) domain.Device {
 	if d.Addresses != nil {
 		out.Addresses = append([]netip.Addr(nil), d.Addresses...)
 	}
+	out.Tags = slices.Clone(d.Tags)
 	if !d.LastSeen.IsZero() {
 		out.LastSeen = d.LastSeen.UTC()
 	}

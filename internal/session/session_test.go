@@ -465,3 +465,61 @@ func waitState(t *testing.T, s *session.Session, want domain.NetworkConnectionSt
 	}
 	t.Fatalf("state=%s want=%s", s.State(), want)
 }
+
+func TestPeerMetadataChangesAreProjectedAndAnnounced(t *testing.T) {
+	id := domain.NewNetworkID()
+	bus := events.NewBus(64, 8)
+	defer bus.Close()
+	sub, err := bus.Subscribe(context.Background(), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer sub.Close()
+	eng := sessiontest.NewEngine()
+	st := sessiontest.StatusWithPeer("peer-a", "100.64.0.2")
+	st.Peers[0].OS = "linux"
+	st.Peers[0].Tags = []string{"tag:db"}
+	eng.SetStatus(st)
+	s, err := session.NewSessionWithFactory(cfgFor(id, "host-a"), bus, nil, sessiontest.Shared(eng))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Start(context.Background(), nil); err != nil {
+		t.Fatal(err)
+	}
+	waitState(t, s, domain.StateConnected)
+	var self, peer domain.Device
+	for _, d := range s.Devices() {
+		if d.Local {
+			self = d
+		} else {
+			peer = d
+		}
+	}
+	if self.ID.NodeID != "node-self" || peer.OS != "linux" || len(peer.Tags) != 1 || peer.Tags[0] != "tag:db" || peer.Local {
+		t.Fatalf("self=%+v peer=%+v", self, peer)
+	}
+	peer.Tags[0] = "mutated"
+	for _, d := range s.Devices() {
+		if len(d.Tags) > 0 && d.Tags[0] == "mutated" {
+			t.Fatal("tags share memory with the session")
+		}
+	}
+
+	next := sessiontest.StatusWithPeer("peer-a", "100.64.0.2")
+	next.Peers[0].OS = "linux"
+	next.Peers[0].Tags = []string{"tag:db", "tag:prod"}
+	eng.SetStatus(next)
+	eng.PushNetMap()
+	deadline := time.After(2 * time.Second)
+	for {
+		select {
+		case ev := <-sub.Events:
+			if p, ok := ev.Payload.(events.PeerUpdated); ok && len(p.Device.Tags) == 2 {
+				return
+			}
+		case <-deadline:
+			t.Fatal("tag change did not emit PeerUpdated")
+		}
+	}
+}

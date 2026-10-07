@@ -21,6 +21,8 @@ message Device {
   bool online = 5;
   google.protobuf.Timestamp last_seen = 6;
   bool local = 7;
+  string os = 8;
+  repeated string tags = 9;
 }
 
 message ListDevicesRequest {

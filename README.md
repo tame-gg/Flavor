@@ -62,8 +62,16 @@ The system Tailscale client joins one tailnet at a time. Switching between a wor
     <td width="50%" valign="top"><b>Remove vs delete</b><br>Removing a network keeps its identity on disk for later. Deleting the identity is a separate, explicit step. Lattice never deletes machines on the control server.</td>
   </tr>
   <tr>
+    <td width="50%" valign="top"><b>Connection Inspector</b><br>Type an address or name and see every network it exists on, which device matched, how it matched, and whether the answer is unique. The same engine powers <code>latticectl explain</code>.</td>
+    <td width="50%" valign="top"><b>Conflict Center</b><br>Every address, DNS name and device name that exists more than once, split into expected overlaps that network-specific names resolve and real ambiguities.</td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><b>Device Explorer</b><br>Search all networks at once by name, address, network, OS or tag, with qualifiers like <code>is:online</code> and <code>tag:db</code>. Each device opens a details panel with copy, inspect and SSH actions.</td>
     <td width="50%" valign="top"><b>Live and resilient UI</b><br>A snapshot plus an ordered event stream. The UI resyncs on gaps or daemon restarts and keeps showing last-known state while the daemon is away.</td>
-    <td width="50%" valign="top"><b>Scriptable</b><br><code>latticectl</code> speaks the same API as the desktop app.</td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><b>Scriptable</b><br><code>latticectl</code> speaks the same API as the desktop app, with <code>--json</code> output for automation.</td>
+    <td width="50%" valign="top"><b>Private by default</b><br>No telemetry. Device inventories, sign-in links and keys stay on your machine, and Tailscale log upload is disabled for every session.</td>
   </tr>
 </table>
 
@@ -131,6 +139,17 @@ ID                          NAME      PROVIDER   STATE           AUTO
 01JA7Q3M0000000000000WORK0  Work      tailscale  authenticating  false
 sign in to Work: https://login.tailscale.com/a/…
 
+$ latticectl explain 100.64.0.1
+destination  100.64.0.1 (address)
+decision     ambiguous: exists on 2 network(s); use a full DNS name to pick one
+reason       multiple matches
+
+NETWORK    DEVICE    MATCH           STATUS  ADDRESSES
+Home       desktop   device address  tied    100.64.0.1
+LunarLabs  prod-api  device address  tied    100.64.0.1
+
+$ latticectl conflicts
+$ latticectl --json explain prod-api
 $ latticectl devices
 $ latticectl remove [--delete-identity] <network-id>
 $ latticectl diag

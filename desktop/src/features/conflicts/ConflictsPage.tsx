@@ -11,7 +11,7 @@ import { counts, describe, filterConflicts, typeLabel, type SeverityFilter, type
 type Props = {
   onInspect: (destination: string) => void;
   onOpenNetwork: (networkId: string) => void;
-  onShowDevice: (networkId: string, search: string) => void;
+  onShowDevice: (networkId: string, nodeId: string) => void;
 };
 
 export function ConflictsPage({ onInspect, onOpenNetwork, onShowDevice }: Props) {
@@ -180,7 +180,7 @@ function ConflictCard({ conflict: c, onInspect, onOpenNetwork, onShowDevice }: {
                 )}
               </span>
               <span role="cell" className="row member-actions">
-                <Button variant="ghost" aria-label={`Show ${name} on ${net.displayName} in Devices`} onClick={() => onShowDevice(net.id, name)}>
+                <Button variant="ghost" aria-label={`Show ${name} on ${net.displayName} in Devices`} onClick={() => d.id && onShowDevice(net.id, d.id.nodeId)}>
                   Device
                 </Button>
                 <Button variant="ghost" aria-label={`Open ${net.displayName}`} onClick={() => onOpenNetwork(net.id)}>

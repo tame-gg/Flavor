@@ -53,11 +53,20 @@ func main() {
 
 var peerNames = []string{"postgres", "grafana", "prod-api", "nas", "build-runner", "pi-hole"}
 
+var peerTags = map[string][]string{
+	"postgres": {"tag:db"},
+	"grafana":  {"tag:monitoring"},
+	"prod-api": {"tag:prod", "tag:api"},
+}
+
+var peerOS = []string{"linux", "linux", "linux", "windows", "macOS", "linux"}
+
 func status(cfg provider.ResolvedSessionConfig, n, peers int) session.EngineStatus {
 	id := cfg.NetworkID
 	st := sessiontest.StatusSelf("self-"+string(id), "100.64.0.1")
 	st.Self.Hostname = cfg.NodeHostname
 	st.Self.DNSName = cfg.NodeHostname + "." + strings.ToLower(string(id)) + ".lattice.test"
+	st.Self.OS = "linux"
 	for i := range peers {
 		addr := netip.AddrFrom4([4]byte{100, 64, byte((i + 2) >> 8), byte(i + 2)})
 		node := fmt.Sprintf("peer-%04d", i+1)
@@ -70,6 +79,8 @@ func status(cfg provider.ResolvedSessionConfig, n, peers int) session.EngineStat
 			DNSName:   node + "." + strings.ToLower(string(id)) + ".lattice.test.",
 			Addresses: []netip.Addr{addr},
 			Online:    i%4 != 3,
+			OS:        peerOS[(i+n)%len(peerOS)],
+			Tags:      peerTags[node],
 		})
 	}
 	return st

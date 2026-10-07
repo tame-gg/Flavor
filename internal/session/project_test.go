@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"git.lunarlabs.dev/lattice/lattice/internal/domain"
+	"tailscale.com/ipn/ipnstate"
+	"tailscale.com/types/views"
 )
 
 func TestConnectedInvariant(t *testing.T) {
@@ -60,5 +62,33 @@ func TestDeviceEqual(t *testing.T) {
 	b.Hostname = "x"
 	if deviceEqual(a, b) {
 		t.Fatal("hostname")
+	}
+}
+
+func TestProjectPeerCarriesOSAndTags(t *testing.T) {
+	tags := views.SliceOf([]string{"tag:db", "tag:prod"})
+	p := projectPeer(&ipnstate.PeerStatus{
+		ID:       "n1",
+		HostName: "postgres",
+		DNSName:  "postgres.example.ts.net.",
+		OS:       "linux",
+		Tags:     &tags,
+	})
+	if p.OS != "linux" || len(p.Tags) != 2 || p.Tags[1] != "tag:prod" || p.DNSName != "postgres.example.ts.net" {
+		t.Fatalf("%+v", p)
+	}
+	if bare := projectPeer(&ipnstate.PeerStatus{ID: "n2"}); bare.Tags != nil {
+		t.Fatalf("%+v", bare)
+	}
+	a := domain.Device{ID: domain.DeviceIdentity{NodeID: "n1"}, Tags: []string{"tag:db"}}
+	b := a
+	b.Tags = []string{"tag:db", "tag:prod"}
+	if deviceEqual(a, b) {
+		t.Fatal("tag change not detected")
+	}
+	b = a
+	b.OS = "windows"
+	if deviceEqual(a, b) {
+		t.Fatal("os change not detected")
 	}
 }

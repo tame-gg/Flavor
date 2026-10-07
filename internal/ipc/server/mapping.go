@@ -112,6 +112,8 @@ func device(d domain.Device) *v1.Device {
 		Online:   d.Online,
 		LastSeen: timestamp(d.LastSeen),
 		Local:    d.Local,
+		Os:       d.OS,
+		Tags:     append([]string(nil), d.Tags...),
 	}
 	for _, a := range d.Addresses {
 		out.Addresses = append(out.Addresses, a.String())

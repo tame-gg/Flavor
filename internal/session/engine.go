@@ -26,6 +26,8 @@ type EnginePeer struct {
 	Addresses []netip.Addr
 	Online    bool
 	LastSeen  time.Time
+	OS        string
+	Tags      []string
 }
 
 type EngineStatus struct {

@@ -183,7 +183,8 @@ function CandidateRow({
       <dl className="dl">
         <dt>Device</dt>
         <dd>
-          {name} <span className={`badge ${d.online ? "badge-ok" : ""}`}>{d.online ? "Online" : "Offline"}</span>
+          {name} <span className={`badge ${d.online ? "badge-ok" : ""}`}>{d.online ? "Online" : "Offline"}</span>{" "}
+          {d.local && <span className="badge">This device</span>}
         </dd>
         <dt>Matched</dt>
         <dd>

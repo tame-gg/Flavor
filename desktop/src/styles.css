@@ -792,3 +792,41 @@ summary {
 .inspect-form .btn {
   height: 36px;
 }
+
+.member-table {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+}
+
+.member-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 2fr) 168px;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+  font-size: var(--text-sm);
+}
+
+.member-row:last-child {
+  border-bottom: 0;
+}
+
+.member-head {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.member-addr {
+  display: block;
+}
+
+.member-actions {
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  gap: var(--space-1);
+}

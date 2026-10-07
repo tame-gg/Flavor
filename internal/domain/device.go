@@ -22,4 +22,5 @@ type Device struct {
 	Addresses []netip.Addr
 	Online    bool
 	LastSeen  time.Time
+	Local     bool
 }

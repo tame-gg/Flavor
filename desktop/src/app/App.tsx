@@ -3,6 +3,7 @@ import { Capability, NetworkConnectionState } from "@gen/lattice/v1/common_pb";
 import logo from "../logo.svg";
 import { Banner } from "../components/ui/Banner";
 import { Button } from "../components/ui/Button";
+import { ConflictsPage } from "../features/conflicts/ConflictsPage";
 import { DevicesPage } from "../features/devices/DevicesPage";
 import { DiagnosticsPage } from "../features/diagnostics/DiagnosticsPage";
 import { InspectorPage } from "../features/inspector/InspectorPage";
@@ -87,6 +88,20 @@ export function App() {
     );
   }
 
+  const openNetwork = (id: string) => {
+    setSelectedId(id);
+    setPage("networks");
+  };
+  const showDevice = (networkId: string, search: string) => {
+    setDeviceNetwork(networkId);
+    setDeviceQuery(search);
+    setPage("devices");
+  };
+  const inspect = (destination: string) => {
+    setInspectorQuery(destination);
+    setPage("inspector");
+  };
+
   return (
     <div className="shell">
       <aside className="sidebar">
@@ -127,19 +142,10 @@ export function App() {
           <DevicesPage networkId={deviceNetwork} onNetworkChange={setDeviceNetwork} query={deviceQuery} onQueryChange={setDeviceQuery} />
         )}
         {page === "inspector" && info.capabilities.includes(Capability.CONNECTION_INSPECTOR) && (
-          <InspectorPage
-            query={inspectorQuery}
-            onQueryChange={setInspectorQuery}
-            onOpenNetwork={(id) => {
-              setSelectedId(id);
-              setPage("networks");
-            }}
-            onShowDevice={(networkId, search) => {
-              setDeviceNetwork(networkId);
-              setDeviceQuery(search);
-              setPage("devices");
-            }}
-          />
+          <InspectorPage query={inspectorQuery} onQueryChange={setInspectorQuery} onOpenNetwork={openNetwork} onShowDevice={showDevice} />
+        )}
+        {page === "conflicts" && info.capabilities.includes(Capability.CONFLICT_CENTER) && (
+          <ConflictsPage onInspect={inspect} onOpenNetwork={openNetwork} onShowDevice={showDevice} />
         )}
         {page === "diagnostics" && <DiagnosticsPage />}
         {page === "settings" && <SettingsPage settings={settings} error={settingsError} onChange={(s) => void changeSettings(s)} />}

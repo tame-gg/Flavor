@@ -10,4 +10,9 @@ describe("visiblePages", () => {
   it("shows it once the daemon advertises the capability", () => {
     expect(visiblePages([Capability.CONNECTION_INSPECTOR]).map(([id]) => id)).toContain("inspector");
   });
+
+  it("gates the Conflict Center separately", () => {
+    expect(visiblePages([Capability.CONNECTION_INSPECTOR]).map(([id]) => id)).not.toContain("conflicts");
+    expect(visiblePages([Capability.CONFLICT_CENTER]).map(([id]) => id)).toContain("conflicts");
+  });
 });

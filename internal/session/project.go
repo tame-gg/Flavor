@@ -86,7 +86,7 @@ func mapConnectionState(snap EngineStatus, hadAuthPrompt bool) domain.NetworkCon
 }
 
 func deviceEqual(a, b domain.Device) bool {
-	if a.ID != b.ID || a.Hostname != b.Hostname || a.DNSName != b.DNSName || a.Online != b.Online {
+	if a.ID != b.ID || a.Hostname != b.Hostname || a.DNSName != b.DNSName || a.Online != b.Online || a.Local != b.Local {
 		return false
 	}
 	if !a.LastSeen.Equal(b.LastSeen) {

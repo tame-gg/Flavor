@@ -172,6 +172,11 @@ pub async fn inspect_destination(daemon: State<'_, Daemon>, destination: String)
 }
 
 #[tauri::command]
+pub async fn list_conflicts(daemon: State<'_, Daemon>) -> Result<ListConflictsResponse> {
+    Ok(daemon.client()?.conflicts.list_conflicts(Default::default()).await?.into_owned())
+}
+
+#[tauri::command]
 pub async fn open_auth_url(
     app: AppHandle,
     daemon: State<'_, Daemon>,

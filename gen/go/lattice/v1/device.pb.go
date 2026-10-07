@@ -82,6 +82,7 @@ type Device struct {
 	Addresses     []string               `protobuf:"bytes,4,rep,name=addresses,proto3" json:"addresses,omitempty"`
 	Online        bool                   `protobuf:"varint,5,opt,name=online,proto3" json:"online,omitempty"`
 	LastSeen      *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"`
+	Local         bool                   `protobuf:"varint,7,opt,name=local,proto3" json:"local,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -156,6 +157,13 @@ func (x *Device) GetLastSeen() *timestamppb.Timestamp {
 		return x.LastSeen
 	}
 	return nil
+}
+
+func (x *Device) GetLocal() bool {
+	if x != nil {
+		return x.Local
+	}
+	return false
 }
 
 type ListDevicesRequest struct {
@@ -271,14 +279,15 @@ const file_lattice_v1_device_proto_rawDesc = "" +
 	"\x0eDeviceIdentity\x12\x1d\n" +
 	"\n" +
 	"network_id\x18\x01 \x01(\tR\tnetworkId\x12\x17\n" +
-	"\anode_id\x18\x02 \x01(\tR\x06nodeId\"\xda\x01\n" +
+	"\anode_id\x18\x02 \x01(\tR\x06nodeId\"\xf0\x01\n" +
 	"\x06Device\x12*\n" +
 	"\x02id\x18\x01 \x01(\v2\x1a.lattice.v1.DeviceIdentityR\x02id\x12\x1a\n" +
 	"\bhostname\x18\x02 \x01(\tR\bhostname\x12\x19\n" +
 	"\bdns_name\x18\x03 \x01(\tR\adnsName\x12\x1c\n" +
 	"\taddresses\x18\x04 \x03(\tR\taddresses\x12\x16\n" +
 	"\x06online\x18\x05 \x01(\bR\x06online\x127\n" +
-	"\tlast_seen\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\blastSeen\"3\n" +
+	"\tlast_seen\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\blastSeen\x12\x14\n" +
+	"\x05local\x18\a \x01(\bR\x05local\"3\n" +
 	"\x12ListDevicesRequest\x12\x1d\n" +
 	"\n" +
 	"network_id\x18\x01 \x01(\tR\tnetworkId\"\x9e\x01\n" +

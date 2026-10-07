@@ -34,8 +34,9 @@ commands:
   remove [--delete-identity] <network-id>
   diag                                 safe diagnostics summary
   explain <destination>                which network an address or name belongs to, and why
+  conflicts                            addresses and names that exist more than once
 
---json prints the daemon response as JSON for info, list, devices, diag and explain.
+--json prints the daemon response as JSON for info, list, devices, diag, explain and conflicts.
 `
 
 func main() {
@@ -234,6 +235,15 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSO
 			return emit(out, res.Msg)
 		}
 		return printExplain(out, res.Msg)
+	case "conflicts":
+		res, err := c.Conflicts.ListConflicts(ctx, connect.NewRequest(&v1.ListConflictsRequest{}))
+		if err != nil {
+			return err
+		}
+		if asJSON {
+			return emit(out, res.Msg)
+		}
+		return printConflicts(out, res.Msg)
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", cmd, usage)
 	}
@@ -277,6 +287,46 @@ func printExplain(out io.Writer, r *v1.InspectDestinationResponse) error {
 				strings.ReplaceAll(enumName(c.Match.String(), "MATCH_KIND_"), "_", " "),
 				enumName(c.Status.String(), "CANDIDATE_STATUS_"),
 				strings.Join(c.Device.GetAddresses(), ","), c.Network.GetId(), c.Device.GetId().GetNodeId())
+		}
+		if err := w.Flush(); err != nil {
+			return err
+		}
+	}
+	if len(r.NotInspected) > 0 {
+		names := make([]string, 0, len(r.NotInspected))
+		for _, n := range r.NotInspected {
+			names = append(names, n.DisplayName)
+		}
+		fmt.Fprintf(out, "\nnot checked (not connected): %s\n", strings.Join(names, ", "))
+	}
+	return nil
+}
+
+func printConflicts(out io.Writer, r *v1.ListConflictsResponse) error {
+	if len(r.Conflicts) == 0 {
+		fmt.Fprintln(out, "no addresses or names exist more than once on your connected networks")
+	}
+	for i, c := range r.Conflicts {
+		if i > 0 {
+			fmt.Fprintln(out)
+		}
+		kind := strings.ReplaceAll(enumName(c.Type.String(), "CONFLICT_TYPE_"), "_", " ")
+		state := "expected overlap: network-specific DNS names stay unambiguous"
+		if c.Severity == v1.ConflictSeverity_CONFLICT_SEVERITY_AMBIGUOUS {
+			state = "ambiguous: no network-specific name tells these apart"
+			if c.Scope == v1.ConflictScope_CONFLICT_SCOPE_WITHIN_NETWORK {
+				state = "ambiguous: several devices on one network share it"
+			}
+		}
+		fmt.Fprintf(out, "%s  %s\n  %s\n  id %s\n", c.Value, kind, state, c.Id)
+		w := tabwriter.NewWriter(out, 0, 4, 2, ' ', 0)
+		fmt.Fprintln(w, "  NETWORK\tDEVICE\tADDRESSES\tUNIQUE NAME")
+		for _, m := range c.Members {
+			name := m.UniqueName
+			if name == "" {
+				name = "-"
+			}
+			fmt.Fprintf(w, "  %s\t%s\t%s\t%s\n", m.Network.GetDisplayName(), m.Device.GetHostname(), strings.Join(m.Device.GetAddresses(), ","), name)
 		}
 		if err := w.Flush(); err != nil {
 			return err

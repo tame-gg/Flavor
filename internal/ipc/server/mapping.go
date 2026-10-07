@@ -21,6 +21,7 @@ var capabilities = map[string]v1.Capability{
 	"headscale":            v1.Capability_CAPABILITY_HEADSCALE,
 	"device_snapshots":     v1.Capability_CAPABILITY_DEVICE_SNAPSHOTS,
 	"connection_inspector": v1.Capability_CAPABILITY_CONNECTION_INSPECTOR,
+	"conflict_center":      v1.Capability_CAPABILITY_CONFLICT_CENTER,
 }
 
 func daemonInfo(info service.DaemonInfo) *v1.GetDaemonInfoResponse {
@@ -110,6 +111,7 @@ func device(d domain.Device) *v1.Device {
 		DnsName:  d.DNSName,
 		Online:   d.Online,
 		LastSeen: timestamp(d.LastSeen),
+		Local:    d.Local,
 	}
 	for _, a := range d.Addresses {
 		out.Addresses = append(out.Addresses, a.String())

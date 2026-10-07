@@ -32,6 +32,7 @@ fn main() {
             commands::delete_network_identity,
             commands::run_diagnostics,
             commands::inspect_destination,
+            commands::list_conflicts,
             commands::open_auth_url,
             commands::get_settings,
             commands::set_settings,

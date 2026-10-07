@@ -4,6 +4,7 @@ fn main() {
         .descriptor_set("lattice.binpb")
         .files(&[
             "lattice/v1/common.proto",
+            "lattice/v1/conflicts.proto",
             "lattice/v1/daemon.proto",
             "lattice/v1/device.proto",
             "lattice/v1/diagnostics.proto",

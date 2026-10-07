@@ -31,6 +31,7 @@ func New(svc *service.Service) *http.Server {
 	mux.Handle(latticev1connect.NewDiagnosticsServiceHandler(h, opts...))
 	mux.Handle(latticev1connect.NewEventServiceHandler(h, opts...))
 	mux.Handle(latticev1connect.NewInspectorServiceHandler(h, opts...))
+	mux.Handle(latticev1connect.NewConflictServiceHandler(h, opts...))
 	var p http.Protocols
 	p.SetUnencryptedHTTP2(true)
 	return &http.Server{

@@ -342,6 +342,7 @@ func (s *Session) applyStatus(snap EngineStatus) {
 			Addresses: append([]netip.Addr(nil), snap.Self.Addresses...),
 			Online:    snap.Self.Online,
 			LastSeen:  snap.Self.LastSeen,
+			Local:     true,
 		}
 	}
 

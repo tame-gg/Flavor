@@ -20,6 +20,7 @@ message Device {
   repeated string addresses = 4;
   bool online = 5;
   google.protobuf.Timestamp last_seen = 6;
+  bool local = 7;
 }
 
 message ListDevicesRequest {

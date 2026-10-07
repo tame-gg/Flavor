@@ -238,6 +238,7 @@ const (
 	Capability_CAPABILITY_HEADSCALE            Capability = 1
 	Capability_CAPABILITY_DEVICE_SNAPSHOTS     Capability = 2
 	Capability_CAPABILITY_CONNECTION_INSPECTOR Capability = 3
+	Capability_CAPABILITY_CONFLICT_CENTER      Capability = 4
 )
 
 // Enum value maps for Capability.
@@ -247,12 +248,14 @@ var (
 		1: "CAPABILITY_HEADSCALE",
 		2: "CAPABILITY_DEVICE_SNAPSHOTS",
 		3: "CAPABILITY_CONNECTION_INSPECTOR",
+		4: "CAPABILITY_CONFLICT_CENTER",
 	}
 	Capability_value = map[string]int32{
 		"CAPABILITY_UNSPECIFIED":          0,
 		"CAPABILITY_HEADSCALE":            1,
 		"CAPABILITY_DEVICE_SNAPSHOTS":     2,
 		"CAPABILITY_CONNECTION_INSPECTOR": 3,
+		"CAPABILITY_CONFLICT_CENTER":      4,
 	}
 )
 
@@ -387,13 +390,14 @@ const file_lattice_v1_common_proto_rawDesc = "" +
 	"\"LATTICE_ERROR_CODE_RESYNC_REQUIRED\x10\f\x12+\n" +
 	"'LATTICE_ERROR_CODE_DAEMON_SHUTTING_DOWN\x10\r\x12'\n" +
 	"#LATTICE_ERROR_CODE_INVALID_ARGUMENT\x10\x0e\x12\x1f\n" +
-	"\x1bLATTICE_ERROR_CODE_INTERNAL\x10\x0f*\x88\x01\n" +
+	"\x1bLATTICE_ERROR_CODE_INTERNAL\x10\x0f*\xa8\x01\n" +
 	"\n" +
 	"Capability\x12\x1a\n" +
 	"\x16CAPABILITY_UNSPECIFIED\x10\x00\x12\x18\n" +
 	"\x14CAPABILITY_HEADSCALE\x10\x01\x12\x1f\n" +
 	"\x1bCAPABILITY_DEVICE_SNAPSHOTS\x10\x02\x12#\n" +
-	"\x1fCAPABILITY_CONNECTION_INSPECTOR\x10\x03B\xa5\x01\n" +
+	"\x1fCAPABILITY_CONNECTION_INSPECTOR\x10\x03\x12\x1e\n" +
+	"\x1aCAPABILITY_CONFLICT_CENTER\x10\x04B\xa5\x01\n" +
 	"\x0ecom.lattice.v1B\vCommonProtoP\x01Z=git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1;latticev1\xa2\x02\x03LXX\xaa\x02\n" +
 	"Lattice.V1\xca\x02\n" +
 	"Lattice\\V1\xe2\x02\x16Lattice\\V1\\GPBMetadata\xea\x02\vLattice::V1b\x06proto3"

@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { GetStateSnapshotResponseSchema, type GetStateSnapshotResponse } from "@gen/lattice/v1/daemon_pb";
 import { RunDiagnosticsResponseSchema, type RunDiagnosticsResponse } from "@gen/lattice/v1/diagnostics_pb";
+import { ListConflictsResponseSchema, type ListConflictsResponse } from "@gen/lattice/v1/conflicts_pb";
 import { DaemonEventSchema } from "@gen/lattice/v1/events_pb";
 import { InspectDestinationResponseSchema, type InspectDestinationResponse } from "@gen/lattice/v1/inspector_pb";
 import { NetworkSchema, type Network } from "@gen/lattice/v1/network_pb";
@@ -57,6 +58,10 @@ export async function runDiagnostics(): Promise<RunDiagnosticsResponse> {
 
 export async function inspectDestination(destination: string): Promise<InspectDestinationResponse> {
   return fromJson(InspectDestinationResponseSchema, await invoke<JsonValue>("inspect_destination", { destination }), options);
+}
+
+export async function listConflicts(): Promise<ListConflictsResponse> {
+  return fromJson(ListConflictsResponseSchema, await invoke<JsonValue>("list_conflicts"), options);
 }
 
 export const getSettings = () => invoke<LoadedSettings>("get_settings");

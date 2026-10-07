@@ -25,14 +25,14 @@ func main() {
 	peers := flag.Int("peers", 3, "synthetic peers per connected network")
 	flag.Parse()
 
-	seq := &sessiontest.Sequence{Prepare: func(_ int, cfg provider.ResolvedSessionConfig, e *sessiontest.Engine) {
+	seq := &sessiontest.Sequence{Prepare: func(n int, cfg provider.ResolvedSessionConfig, e *sessiontest.Engine) {
 		switch host := strings.ToLower(cfg.ControlURL); {
 		case strings.Contains(host, "login"):
 			e.SetStatus(sessiontest.StatusNeedsLogin("https://login.example.com/a/" + string(cfg.NetworkID)))
 		case strings.Contains(host, "approval"):
 			e.SetStatus(sessiontest.StatusNeedsMachineAuth())
 		default:
-			e.SetStatus(status(cfg, *peers))
+			e.SetStatus(status(cfg, n, *peers))
 		}
 	}}
 
@@ -53,7 +53,7 @@ func main() {
 
 var peerNames = []string{"postgres", "grafana", "prod-api", "nas", "build-runner", "pi-hole"}
 
-func status(cfg provider.ResolvedSessionConfig, peers int) session.EngineStatus {
+func status(cfg provider.ResolvedSessionConfig, n, peers int) session.EngineStatus {
 	id := cfg.NetworkID
 	st := sessiontest.StatusSelf("self-"+string(id), "100.64.0.1")
 	st.Self.Hostname = cfg.NodeHostname
@@ -62,7 +62,7 @@ func status(cfg provider.ResolvedSessionConfig, peers int) session.EngineStatus 
 		addr := netip.AddrFrom4([4]byte{100, 64, byte((i + 2) >> 8), byte(i + 2)})
 		node := fmt.Sprintf("peer-%04d", i+1)
 		if i < len(peerNames) {
-			node = peerNames[i]
+			node = peerNames[(i+n)%len(peerNames)]
 		}
 		st.Peers = append(st.Peers, session.EnginePeer{
 			NodeID:    domain.NodeID(fmt.Sprintf("%s-%d", id, i+1)),

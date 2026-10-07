@@ -230,9 +230,19 @@ async fn inspector_reports_duplicate_addresses_and_unique_names() {
     assert_eq!(uniq.reason, DecisionReason::DECISION_REASON_DEVICE_DNS_NAME);
     assert_eq!(uniq.candidates[0].network.id, a.id);
 
-    let collide = inspect("postgres").await.unwrap();
+    let collide = inspect("grafana").await.unwrap();
     assert_eq!(collide.decision, ResolutionDecision::RESOLUTION_DECISION_AMBIGUOUS);
 
     let err = lattice_ipc::IpcError::from(inspect("not a destination").await.unwrap_err());
     assert_eq!(err.lattice_code(), Some(LatticeErrorCode::LATTICE_ERROR_CODE_INVALID_ARGUMENT));
+
+    let conflicts = client.conflicts.list_conflicts(ListConflictsRequest::default()).await.unwrap().into_owned();
+    let ids: HashSet<_> = conflicts.conflicts.iter().map(|c| c.id.clone()).collect();
+    assert!(ids.contains("address:100.64.0.2"), "{ids:?}");
+    assert!(ids.contains("name:grafana"), "{ids:?}");
+    assert!(!ids.contains("name:postgres"), "{ids:?}");
+    assert!(!ids.contains("address:100.64.0.1"), "this machine reported as a conflict: {ids:?}");
+    let addr = conflicts.conflicts.iter().find(|c| c.id == "address:100.64.0.2").unwrap();
+    assert_eq!(addr.severity, ConflictSeverity::CONFLICT_SEVERITY_EXPECTED);
+    assert!(addr.network_context_resolves);
 }

@@ -18,6 +18,7 @@
     "allow-delete-network-identity",
     "allow-run-diagnostics",
     "allow-inspect-destination",
+    "allow-list-conflicts",
     "allow-open-auth-url",
     "allow-get-settings",
     "allow-set-settings",

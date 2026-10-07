@@ -1,0 +1,15 @@
+[Unit]
+Description=Lattice network daemon
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/latticed
+Restart=on-failure
+RestartSec=2
+RestartPreventExitStatus=2 3
+TimeoutStopSec=30
+NoNewPrivileges=yes
+LockPersonality=yes
+
+[Install]
+WantedBy=default.target

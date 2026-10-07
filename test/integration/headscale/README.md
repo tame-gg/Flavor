@@ -32,7 +32,7 @@ Prints a one-time reusable=false pre-auth key to stdout. Do not commit keys.
 export LATTICE_INTEGRATION=1
 export LATTICE_HEADSCALE_URL=http://127.0.0.1:18080
 export LATTICE_HEADSCALE_AUTHKEY="$(./test/integration/headscale/scripts/create-preauth-key.sh a lattice)"
-go test ./internal/session -run TestIntegrationHeadscale -count=1 -v
+./scripts/go.sh test ./internal/session -run TestIntegrationHeadscale -count=1 -v
 ```
 
 Ordinary `go test ./...` skips this test when `LATTICE_INTEGRATION` is unset.

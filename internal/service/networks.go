@@ -269,11 +269,13 @@ func (s *Service) RemoveNetwork(ctx context.Context, rawID string) error {
 		return err
 	}
 	affected := s.workspacesContaining(ctx, id)
+	prefs := s.preferencesFor(ctx, id)
 	if err := s.cfg.Store.SoftRemove(ctx, id); err != nil {
 		return s.storeErr(err)
 	}
 	s.publish(events.NetworkRemoved{NetworkID: id})
 	s.reannounceWorkspaces(ctx, affected)
+	s.announcePreferencesGone(prefs)
 	return nil
 }
 
@@ -302,6 +304,7 @@ func (s *Service) DeleteNetworkIdentity(ctx context.Context, rawID string) error
 		return s.storeErr(err)
 	}
 	affected := s.workspacesContaining(ctx, id)
+	prefs := s.preferencesFor(ctx, id)
 	err = s.cfg.Store.HardDeleteIdentity(ctx, id, store.PathResolver{Root: s.cfg.Paths.NetworksRoot})
 	if err != nil && !errors.Is(err, store.ErrIdentityDeletePending) {
 		s.cfg.Log.Error("identity delete failed", "network_id", id, "err", err.Error())
@@ -310,6 +313,7 @@ func (s *Service) DeleteNetworkIdentity(ctx context.Context, rawID string) error
 	if configured {
 		s.publish(events.NetworkRemoved{NetworkID: id})
 		s.reannounceWorkspaces(ctx, affected)
+		s.announcePreferencesGone(prefs)
 	}
 	if err != nil {
 		s.cfg.Log.Error("identity directory removal pending", "network_id", id, "err", err.Error())

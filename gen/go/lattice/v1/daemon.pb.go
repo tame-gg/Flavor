@@ -179,17 +179,18 @@ func (*GetStateSnapshotRequest) Descriptor() ([]byte, []int) {
 }
 
 type GetStateSnapshotResponse struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	DaemonInstanceId  string                 `protobuf:"bytes,1,opt,name=daemon_instance_id,json=daemonInstanceId,proto3" json:"daemon_instance_id,omitempty"`
-	SnapshotSequence  uint64                 `protobuf:"varint,2,opt,name=snapshot_sequence,json=snapshotSequence,proto3" json:"snapshot_sequence,omitempty"`
-	Daemon            *GetDaemonInfoResponse `protobuf:"bytes,3,opt,name=daemon,proto3" json:"daemon,omitempty"`
-	Networks          []*Network             `protobuf:"bytes,4,rep,name=networks,proto3" json:"networks,omitempty"`
-	Devices           []*Device              `protobuf:"bytes,5,rep,name=devices,proto3" json:"devices,omitempty"`
-	CapturedAt        *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=captured_at,json=capturedAt,proto3" json:"captured_at,omitempty"`
-	Workspaces        []*Workspace           `protobuf:"bytes,7,rep,name=workspaces,proto3" json:"workspaces,omitempty"`
-	ActiveWorkspaceId string                 `protobuf:"bytes,8,opt,name=active_workspace_id,json=activeWorkspaceId,proto3" json:"active_workspace_id,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	state                  protoimpl.MessageState   `protogen:"open.v1"`
+	DaemonInstanceId       string                   `protobuf:"bytes,1,opt,name=daemon_instance_id,json=daemonInstanceId,proto3" json:"daemon_instance_id,omitempty"`
+	SnapshotSequence       uint64                   `protobuf:"varint,2,opt,name=snapshot_sequence,json=snapshotSequence,proto3" json:"snapshot_sequence,omitempty"`
+	Daemon                 *GetDaemonInfoResponse   `protobuf:"bytes,3,opt,name=daemon,proto3" json:"daemon,omitempty"`
+	Networks               []*Network               `protobuf:"bytes,4,rep,name=networks,proto3" json:"networks,omitempty"`
+	Devices                []*Device                `protobuf:"bytes,5,rep,name=devices,proto3" json:"devices,omitempty"`
+	CapturedAt             *timestamppb.Timestamp   `protobuf:"bytes,6,opt,name=captured_at,json=capturedAt,proto3" json:"captured_at,omitempty"`
+	Workspaces             []*Workspace             `protobuf:"bytes,7,rep,name=workspaces,proto3" json:"workspaces,omitempty"`
+	ActiveWorkspaceId      string                   `protobuf:"bytes,8,opt,name=active_workspace_id,json=activeWorkspaceId,proto3" json:"active_workspace_id,omitempty"`
+	DestinationPreferences []*DestinationPreference `protobuf:"bytes,9,rep,name=destination_preferences,json=destinationPreferences,proto3" json:"destination_preferences,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *GetStateSnapshotResponse) Reset() {
@@ -278,12 +279,19 @@ func (x *GetStateSnapshotResponse) GetActiveWorkspaceId() string {
 	return ""
 }
 
+func (x *GetStateSnapshotResponse) GetDestinationPreferences() []*DestinationPreference {
+	if x != nil {
+		return x.DestinationPreferences
+	}
+	return nil
+}
+
 var File_lattice_v1_daemon_proto protoreflect.FileDescriptor
 
 const file_lattice_v1_daemon_proto_rawDesc = "" +
 	"\n" +
 	"\x17lattice/v1/daemon.proto\x12\n" +
-	"lattice.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17lattice/v1/common.proto\x1a\x18lattice/v1/network.proto\x1a\x17lattice/v1/device.proto\x1a\x1blattice/v1/workspaces.proto\"\x16\n" +
+	"lattice.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17lattice/v1/common.proto\x1a\x18lattice/v1/network.proto\x1a\x17lattice/v1/device.proto\x1a\x1clattice/v1/preferences.proto\x1a\x1blattice/v1/workspaces.proto\"\x16\n" +
 	"\x14GetDaemonInfoRequest\"\x99\x02\n" +
 	"\x15GetDaemonInfoResponse\x12%\n" +
 	"\x0edaemon_version\x18\x01 \x01(\tR\rdaemonVersion\x12%\n" +
@@ -292,7 +300,7 @@ const file_lattice_v1_daemon_proto_rawDesc = "" +
 	"\x12daemon_instance_id\x18\x04 \x01(\tR\x10daemonInstanceId\x12!\n" +
 	"\fbuild_commit\x18\x05 \x01(\tR\vbuildCommit\x12:\n" +
 	"\fcapabilities\x18\x06 \x03(\x0e2\x16.lattice.v1.CapabilityR\fcapabilities\"\x19\n" +
-	"\x17GetStateSnapshotRequest\"\xb3\x03\n" +
+	"\x17GetStateSnapshotRequest\"\x8f\x04\n" +
 	"\x18GetStateSnapshotResponse\x12,\n" +
 	"\x12daemon_instance_id\x18\x01 \x01(\tR\x10daemonInstanceId\x12+\n" +
 	"\x11snapshot_sequence\x18\x02 \x01(\x04R\x10snapshotSequence\x129\n" +
@@ -304,7 +312,8 @@ const file_lattice_v1_daemon_proto_rawDesc = "" +
 	"\n" +
 	"workspaces\x18\a \x03(\v2\x15.lattice.v1.WorkspaceR\n" +
 	"workspaces\x12.\n" +
-	"\x13active_workspace_id\x18\b \x01(\tR\x11activeWorkspaceId2\xc4\x01\n" +
+	"\x13active_workspace_id\x18\b \x01(\tR\x11activeWorkspaceId\x12Z\n" +
+	"\x17destination_preferences\x18\t \x03(\v2!.lattice.v1.DestinationPreferenceR\x16destinationPreferences2\xc4\x01\n" +
 	"\rDaemonService\x12T\n" +
 	"\rGetDaemonInfo\x12 .lattice.v1.GetDaemonInfoRequest\x1a!.lattice.v1.GetDaemonInfoResponse\x12]\n" +
 	"\x10GetStateSnapshot\x12#.lattice.v1.GetStateSnapshotRequest\x1a$.lattice.v1.GetStateSnapshotResponseB\xa5\x01\n" +
@@ -335,6 +344,7 @@ var file_lattice_v1_daemon_proto_goTypes = []any{
 	(*Device)(nil),                   // 6: lattice.v1.Device
 	(*timestamppb.Timestamp)(nil),    // 7: google.protobuf.Timestamp
 	(*Workspace)(nil),                // 8: lattice.v1.Workspace
+	(*DestinationPreference)(nil),    // 9: lattice.v1.DestinationPreference
 }
 var file_lattice_v1_daemon_proto_depIdxs = []int32{
 	4, // 0: lattice.v1.GetDaemonInfoResponse.capabilities:type_name -> lattice.v1.Capability
@@ -343,15 +353,16 @@ var file_lattice_v1_daemon_proto_depIdxs = []int32{
 	6, // 3: lattice.v1.GetStateSnapshotResponse.devices:type_name -> lattice.v1.Device
 	7, // 4: lattice.v1.GetStateSnapshotResponse.captured_at:type_name -> google.protobuf.Timestamp
 	8, // 5: lattice.v1.GetStateSnapshotResponse.workspaces:type_name -> lattice.v1.Workspace
-	0, // 6: lattice.v1.DaemonService.GetDaemonInfo:input_type -> lattice.v1.GetDaemonInfoRequest
-	2, // 7: lattice.v1.DaemonService.GetStateSnapshot:input_type -> lattice.v1.GetStateSnapshotRequest
-	1, // 8: lattice.v1.DaemonService.GetDaemonInfo:output_type -> lattice.v1.GetDaemonInfoResponse
-	3, // 9: lattice.v1.DaemonService.GetStateSnapshot:output_type -> lattice.v1.GetStateSnapshotResponse
-	8, // [8:10] is the sub-list for method output_type
-	6, // [6:8] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	9, // 6: lattice.v1.GetStateSnapshotResponse.destination_preferences:type_name -> lattice.v1.DestinationPreference
+	0, // 7: lattice.v1.DaemonService.GetDaemonInfo:input_type -> lattice.v1.GetDaemonInfoRequest
+	2, // 8: lattice.v1.DaemonService.GetStateSnapshot:input_type -> lattice.v1.GetStateSnapshotRequest
+	1, // 9: lattice.v1.DaemonService.GetDaemonInfo:output_type -> lattice.v1.GetDaemonInfoResponse
+	3, // 10: lattice.v1.DaemonService.GetStateSnapshot:output_type -> lattice.v1.GetStateSnapshotResponse
+	9, // [9:11] is the sub-list for method output_type
+	7, // [7:9] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_lattice_v1_daemon_proto_init() }
@@ -362,6 +373,7 @@ func file_lattice_v1_daemon_proto_init() {
 	file_lattice_v1_common_proto_init()
 	file_lattice_v1_network_proto_init()
 	file_lattice_v1_device_proto_init()
+	file_lattice_v1_preferences_proto_init()
 	file_lattice_v1_workspaces_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{

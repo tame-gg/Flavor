@@ -1,13 +1,15 @@
 import { create } from "@bufbuild/protobuf";
 import {
   CandidateStatus,
+  DecisionReason,
   DestinationKind,
+  PreferenceState,
   InspectDestinationResponseSchema,
   MatchKind,
   ResolutionDecision,
 } from "@gen/lattice/v1/inspector_pb";
 import { describe, expect, it } from "vitest";
-import { explain } from "./explain";
+import { candidateLabel, explain, preferenceNote } from "./explain";
 
 const candidate = (networkId: string, network: string, host: string, status: CandidateStatus, match = MatchKind.DEVICE_ADDRESS) => ({
   network: { id: networkId, displayName: network },
@@ -66,4 +68,27 @@ describe("explain", () => {
     });
     expect(explain(r).title).toBe("100.64.0.1 exists on one network, on more than one device");
   });
+
+  it("explains a decision made by a preference, and a preference that could not apply", () => {
+    const chosen = create(InspectDestinationResponseSchema, {
+      normalized: "100.64.0.1",
+      kind: DestinationKind.ADDRESS,
+      decision: ResolutionDecision.UNIQUE,
+      reason: DecisionReason.DESTINATION_PREFERENCE,
+      candidates: [candidate("a", "LunarLabs", "prod-api", CandidateStatus.SELECTED), candidate("b", "Home", "desktop", CandidateStatus.OUTRANKED)],
+      preference: { destination: "100.64.0.1", network: { id: "a", displayName: "LunarLabs" }, state: PreferenceState.APPLIED },
+    });
+    expect(explain(chosen)).toEqual({
+      title: "prod-api on LunarLabs",
+      detail: "Chosen by your Lattice preference for LunarLabs. Without it, 100.64.0.1 would match on 2 networks.",
+    });
+    expect(preferenceNote(chosen)).toBeNull();
+    expect(candidateLabel(chosen, CandidateStatus.OUTRANKED)).toBe("Not preferred");
+    const offline = create(InspectDestinationResponseSchema, {
+      normalized: "100.64.0.1",
+      preference: { network: { id: "a", displayName: "LunarLabs" }, state: PreferenceState.NETWORK_NOT_CONNECTED },
+    });
+    expect(preferenceNote(offline)).toBe("Your preference for LunarLabs is not applied because LunarLabs is not connected.");
+  });
 });
+

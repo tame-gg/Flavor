@@ -42,6 +42,7 @@ message Conflict {
   string value = 5;
   repeated ConflictMember members = 6;
   bool network_context_resolves = 7;
+  string preferred_network_id = 8;
 }
 
 message ListConflictsRequest {}

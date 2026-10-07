@@ -7,7 +7,7 @@ export const typeLabel: Record<ConflictType, string> = {
   [ConflictType.HOSTNAME_COLLISION]: "Device name",
 };
 
-export type SeverityFilter = "all" | "ambiguous" | "expected";
+export type SeverityFilter = "all" | "ambiguous" | "expected" | "resolved";
 export type TypeFilter = "all" | ConflictType;
 
 export function networkCount(c: Conflict): number {
@@ -28,18 +28,17 @@ export function describe(c: Conflict): string {
   return `${c.value} exists on ${n} networks, and not every device has a network-specific name that tells it apart.`;
 }
 
-export function filterConflicts(list: readonly Conflict[], severity: SeverityFilter, type: TypeFilter): Conflict[] {
-  return list.filter(
-    (c) =>
-      (severity === "all" ||
-        (severity === "ambiguous" ? c.severity === ConflictSeverity.AMBIGUOUS : c.severity === ConflictSeverity.EXPECTED)) &&
-      (type === "all" || c.type === type),
-  );
+export function category(c: Conflict): Exclude<SeverityFilter, "all"> {
+  if (c.preferredNetworkId) return "resolved";
+  return c.severity === ConflictSeverity.AMBIGUOUS ? "ambiguous" : "expected";
 }
 
-export function counts(list: readonly Conflict[]): { ambiguous: number; expected: number } {
-  return {
-    ambiguous: list.filter((c) => c.severity === ConflictSeverity.AMBIGUOUS).length,
-    expected: list.filter((c) => c.severity === ConflictSeverity.EXPECTED).length,
-  };
+export function filterConflicts(list: readonly Conflict[], severity: SeverityFilter, type: TypeFilter): Conflict[] {
+  return list.filter((c) => (severity === "all" || category(c) === severity) && (type === "all" || c.type === type));
+}
+
+export function counts(list: readonly Conflict[]): { ambiguous: number; expected: number; resolved: number } {
+  const out = { ambiguous: 0, expected: 0, resolved: 0 };
+  for (const c of list) out[category(c)]++;
+  return out;
 }

@@ -240,6 +240,7 @@ type Conflict struct {
 	Value                  string                 `protobuf:"bytes,5,opt,name=value,proto3" json:"value,omitempty"`
 	Members                []*ConflictMember      `protobuf:"bytes,6,rep,name=members,proto3" json:"members,omitempty"`
 	NetworkContextResolves bool                   `protobuf:"varint,7,opt,name=network_context_resolves,json=networkContextResolves,proto3" json:"network_context_resolves,omitempty"`
+	PreferredNetworkId     string                 `protobuf:"bytes,8,opt,name=preferred_network_id,json=preferredNetworkId,proto3" json:"preferred_network_id,omitempty"`
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -321,6 +322,13 @@ func (x *Conflict) GetNetworkContextResolves() bool {
 		return x.NetworkContextResolves
 	}
 	return false
+}
+
+func (x *Conflict) GetPreferredNetworkId() string {
+	if x != nil {
+		return x.PreferredNetworkId
+	}
+	return ""
 }
 
 type ListConflictsRequest struct {
@@ -437,7 +445,7 @@ const file_lattice_v1_conflicts_proto_rawDesc = "" +
 	"\anetwork\x18\x01 \x01(\v2\x16.lattice.v1.NetworkRefR\anetwork\x12*\n" +
 	"\x06device\x18\x02 \x01(\v2\x12.lattice.v1.DeviceR\x06device\x12\x1f\n" +
 	"\vunique_name\x18\x03 \x01(\tR\n" +
-	"uniqueName\"\xb9\x02\n" +
+	"uniqueName\"\xeb\x02\n" +
 	"\bConflict\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12,\n" +
 	"\x04type\x18\x02 \x01(\x0e2\x18.lattice.v1.ConflictTypeR\x04type\x128\n" +
@@ -445,7 +453,8 @@ const file_lattice_v1_conflicts_proto_rawDesc = "" +
 	"\x05scope\x18\x04 \x01(\x0e2\x19.lattice.v1.ConflictScopeR\x05scope\x12\x14\n" +
 	"\x05value\x18\x05 \x01(\tR\x05value\x124\n" +
 	"\amembers\x18\x06 \x03(\v2\x1a.lattice.v1.ConflictMemberR\amembers\x128\n" +
-	"\x18network_context_resolves\x18\a \x01(\bR\x16networkContextResolves\"\x16\n" +
+	"\x18network_context_resolves\x18\a \x01(\bR\x16networkContextResolves\x120\n" +
+	"\x14preferred_network_id\x18\b \x01(\tR\x12preferredNetworkId\"\x16\n" +
 	"\x14ListConflictsRequest\"\xe3\x01\n" +
 	"\x15ListConflictsResponse\x12,\n" +
 	"\x12daemon_instance_id\x18\x01 \x01(\tR\x10daemonInstanceId\x12+\n" +

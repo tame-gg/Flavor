@@ -177,12 +177,13 @@ func (ResolutionDecision) EnumDescriptor() ([]byte, []int) {
 type DecisionReason int32
 
 const (
-	DecisionReason_DECISION_REASON_UNSPECIFIED          DecisionReason = 0
-	DecisionReason_DECISION_REASON_EXACT_DEVICE_ADDRESS DecisionReason = 1
-	DecisionReason_DECISION_REASON_DEVICE_DNS_NAME      DecisionReason = 2
-	DecisionReason_DECISION_REASON_DEVICE_HOSTNAME      DecisionReason = 3
-	DecisionReason_DECISION_REASON_MULTIPLE_MATCHES     DecisionReason = 4
-	DecisionReason_DECISION_REASON_NO_MATCH             DecisionReason = 5
+	DecisionReason_DECISION_REASON_UNSPECIFIED            DecisionReason = 0
+	DecisionReason_DECISION_REASON_EXACT_DEVICE_ADDRESS   DecisionReason = 1
+	DecisionReason_DECISION_REASON_DEVICE_DNS_NAME        DecisionReason = 2
+	DecisionReason_DECISION_REASON_DEVICE_HOSTNAME        DecisionReason = 3
+	DecisionReason_DECISION_REASON_MULTIPLE_MATCHES       DecisionReason = 4
+	DecisionReason_DECISION_REASON_NO_MATCH               DecisionReason = 5
+	DecisionReason_DECISION_REASON_DESTINATION_PREFERENCE DecisionReason = 6
 )
 
 // Enum value maps for DecisionReason.
@@ -194,14 +195,16 @@ var (
 		3: "DECISION_REASON_DEVICE_HOSTNAME",
 		4: "DECISION_REASON_MULTIPLE_MATCHES",
 		5: "DECISION_REASON_NO_MATCH",
+		6: "DECISION_REASON_DESTINATION_PREFERENCE",
 	}
 	DecisionReason_value = map[string]int32{
-		"DECISION_REASON_UNSPECIFIED":          0,
-		"DECISION_REASON_EXACT_DEVICE_ADDRESS": 1,
-		"DECISION_REASON_DEVICE_DNS_NAME":      2,
-		"DECISION_REASON_DEVICE_HOSTNAME":      3,
-		"DECISION_REASON_MULTIPLE_MATCHES":     4,
-		"DECISION_REASON_NO_MATCH":             5,
+		"DECISION_REASON_UNSPECIFIED":            0,
+		"DECISION_REASON_EXACT_DEVICE_ADDRESS":   1,
+		"DECISION_REASON_DEVICE_DNS_NAME":        2,
+		"DECISION_REASON_DEVICE_HOSTNAME":        3,
+		"DECISION_REASON_MULTIPLE_MATCHES":       4,
+		"DECISION_REASON_NO_MATCH":               5,
+		"DECISION_REASON_DESTINATION_PREFERENCE": 6,
 	}
 )
 
@@ -284,6 +287,118 @@ func (CandidateStatus) EnumDescriptor() ([]byte, []int) {
 	return file_lattice_v1_inspector_proto_rawDescGZIP(), []int{4}
 }
 
+type PreferenceState int32
+
+const (
+	PreferenceState_PREFERENCE_STATE_UNSPECIFIED           PreferenceState = 0
+	PreferenceState_PREFERENCE_STATE_APPLIED               PreferenceState = 1
+	PreferenceState_PREFERENCE_STATE_NETWORK_NOT_CONNECTED PreferenceState = 2
+	PreferenceState_PREFERENCE_STATE_NO_MATCH_ON_NETWORK   PreferenceState = 3
+)
+
+// Enum value maps for PreferenceState.
+var (
+	PreferenceState_name = map[int32]string{
+		0: "PREFERENCE_STATE_UNSPECIFIED",
+		1: "PREFERENCE_STATE_APPLIED",
+		2: "PREFERENCE_STATE_NETWORK_NOT_CONNECTED",
+		3: "PREFERENCE_STATE_NO_MATCH_ON_NETWORK",
+	}
+	PreferenceState_value = map[string]int32{
+		"PREFERENCE_STATE_UNSPECIFIED":           0,
+		"PREFERENCE_STATE_APPLIED":               1,
+		"PREFERENCE_STATE_NETWORK_NOT_CONNECTED": 2,
+		"PREFERENCE_STATE_NO_MATCH_ON_NETWORK":   3,
+	}
+)
+
+func (x PreferenceState) Enum() *PreferenceState {
+	p := new(PreferenceState)
+	*p = x
+	return p
+}
+
+func (x PreferenceState) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PreferenceState) Descriptor() protoreflect.EnumDescriptor {
+	return file_lattice_v1_inspector_proto_enumTypes[5].Descriptor()
+}
+
+func (PreferenceState) Type() protoreflect.EnumType {
+	return &file_lattice_v1_inspector_proto_enumTypes[5]
+}
+
+func (x PreferenceState) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PreferenceState.Descriptor instead.
+func (PreferenceState) EnumDescriptor() ([]byte, []int) {
+	return file_lattice_v1_inspector_proto_rawDescGZIP(), []int{5}
+}
+
+type PreferenceUse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Destination   string                 `protobuf:"bytes,1,opt,name=destination,proto3" json:"destination,omitempty"`
+	Network       *NetworkRef            `protobuf:"bytes,2,opt,name=network,proto3" json:"network,omitempty"`
+	State         PreferenceState        `protobuf:"varint,3,opt,name=state,proto3,enum=lattice.v1.PreferenceState" json:"state,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PreferenceUse) Reset() {
+	*x = PreferenceUse{}
+	mi := &file_lattice_v1_inspector_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PreferenceUse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PreferenceUse) ProtoMessage() {}
+
+func (x *PreferenceUse) ProtoReflect() protoreflect.Message {
+	mi := &file_lattice_v1_inspector_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PreferenceUse.ProtoReflect.Descriptor instead.
+func (*PreferenceUse) Descriptor() ([]byte, []int) {
+	return file_lattice_v1_inspector_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *PreferenceUse) GetDestination() string {
+	if x != nil {
+		return x.Destination
+	}
+	return ""
+}
+
+func (x *PreferenceUse) GetNetwork() *NetworkRef {
+	if x != nil {
+		return x.Network
+	}
+	return nil
+}
+
+func (x *PreferenceUse) GetState() PreferenceState {
+	if x != nil {
+		return x.State
+	}
+	return PreferenceState_PREFERENCE_STATE_UNSPECIFIED
+}
+
 type NetworkRef struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -296,7 +411,7 @@ type NetworkRef struct {
 
 func (x *NetworkRef) Reset() {
 	*x = NetworkRef{}
-	mi := &file_lattice_v1_inspector_proto_msgTypes[0]
+	mi := &file_lattice_v1_inspector_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -308,7 +423,7 @@ func (x *NetworkRef) String() string {
 func (*NetworkRef) ProtoMessage() {}
 
 func (x *NetworkRef) ProtoReflect() protoreflect.Message {
-	mi := &file_lattice_v1_inspector_proto_msgTypes[0]
+	mi := &file_lattice_v1_inspector_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -321,7 +436,7 @@ func (x *NetworkRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NetworkRef.ProtoReflect.Descriptor instead.
 func (*NetworkRef) Descriptor() ([]byte, []int) {
-	return file_lattice_v1_inspector_proto_rawDescGZIP(), []int{0}
+	return file_lattice_v1_inspector_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *NetworkRef) GetId() string {
@@ -365,7 +480,7 @@ type ResolutionCandidate struct {
 
 func (x *ResolutionCandidate) Reset() {
 	*x = ResolutionCandidate{}
-	mi := &file_lattice_v1_inspector_proto_msgTypes[1]
+	mi := &file_lattice_v1_inspector_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -377,7 +492,7 @@ func (x *ResolutionCandidate) String() string {
 func (*ResolutionCandidate) ProtoMessage() {}
 
 func (x *ResolutionCandidate) ProtoReflect() protoreflect.Message {
-	mi := &file_lattice_v1_inspector_proto_msgTypes[1]
+	mi := &file_lattice_v1_inspector_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -390,7 +505,7 @@ func (x *ResolutionCandidate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResolutionCandidate.ProtoReflect.Descriptor instead.
 func (*ResolutionCandidate) Descriptor() ([]byte, []int) {
-	return file_lattice_v1_inspector_proto_rawDescGZIP(), []int{1}
+	return file_lattice_v1_inspector_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ResolutionCandidate) GetNetwork() *NetworkRef {
@@ -437,7 +552,7 @@ type InspectDestinationRequest struct {
 
 func (x *InspectDestinationRequest) Reset() {
 	*x = InspectDestinationRequest{}
-	mi := &file_lattice_v1_inspector_proto_msgTypes[2]
+	mi := &file_lattice_v1_inspector_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -449,7 +564,7 @@ func (x *InspectDestinationRequest) String() string {
 func (*InspectDestinationRequest) ProtoMessage() {}
 
 func (x *InspectDestinationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_lattice_v1_inspector_proto_msgTypes[2]
+	mi := &file_lattice_v1_inspector_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -462,7 +577,7 @@ func (x *InspectDestinationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InspectDestinationRequest.ProtoReflect.Descriptor instead.
 func (*InspectDestinationRequest) Descriptor() ([]byte, []int) {
-	return file_lattice_v1_inspector_proto_rawDescGZIP(), []int{2}
+	return file_lattice_v1_inspector_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *InspectDestinationRequest) GetDestination() string {
@@ -485,13 +600,14 @@ type InspectDestinationResponse struct {
 	DecidedBy        MatchKind              `protobuf:"varint,9,opt,name=decided_by,json=decidedBy,proto3,enum=lattice.v1.MatchKind" json:"decided_by,omitempty"`
 	Candidates       []*ResolutionCandidate `protobuf:"bytes,10,rep,name=candidates,proto3" json:"candidates,omitempty"`
 	NotInspected     []*NetworkRef          `protobuf:"bytes,11,rep,name=not_inspected,json=notInspected,proto3" json:"not_inspected,omitempty"`
+	Preference       *PreferenceUse         `protobuf:"bytes,12,opt,name=preference,proto3" json:"preference,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
 
 func (x *InspectDestinationResponse) Reset() {
 	*x = InspectDestinationResponse{}
-	mi := &file_lattice_v1_inspector_proto_msgTypes[3]
+	mi := &file_lattice_v1_inspector_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -503,7 +619,7 @@ func (x *InspectDestinationResponse) String() string {
 func (*InspectDestinationResponse) ProtoMessage() {}
 
 func (x *InspectDestinationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_lattice_v1_inspector_proto_msgTypes[3]
+	mi := &file_lattice_v1_inspector_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -516,7 +632,7 @@ func (x *InspectDestinationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InspectDestinationResponse.ProtoReflect.Descriptor instead.
 func (*InspectDestinationResponse) Descriptor() ([]byte, []int) {
-	return file_lattice_v1_inspector_proto_rawDescGZIP(), []int{3}
+	return file_lattice_v1_inspector_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *InspectDestinationResponse) GetDaemonInstanceId() string {
@@ -596,12 +712,23 @@ func (x *InspectDestinationResponse) GetNotInspected() []*NetworkRef {
 	return nil
 }
 
+func (x *InspectDestinationResponse) GetPreference() *PreferenceUse {
+	if x != nil {
+		return x.Preference
+	}
+	return nil
+}
+
 var File_lattice_v1_inspector_proto protoreflect.FileDescriptor
 
 const file_lattice_v1_inspector_proto_rawDesc = "" +
 	"\n" +
 	"\x1alattice/v1/inspector.proto\x12\n" +
-	"lattice.v1\x1a\x17lattice/v1/common.proto\x1a\x17lattice/v1/device.proto\"\xaf\x01\n" +
+	"lattice.v1\x1a\x17lattice/v1/common.proto\x1a\x17lattice/v1/device.proto\"\x96\x01\n" +
+	"\rPreferenceUse\x12 \n" +
+	"\vdestination\x18\x01 \x01(\tR\vdestination\x120\n" +
+	"\anetwork\x18\x02 \x01(\v2\x16.lattice.v1.NetworkRefR\anetwork\x121\n" +
+	"\x05state\x18\x03 \x01(\x0e2\x1b.lattice.v1.PreferenceStateR\x05state\"\xaf\x01\n" +
 	"\n" +
 	"NetworkRef\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
@@ -615,7 +742,7 @@ const file_lattice_v1_inspector_proto_rawDesc = "" +
 	"\rmatched_value\x18\x04 \x01(\tR\fmatchedValue\x123\n" +
 	"\x06status\x18\x05 \x01(\x0e2\x1b.lattice.v1.CandidateStatusR\x06status\"=\n" +
 	"\x19InspectDestinationRequest\x12 \n" +
-	"\vdestination\x18\x01 \x01(\tR\vdestination\"\x96\x04\n" +
+	"\vdestination\x18\x01 \x01(\tR\vdestination\"\xd1\x04\n" +
 	"\x1aInspectDestinationResponse\x12,\n" +
 	"\x12daemon_instance_id\x18\x01 \x01(\tR\x10daemonInstanceId\x12+\n" +
 	"\x11snapshot_sequence\x18\x02 \x01(\x04R\x10snapshotSequence\x12\x14\n" +
@@ -633,7 +760,10 @@ const file_lattice_v1_inspector_proto_rawDesc = "" +
 	"candidates\x18\n" +
 	" \x03(\v2\x1f.lattice.v1.ResolutionCandidateR\n" +
 	"candidates\x12;\n" +
-	"\rnot_inspected\x18\v \x03(\v2\x16.lattice.v1.NetworkRefR\fnotInspected*l\n" +
+	"\rnot_inspected\x18\v \x03(\v2\x16.lattice.v1.NetworkRefR\fnotInspected\x129\n" +
+	"\n" +
+	"preference\x18\f \x01(\v2\x19.lattice.v1.PreferenceUseR\n" +
+	"preference*l\n" +
 	"\x0fDestinationKind\x12 \n" +
 	"\x1cDESTINATION_KIND_UNSPECIFIED\x10\x00\x12\x1c\n" +
 	"\x18DESTINATION_KIND_ADDRESS\x10\x01\x12\x19\n" +
@@ -647,19 +777,25 @@ const file_lattice_v1_inspector_proto_rawDesc = "" +
 	"\x1fRESOLUTION_DECISION_UNSPECIFIED\x10\x00\x12\x1e\n" +
 	"\x1aRESOLUTION_DECISION_UNIQUE\x10\x01\x12!\n" +
 	"\x1dRESOLUTION_DECISION_AMBIGUOUS\x10\x02\x12 \n" +
-	"\x1cRESOLUTION_DECISION_NO_MATCH\x10\x03*\xe9\x01\n" +
+	"\x1cRESOLUTION_DECISION_NO_MATCH\x10\x03*\x95\x02\n" +
 	"\x0eDecisionReason\x12\x1f\n" +
 	"\x1bDECISION_REASON_UNSPECIFIED\x10\x00\x12(\n" +
 	"$DECISION_REASON_EXACT_DEVICE_ADDRESS\x10\x01\x12#\n" +
 	"\x1fDECISION_REASON_DEVICE_DNS_NAME\x10\x02\x12#\n" +
 	"\x1fDECISION_REASON_DEVICE_HOSTNAME\x10\x03\x12$\n" +
 	" DECISION_REASON_MULTIPLE_MATCHES\x10\x04\x12\x1c\n" +
-	"\x18DECISION_REASON_NO_MATCH\x10\x05*\x8d\x01\n" +
+	"\x18DECISION_REASON_NO_MATCH\x10\x05\x12*\n" +
+	"&DECISION_REASON_DESTINATION_PREFERENCE\x10\x06*\x8d\x01\n" +
 	"\x0fCandidateStatus\x12 \n" +
 	"\x1cCANDIDATE_STATUS_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19CANDIDATE_STATUS_SELECTED\x10\x01\x12\x19\n" +
 	"\x15CANDIDATE_STATUS_TIED\x10\x02\x12\x1e\n" +
-	"\x1aCANDIDATE_STATUS_OUTRANKED\x10\x032w\n" +
+	"\x1aCANDIDATE_STATUS_OUTRANKED\x10\x03*\xa7\x01\n" +
+	"\x0fPreferenceState\x12 \n" +
+	"\x1cPREFERENCE_STATE_UNSPECIFIED\x10\x00\x12\x1c\n" +
+	"\x18PREFERENCE_STATE_APPLIED\x10\x01\x12*\n" +
+	"&PREFERENCE_STATE_NETWORK_NOT_CONNECTED\x10\x02\x12(\n" +
+	"$PREFERENCE_STATE_NO_MATCH_ON_NETWORK\x10\x032w\n" +
 	"\x10InspectorService\x12c\n" +
 	"\x12InspectDestination\x12%.lattice.v1.InspectDestinationRequest\x1a&.lattice.v1.InspectDestinationResponseB\xa8\x01\n" +
 	"\x0ecom.lattice.v1B\x0eInspectorProtoP\x01Z=git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1;latticev1\xa2\x02\x03LXX\xaa\x02\n" +
@@ -678,42 +814,47 @@ func file_lattice_v1_inspector_proto_rawDescGZIP() []byte {
 	return file_lattice_v1_inspector_proto_rawDescData
 }
 
-var file_lattice_v1_inspector_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
-var file_lattice_v1_inspector_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_lattice_v1_inspector_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
+var file_lattice_v1_inspector_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_lattice_v1_inspector_proto_goTypes = []any{
 	(DestinationKind)(0),               // 0: lattice.v1.DestinationKind
 	(MatchKind)(0),                     // 1: lattice.v1.MatchKind
 	(ResolutionDecision)(0),            // 2: lattice.v1.ResolutionDecision
 	(DecisionReason)(0),                // 3: lattice.v1.DecisionReason
 	(CandidateStatus)(0),               // 4: lattice.v1.CandidateStatus
-	(*NetworkRef)(nil),                 // 5: lattice.v1.NetworkRef
-	(*ResolutionCandidate)(nil),        // 6: lattice.v1.ResolutionCandidate
-	(*InspectDestinationRequest)(nil),  // 7: lattice.v1.InspectDestinationRequest
-	(*InspectDestinationResponse)(nil), // 8: lattice.v1.InspectDestinationResponse
-	(ProviderType)(0),                  // 9: lattice.v1.ProviderType
-	(NetworkConnectionState)(0),        // 10: lattice.v1.NetworkConnectionState
-	(*Device)(nil),                     // 11: lattice.v1.Device
+	(PreferenceState)(0),               // 5: lattice.v1.PreferenceState
+	(*PreferenceUse)(nil),              // 6: lattice.v1.PreferenceUse
+	(*NetworkRef)(nil),                 // 7: lattice.v1.NetworkRef
+	(*ResolutionCandidate)(nil),        // 8: lattice.v1.ResolutionCandidate
+	(*InspectDestinationRequest)(nil),  // 9: lattice.v1.InspectDestinationRequest
+	(*InspectDestinationResponse)(nil), // 10: lattice.v1.InspectDestinationResponse
+	(ProviderType)(0),                  // 11: lattice.v1.ProviderType
+	(NetworkConnectionState)(0),        // 12: lattice.v1.NetworkConnectionState
+	(*Device)(nil),                     // 13: lattice.v1.Device
 }
 var file_lattice_v1_inspector_proto_depIdxs = []int32{
-	9,  // 0: lattice.v1.NetworkRef.provider:type_name -> lattice.v1.ProviderType
-	10, // 1: lattice.v1.NetworkRef.state:type_name -> lattice.v1.NetworkConnectionState
-	5,  // 2: lattice.v1.ResolutionCandidate.network:type_name -> lattice.v1.NetworkRef
-	11, // 3: lattice.v1.ResolutionCandidate.device:type_name -> lattice.v1.Device
-	1,  // 4: lattice.v1.ResolutionCandidate.match:type_name -> lattice.v1.MatchKind
-	4,  // 5: lattice.v1.ResolutionCandidate.status:type_name -> lattice.v1.CandidateStatus
-	0,  // 6: lattice.v1.InspectDestinationResponse.kind:type_name -> lattice.v1.DestinationKind
-	2,  // 7: lattice.v1.InspectDestinationResponse.decision:type_name -> lattice.v1.ResolutionDecision
-	3,  // 8: lattice.v1.InspectDestinationResponse.reason:type_name -> lattice.v1.DecisionReason
-	1,  // 9: lattice.v1.InspectDestinationResponse.decided_by:type_name -> lattice.v1.MatchKind
-	6,  // 10: lattice.v1.InspectDestinationResponse.candidates:type_name -> lattice.v1.ResolutionCandidate
-	5,  // 11: lattice.v1.InspectDestinationResponse.not_inspected:type_name -> lattice.v1.NetworkRef
-	7,  // 12: lattice.v1.InspectorService.InspectDestination:input_type -> lattice.v1.InspectDestinationRequest
-	8,  // 13: lattice.v1.InspectorService.InspectDestination:output_type -> lattice.v1.InspectDestinationResponse
-	13, // [13:14] is the sub-list for method output_type
-	12, // [12:13] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	7,  // 0: lattice.v1.PreferenceUse.network:type_name -> lattice.v1.NetworkRef
+	5,  // 1: lattice.v1.PreferenceUse.state:type_name -> lattice.v1.PreferenceState
+	11, // 2: lattice.v1.NetworkRef.provider:type_name -> lattice.v1.ProviderType
+	12, // 3: lattice.v1.NetworkRef.state:type_name -> lattice.v1.NetworkConnectionState
+	7,  // 4: lattice.v1.ResolutionCandidate.network:type_name -> lattice.v1.NetworkRef
+	13, // 5: lattice.v1.ResolutionCandidate.device:type_name -> lattice.v1.Device
+	1,  // 6: lattice.v1.ResolutionCandidate.match:type_name -> lattice.v1.MatchKind
+	4,  // 7: lattice.v1.ResolutionCandidate.status:type_name -> lattice.v1.CandidateStatus
+	0,  // 8: lattice.v1.InspectDestinationResponse.kind:type_name -> lattice.v1.DestinationKind
+	2,  // 9: lattice.v1.InspectDestinationResponse.decision:type_name -> lattice.v1.ResolutionDecision
+	3,  // 10: lattice.v1.InspectDestinationResponse.reason:type_name -> lattice.v1.DecisionReason
+	1,  // 11: lattice.v1.InspectDestinationResponse.decided_by:type_name -> lattice.v1.MatchKind
+	8,  // 12: lattice.v1.InspectDestinationResponse.candidates:type_name -> lattice.v1.ResolutionCandidate
+	7,  // 13: lattice.v1.InspectDestinationResponse.not_inspected:type_name -> lattice.v1.NetworkRef
+	6,  // 14: lattice.v1.InspectDestinationResponse.preference:type_name -> lattice.v1.PreferenceUse
+	9,  // 15: lattice.v1.InspectorService.InspectDestination:input_type -> lattice.v1.InspectDestinationRequest
+	10, // 16: lattice.v1.InspectorService.InspectDestination:output_type -> lattice.v1.InspectDestinationResponse
+	16, // [16:17] is the sub-list for method output_type
+	15, // [15:16] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_lattice_v1_inspector_proto_init() }
@@ -728,8 +869,8 @@ func file_lattice_v1_inspector_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_lattice_v1_inspector_proto_rawDesc), len(file_lattice_v1_inspector_proto_rawDesc)),
-			NumEnums:      5,
-			NumMessages:   4,
+			NumEnums:      6,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

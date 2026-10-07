@@ -70,6 +70,10 @@ The system Tailscale client joins one tailnet at a time. Switching between a wor
     <td width="50%" valign="top"><b>Live and resilient UI</b><br>A snapshot plus an ordered event stream. The UI resyncs on gaps or daemon restarts and keeps showing last-known state while the daemon is away.</td>
   </tr>
   <tr>
+    <td width="50%" valign="top"><b>Workspaces</b><br>Name a set of networks after what you are doing, like Work or On Call, and connect them in one step. Optionally disconnect everything else. Identities are never touched.</td>
+    <td width="50%" valign="top"><b>Destination preferences</b><br>When an address or name exists on several networks, tell Lattice which one you mean. The inspector, conflict view and CLI all explain the choice. System routing is not changed.</td>
+  </tr>
+  <tr>
     <td width="50%" valign="top"><b>Scriptable</b><br><code>latticectl</code> speaks the same API as the desktop app, with <code>--json</code> output for automation.</td>
     <td width="50%" valign="top"><b>Private by default</b><br>No telemetry. Device inventories, sign-in links and keys stay on your machine, and Tailscale log upload is disabled for every session.</td>
   </tr>
@@ -148,6 +152,9 @@ NETWORK    DEVICE    MATCH           STATUS  ADDRESSES
 Home       desktop   device address  tied    100.64.0.1
 LunarLabs  prod-api  device address  tied    100.64.0.1
 
+$ latticectl preference set 100.64.0.1 --network LunarLabs
+$ latticectl workspace create --name "On Call" <network-id> <network-id>
+$ latticectl workspace activate --disconnect-others "On Call"
 $ latticectl conflicts
 $ latticectl --json explain prod-api
 $ latticectl devices

@@ -36,6 +36,7 @@ enum DecisionReason {
   DECISION_REASON_DEVICE_HOSTNAME = 3;
   DECISION_REASON_MULTIPLE_MATCHES = 4;
   DECISION_REASON_NO_MATCH = 5;
+  DECISION_REASON_DESTINATION_PREFERENCE = 6;
 }
 
 enum CandidateStatus {
@@ -43,6 +44,19 @@ enum CandidateStatus {
   CANDIDATE_STATUS_SELECTED = 1;
   CANDIDATE_STATUS_TIED = 2;
   CANDIDATE_STATUS_OUTRANKED = 3;
+}
+
+enum PreferenceState {
+  PREFERENCE_STATE_UNSPECIFIED = 0;
+  PREFERENCE_STATE_APPLIED = 1;
+  PREFERENCE_STATE_NETWORK_NOT_CONNECTED = 2;
+  PREFERENCE_STATE_NO_MATCH_ON_NETWORK = 3;
+}
+
+message PreferenceUse {
+  string destination = 1;
+  NetworkRef network = 2;
+  PreferenceState state = 3;
 }
 
 message NetworkRef {
@@ -76,4 +90,5 @@ message InspectDestinationResponse {
   MatchKind decided_by = 9;
   repeated ResolutionCandidate candidates = 10;
   repeated NetworkRef not_inspected = 11;
+  PreferenceUse preference = 12;
 }

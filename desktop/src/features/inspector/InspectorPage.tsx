@@ -11,17 +11,19 @@ import { Banner } from "../../components/ui/Banner";
 import { Button } from "../../components/ui/Button";
 import { CopyButton } from "../../components/ui/CopyButton";
 import { StatusBadge } from "../../components/ui/StatusBadge";
-import { inspectDestination } from "../../lib/api/daemon";
-import { useDaemon } from "../../app/sync/useDaemon";
+import { deleteDestinationPreference, inspectDestination, setDestinationPreference } from "../../lib/api/daemon";
+import { errorMessage } from "../../lib/api/errors";
+import { useCanMutate, useDaemon } from "../../app/sync/useDaemon";
 import { useAction } from "../../app/useAction";
 import { providerName } from "../networks/format";
-import { explain, matchLabel, statusLabel } from "./explain";
+import { candidateLabel, explain, matchLabel, preferenceNote } from "./explain";
 
 type Props = {
   query: string;
   onQueryChange: (q: string) => void;
   onOpenNetwork: (networkId: string) => void;
   onShowDevice: (networkId: string, nodeId: string) => void;
+  canPrefer: boolean;
 };
 
 const decisionTone: Record<ResolutionDecision, string> = {
@@ -38,8 +40,11 @@ const decisionLabel: Record<ResolutionDecision, string> = {
   [ResolutionDecision.NO_MATCH]: "No match",
 };
 
-export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevice }: Props) {
-  const { sequence, status } = useDaemon();
+export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevice, canPrefer }: Props) {
+  const { sequence, status, preferences, networks } = useDaemon();
+  const canMutate = useCanMutate();
+  const [prefError, setPrefError] = useState<string | null>(null);
+  const [prefPending, setPrefPending] = useState(false);
   const [result, setResult] = useState<InspectDestinationResponse | null>(null);
   const run = useAction(inspectDestination);
   const input = useRef<HTMLInputElement>(null);
@@ -57,6 +62,25 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
 
   const stale = result !== null && sequence > result.snapshotSequence;
   const summary = result && explain(result);
+  const note = result && preferenceNote(result);
+  const spansNetworks = result !== null && new Set(result.candidates.map((c) => c.network?.id)).size > 1;
+  const preferredId = result?.preference?.network?.id;
+
+  const changePreference = async (fn: () => Promise<unknown>) => {
+    setPrefError(null);
+    setPrefPending(true);
+    try {
+      await fn();
+      if (result) await submit(result.query);
+    } catch (e) {
+      setPrefError(errorMessage(e));
+    } finally {
+      setPrefPending(false);
+    }
+  };
+  const prefer = (networkId: string) => result && changePreference(() => setDestinationPreference(result.normalized, networkId));
+  const unprefer = (destination: string) => changePreference(() => deleteDestinationPreference(destination));
+  const saved = [...preferences.values()].sort((a, b) => a.destination.localeCompare(b.destination));
 
   return (
     <div className="page">
@@ -114,6 +138,18 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
             </div>
             <h2 id="decision-title">{summary.title}</h2>
             <p className="muted">{summary.detail}</p>
+            {note && <p className="muted">{note}</p>}
+            {result.preference && canPrefer && (
+              <div className="row">
+                <span className="badge">Lattice preference: {result.preference.network?.displayName}</span>
+                <span className="hint">Used by Lattice's decisions only. System routing is not changed.</span>
+                <span className="spacer" />
+                <Button variant="ghost" loading={prefPending} disabled={!canMutate} onClick={() => void unprefer(result.preference!.destination)}>
+                  Remove preference
+                </Button>
+              </div>
+            )}
+            {prefError && <p className="error-text" role="alert">{prefError}</p>}
             {result.port > 0 && <p className="hint">Lattice notes the port but does not probe services.</p>}
           </section>
 
@@ -122,13 +158,22 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
               <h3 id="candidates-title">
                 {result.candidates.length} candidate{result.candidates.length === 1 ? "" : "s"}
               </h3>
+              {canPrefer && spansNetworks && result.decision === ResolutionDecision.AMBIGUOUS && (
+                <p className="muted small">Prefer a network to have Lattice choose it whenever you use {result.normalized}.</p>
+              )}
               <ul className="list candidate-list">
                 {result.candidates.map((c) => (
                   <CandidateRow
                     key={`${c.device?.id?.networkId}:${c.device?.id?.nodeId}`}
                     candidate={c}
+                    label={candidateLabel(result, c.status)}
                     onOpenNetwork={onOpenNetwork}
                     onShowDevice={onShowDevice}
+                    onPrefer={
+                      canPrefer && spansNetworks && c.network && c.network.id !== preferredId && canMutate && !prefPending
+                        ? () => void prefer(c.network!.id)
+                        : undefined
+                    }
                   />
                 ))}
               </ul>
@@ -142,6 +187,36 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
             </p>
           )}
         </>
+      )}
+
+      {canPrefer && saved.length > 0 && (
+        <section className="stack-sm" aria-labelledby="saved-preferences">
+          <h3 id="saved-preferences">Your preferences</h3>
+          <p className="muted small">When a destination exists on several networks, Lattice uses these to decide. They do not change system routing.</p>
+          <div className="member-table" role="table" aria-label="Destination preferences">
+            {saved.map((p) => (
+              <div key={p.destination} className="member-row pref-row" role="row">
+                <span role="cell" className="mono cell">
+                  {p.destination}
+                </span>
+                <span role="cell" className="cell">
+                  <strong>{networks.get(p.networkId)?.displayName ?? "Removed network"}</strong>
+                </span>
+                <span role="cell" className="row member-actions">
+                  <Button variant="ghost" onClick={() => {
+                    onQueryChange(p.destination);
+                    void submit(p.destination);
+                  }}>
+                    Inspect
+                  </Button>
+                  <Button variant="ghost" disabled={!canMutate || prefPending} aria-label={`Remove preference for ${p.destination}`} onClick={() => void unprefer(p.destination)}>
+                    Remove
+                  </Button>
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       {!result && !run.pending && !run.error && (
@@ -159,12 +234,16 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
 
 function CandidateRow({
   candidate: c,
+  label,
   onOpenNetwork,
   onShowDevice,
+  onPrefer,
 }: {
   candidate: ResolutionCandidate;
+  label: string;
   onOpenNetwork: (id: string) => void;
   onShowDevice: (networkId: string, nodeId: string) => void;
+  onPrefer?: () => void;
 }) {
   const d = c.device;
   const n = c.network;
@@ -178,7 +257,7 @@ function CandidateRow({
         <span className="muted small">{providerName(n.provider)}</span>
         <StatusBadge state={n.state} />
         <span className="spacer" />
-        <span className="small muted">{statusLabel[c.status]}</span>
+        <span className="small muted">{label}</span>
       </div>
       <dl className="dl">
         <dt>Device</dt>
@@ -203,6 +282,11 @@ function CandidateRow({
         {address && <CopyButton value={address} label="Copy address" />}
         {d.dnsName && <CopyButton value={d.dnsName} label="Copy DNS name" />}
         <span className="spacer" />
+        {onPrefer && (
+          <Button onClick={onPrefer}>
+            Prefer {n.displayName}
+          </Button>
+        )}
         {d.id && <Button onClick={() => onShowDevice(n.id, d.id!.nodeId)}>Show device</Button>}
         <Button onClick={() => onOpenNetwork(n.id)}>Open network</Button>
       </div>

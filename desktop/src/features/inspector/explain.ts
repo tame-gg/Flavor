@@ -1,4 +1,12 @@
-import { CandidateStatus, DestinationKind, MatchKind, ResolutionDecision, type InspectDestinationResponse } from "@gen/lattice/v1/inspector_pb";
+import {
+  CandidateStatus,
+  DecisionReason,
+  DestinationKind,
+  MatchKind,
+  PreferenceState,
+  ResolutionDecision,
+  type InspectDestinationResponse,
+} from "@gen/lattice/v1/inspector_pb";
 
 export const matchLabel: Record<MatchKind, string> = {
   [MatchKind.UNSPECIFIED]: "Match",
@@ -13,6 +21,11 @@ export const statusLabel: Record<CandidateStatus, string> = {
   [CandidateStatus.TIED]: "Equal match",
   [CandidateStatus.OUTRANKED]: "Weaker match",
 };
+
+export function candidateLabel(r: InspectDestinationResponse, status: CandidateStatus): string {
+  if (status === CandidateStatus.OUTRANKED && r.reason === DecisionReason.DESTINATION_PREFERENCE) return "Not preferred";
+  return statusLabel[status];
+}
 
 const basis: Record<MatchKind, string> = {
   [MatchKind.UNSPECIFIED]: "a match",
@@ -31,6 +44,15 @@ export function explain(r: InspectDestinationResponse): { title: string; detail:
     case ResolutionDecision.UNIQUE: {
       const device = selected?.device?.hostname || selected?.device?.dnsName || "one device";
       const network = selected?.network?.displayName ?? "one network";
+      if (r.reason === DecisionReason.DESTINATION_PREFERENCE) {
+        const others = new Set(outranked.map((c) => c.network?.id)).size;
+        return {
+          title: `${device} on ${network}`,
+          detail:
+            `Chosen by your Lattice preference for ${network}.` +
+            (others > 0 ? ` Without it, ${r.normalized} would match on ${others + 1} networks.` : ""),
+        };
+      }
       const by = basis[r.decidedBy];
       const others =
         outranked.length > 0
@@ -58,4 +80,13 @@ export function explain(r: InspectDestinationResponse): { title: string; detail:
             : `No device address, DNS name or device name matched.`,
       };
   }
+}
+
+export function preferenceNote(r: InspectDestinationResponse): string | null {
+  const p = r.preference;
+  if (!p || p.state === PreferenceState.APPLIED) return null;
+  const net = p.network?.displayName || "the preferred network";
+  return p.state === PreferenceState.NETWORK_NOT_CONNECTED
+    ? `Your preference for ${net} is not applied because ${net} is not connected.`
+    : `Your preference for ${net} is not applied because no device on ${net} matches ${r.normalized}.`;
 }

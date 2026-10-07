@@ -3,18 +3,19 @@ import { ConflictSeverity, ConflictType, type Conflict, type ListConflictsRespon
 import { Banner } from "../../components/ui/Banner";
 import { Button } from "../../components/ui/Button";
 import { CopyButton } from "../../components/ui/CopyButton";
-import { listConflicts } from "../../lib/api/daemon";
+import { listConflicts, setDestinationPreference } from "../../lib/api/daemon";
 import { errorMessage } from "../../lib/api/errors";
-import { useDaemon } from "../../app/sync/useDaemon";
-import { counts, describe, filterConflicts, typeLabel, type SeverityFilter, type TypeFilter } from "./describe";
+import { useCanMutate, useDaemon } from "../../app/sync/useDaemon";
+import { category, counts, describe, filterConflicts, typeLabel, type SeverityFilter, type TypeFilter } from "./describe";
 
 type Props = {
   onInspect: (destination: string) => void;
   onOpenNetwork: (networkId: string) => void;
   onShowDevice: (networkId: string, nodeId: string) => void;
+  canPrefer: boolean;
 };
 
-export function ConflictsPage({ onInspect, onOpenNetwork, onShowDevice }: Props) {
+export function ConflictsPage({ onInspect, onOpenNetwork, onShowDevice, canPrefer }: Props) {
   const { sequence, status } = useDaemon();
   const [data, setData] = useState<ListConflictsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +76,7 @@ export function ConflictsPage({ onInspect, onOpenNetwork, onShowDevice }: Props)
                   ["all", `All ${all.length}`],
                   ["ambiguous", `Ambiguous ${n.ambiguous}`],
                   ["expected", `Expected ${n.expected}`],
+                  ...(canPrefer ? ([["resolved", `Resolved ${n.resolved}`]] as const) : []),
                 ] as const
               ).map(([value, label]) => (
                 <button key={value} type="button" aria-pressed={severity === value} onClick={() => setSeverity(value)}>
@@ -112,7 +114,14 @@ export function ConflictsPage({ onInspect, onOpenNetwork, onShowDevice }: Props)
           ) : (
             <ul className="list candidate-list">
               {shown.map((c) => (
-                <ConflictCard key={c.id} conflict={c} onInspect={onInspect} onOpenNetwork={onOpenNetwork} onShowDevice={onShowDevice} />
+                <ConflictCard
+                  key={c.id}
+                  conflict={c}
+                  onInspect={onInspect}
+                  onOpenNetwork={onOpenNetwork}
+                  onShowDevice={onShowDevice}
+                  canPrefer={canPrefer}
+                />
               ))}
             </ul>
           )}
@@ -129,20 +138,39 @@ export function ConflictsPage({ onInspect, onOpenNetwork, onShowDevice }: Props)
   );
 }
 
-function ConflictCard({ conflict: c, onInspect, onOpenNetwork, onShowDevice }: { conflict: Conflict } & Props) {
+function ConflictCard({ conflict: c, onInspect, onOpenNetwork, onShowDevice, canPrefer }: { conflict: Conflict } & Props) {
   const ambiguous = c.severity === ConflictSeverity.AMBIGUOUS;
+  const kind = category(c);
+  const canMutate = useCanMutate();
+  const [prefError, setPrefError] = useState<string | null>(null);
+  const preferredName = c.members.find((m) => m.network?.id === c.preferredNetworkId)?.network?.displayName;
+  const prefer = async (networkId: string) => {
+    setPrefError(null);
+    try {
+      await setDestinationPreference(c.value, networkId);
+    } catch (e) {
+      setPrefError(errorMessage(e));
+    }
+  };
+  const spans = new Set(c.members.map((m) => m.network?.id)).size > 1;
   return (
     <li className="card candidate">
       <div className="row">
         <strong className="mono network-name">{c.value}</strong>
         <span className="muted small">{typeLabel[c.type]}</span>
-        <span className={`badge ${ambiguous ? "badge-warn" : "badge-info"}`}>{ambiguous ? "Ambiguous" : "Expected overlap"}</span>
+        {kind === "resolved" ? (
+          <span className="badge badge-ok">Resolved by preference</span>
+        ) : (
+          <span className={`badge ${ambiguous ? "badge-warn" : "badge-info"}`}>{ambiguous ? "Ambiguous" : "Expected overlap"}</span>
+        )}
         <span className="spacer" />
         <Button aria-label={`Inspect ${c.value}`} onClick={() => onInspect(c.value)}>
           Inspect
         </Button>
       </div>
       <p className="muted">{describe(c)}</p>
+      {preferredName && <p className="muted small">Lattice prefers {preferredName} for {c.value}. System routing is not changed.</p>}
+      {prefError && <p className="error-text" role="alert">{prefError}</p>}
       <div className="member-table" role="table" aria-label={`Devices sharing ${c.value}`}>
         <div className="member-row member-head" role="row">
           <span role="columnheader">Network</span>
@@ -160,7 +188,7 @@ function ConflictCard({ conflict: c, onInspect, onOpenNetwork, onShowDevice }: {
           return (
             <div key={`${d.id?.networkId}:${d.id?.nodeId}`} className="member-row" role="row">
               <span role="cell" className="cell">
-                <strong>{net.displayName}</strong>
+                <strong>{net.displayName}</strong> {net.id === c.preferredNetworkId && <span className="badge badge-ok">Preferred</span>}
               </span>
               <span role="cell" className="cell">
                 {name} {d.local && <span className="badge">This device</span>}
@@ -180,6 +208,11 @@ function ConflictCard({ conflict: c, onInspect, onOpenNetwork, onShowDevice }: {
                 )}
               </span>
               <span role="cell" className="row member-actions">
+                {canPrefer && spans && net.id !== c.preferredNetworkId && (
+                  <Button variant="ghost" disabled={!canMutate} aria-label={`Prefer ${net.displayName} for ${c.value}`} onClick={() => void prefer(net.id)}>
+                    Prefer
+                  </Button>
+                )}
                 <Button variant="ghost" aria-label={`Show ${name} on ${net.displayName} in Devices`} onClick={() => d.id && onShowDevice(net.id, d.id.nodeId)}>
                   Device
                 </Button>

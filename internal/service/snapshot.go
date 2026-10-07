@@ -17,6 +17,7 @@ type Snapshot struct {
 	Devices         []domain.Device
 	Workspaces      []domain.Workspace
 	ActiveWorkspace domain.WorkspaceID
+	Preferences     []domain.DestinationPreference
 	CapturedAt      time.Time
 }
 
@@ -35,6 +36,9 @@ func (s *Service) Snapshot(ctx context.Context) (Snapshot, error) {
 		return Snapshot{}, s.storeErr(err)
 	}
 	if snap.ActiveWorkspace, err = s.cfg.Store.Workspaces().Active(ctx); err != nil {
+		return Snapshot{}, s.storeErr(err)
+	}
+	if snap.Preferences, err = s.cfg.Store.Preferences().List(ctx); err != nil {
 		return Snapshot{}, s.storeErr(err)
 	}
 	return snap, nil

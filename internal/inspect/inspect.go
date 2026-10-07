@@ -28,6 +28,13 @@ type Query struct {
 	Port    uint16
 }
 
+func (q Query) DestinationKind() domain.DestinationKind {
+	if q.Kind == KindAddress {
+		return domain.DestinationAddress
+	}
+	return domain.DestinationName
+}
+
 func (q Query) Normalized() string {
 	if q.Kind == KindAddress {
 		return q.Address.String()
@@ -59,7 +66,22 @@ const (
 	ReasonDeviceHostname
 	ReasonMultipleMatches
 	ReasonNoMatch
+	ReasonDestinationPreference
 )
+
+type PreferenceState int
+
+const (
+	PreferenceApplied PreferenceState = iota + 1
+	PreferenceNetworkNotConnected
+	PreferenceNoMatchOnNetwork
+)
+
+type PreferenceUse struct {
+	Preference domain.DestinationPreference
+	Network    domain.Network
+	State      PreferenceState
+}
 
 type CandidateStatus int
 
@@ -92,6 +114,7 @@ type Result struct {
 	DecidedBy    MatchKind
 	Candidates   []Candidate
 	NotInspected []Network
+	Preference   *PreferenceUse
 }
 
 func ParseQuery(raw string) (Query, error) {
@@ -141,7 +164,52 @@ func validName(name string) bool {
 	return true
 }
 
-func Resolve(q Query, networks []Network) Result {
+func Resolve(q Query, networks []Network, pref *domain.DestinationPreference) Result {
+	res := resolveMatches(q, networks)
+	if pref != nil && pref.Destination == q.Normalized() && pref.Kind == q.DestinationKind() {
+		applyPreference(&res, networks, *pref)
+	}
+	return res
+}
+
+func applyPreference(res *Result, networks []Network, pref domain.DestinationPreference) {
+	use := &PreferenceUse{Preference: pref, State: PreferenceNoMatchOnNetwork}
+	res.Preference = use
+	for _, n := range networks {
+		if n.Network.ID == pref.NetworkID {
+			use.Network = n.Network
+			if !n.Live {
+				use.State = PreferenceNetworkNotConnected
+				return
+			}
+		}
+	}
+	var preferred []int
+	for i, c := range res.Candidates {
+		if c.Network.ID == pref.NetworkID {
+			preferred = append(preferred, i)
+		}
+	}
+	if len(preferred) == 0 {
+		return
+	}
+	use.State = PreferenceApplied
+	for i := range res.Candidates {
+		res.Candidates[i].Status = StatusOutranked
+	}
+	if len(preferred) == 1 {
+		c := &res.Candidates[preferred[0]]
+		c.Status = StatusSelected
+		res.Decision, res.Reason, res.DecidedBy = DecisionUnique, ReasonDestinationPreference, c.Match
+		return
+	}
+	for _, i := range preferred {
+		res.Candidates[i].Status = StatusTied
+	}
+	res.Decision, res.Reason = DecisionAmbiguous, ReasonMultipleMatches
+}
+
+func resolveMatches(q Query, networks []Network) Result {
 	res := Result{Query: q}
 	seen := make(map[string]bool)
 	for _, n := range networks {

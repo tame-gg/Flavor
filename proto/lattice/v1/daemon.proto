@@ -6,6 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "lattice/v1/common.proto";
 import "lattice/v1/network.proto";
 import "lattice/v1/device.proto";
+import "lattice/v1/preferences.proto";
 import "lattice/v1/workspaces.proto";
 
 service DaemonService {
@@ -35,4 +36,5 @@ message GetStateSnapshotResponse {
   google.protobuf.Timestamp captured_at = 6;
   repeated Workspace workspaces = 7;
   string active_workspace_id = 8;
+  repeated DestinationPreference destination_preferences = 9;
 }

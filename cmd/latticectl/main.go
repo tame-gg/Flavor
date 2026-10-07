@@ -42,8 +42,11 @@ commands:
   workspace deactivate
   workspace delete <workspace>
                                        <workspace> is an id or an exact name
+  preference list
+  preference set <destination> --network <network>
+  preference remove <destination>      <network> is an id or an exact name
 
---json prints the daemon response as JSON for info, list, devices, diag, explain, conflicts and workspace list.
+--json prints the daemon response as JSON for info, list, devices, diag, explain, conflicts, workspace list and preference list.
 `
 
 func main() {
@@ -253,6 +256,8 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSO
 		return printConflicts(out, res.Msg)
 	case "workspace", "workspaces":
 		return runWorkspace(ctx, c, args, asJSON, out)
+	case "preference", "preferences", "prefer":
+		return runPreference(ctx, c, args, asJSON, out)
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", cmd, usage)
 	}
@@ -281,11 +286,22 @@ func printExplain(out io.Writer, r *v1.InspectDestinationResponse) error {
 		}
 		decision += fmt.Sprintf(": exists on %d network(s); use a full DNS name to pick one", len(nets))
 	case v1.ResolutionDecision_RESOLUTION_DECISION_UNIQUE:
-		c := r.Candidates[0]
-		decision += fmt.Sprintf(": %s on %s", c.Device.GetHostname(), c.Network.GetDisplayName())
+		for _, c := range r.Candidates {
+			if c.Status == v1.CandidateStatus_CANDIDATE_STATUS_SELECTED {
+				decision += fmt.Sprintf(": %s on %s", c.Device.GetHostname(), c.Network.GetDisplayName())
+			}
+		}
 	}
 	fmt.Fprintf(out, "decision     %s\n", strings.ReplaceAll(decision, "_", " "))
 	fmt.Fprintf(out, "reason       %s\n", strings.ReplaceAll(enumName(r.Reason.String(), "DECISION_REASON_"), "_", " "))
+	if p := r.Preference; p != nil {
+		state := map[v1.PreferenceState]string{
+			v1.PreferenceState_PREFERENCE_STATE_APPLIED:               "applied",
+			v1.PreferenceState_PREFERENCE_STATE_NETWORK_NOT_CONNECTED: "not applied, network not connected",
+			v1.PreferenceState_PREFERENCE_STATE_NO_MATCH_ON_NETWORK:   "not applied, no matching device on that network",
+		}[p.State]
+		fmt.Fprintf(out, "preference   %s (%s)\n", p.Network.GetDisplayName(), state)
+	}
 	if len(r.Candidates) > 0 {
 		fmt.Fprintln(out)
 		w := tabwriter.NewWriter(out, 0, 4, 2, ' ', 0)
@@ -486,6 +502,70 @@ func runWorkspace(ctx context.Context, c *client.Client, args []string, asJSON b
 		return err
 	default:
 		return fmt.Errorf("unknown workspace command %q\n\n%s", sub, usage)
+	}
+	return nil
+}
+
+func runPreference(ctx context.Context, c *client.Client, args []string, asJSON bool, out io.Writer) error {
+	if len(args) == 0 {
+		args = []string{"list"}
+	}
+	nets, err := c.Networks.ListNetworks(ctx, connect.NewRequest(&v1.ListNetworksRequest{}))
+	if err != nil {
+		return err
+	}
+	names := map[string]string{}
+	for _, n := range nets.Msg.Networks {
+		names[n.Id] = n.DisplayName
+	}
+	sub, rest := args[0], args[1:]
+	switch sub {
+	case "list", "ls":
+		res, err := c.Preferences.ListDestinationPreferences(ctx, connect.NewRequest(&v1.ListDestinationPreferencesRequest{}))
+		if err != nil {
+			return err
+		}
+		if asJSON {
+			return emit(out, res.Msg)
+		}
+		if len(res.Msg.Preferences) == 0 {
+			fmt.Fprintln(out, "no destination preferences")
+			return nil
+		}
+		w := tabwriter.NewWriter(out, 0, 4, 2, ' ', 0)
+		fmt.Fprintln(w, "DESTINATION\tKIND\tPREFERRED NETWORK")
+		for _, p := range res.Msg.Preferences {
+			fmt.Fprintf(w, "%s\t%s\t%s\n", p.Destination, enumName(p.Kind.String(), "DESTINATION_KIND_"), names[p.NetworkId])
+		}
+		return w.Flush()
+	case "set":
+		if len(rest) == 0 {
+			return fmt.Errorf("preference set: expected a destination\n\n%s", usage)
+		}
+		fs := flag.NewFlagSet("preference set", flag.ContinueOnError)
+		network := fs.String("network", "", "preferred network id or name")
+		if err := fs.Parse(rest[1:]); err != nil {
+			return err
+		}
+		id := *network
+		for nid, name := range names {
+			if name == *network {
+				id = nid
+			}
+		}
+		res, err := c.Preferences.SetDestinationPreference(ctx, connect.NewRequest(&v1.SetDestinationPreferenceRequest{Destination: rest[0], NetworkId: id}))
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s now prefers %s (a Lattice preference; system routing is not changed)\n", res.Msg.Preference.Destination, names[res.Msg.Preference.NetworkId])
+	case "remove", "rm", "delete":
+		if len(rest) != 1 {
+			return fmt.Errorf("preference remove: expected a destination\n\n%s", usage)
+		}
+		_, err := c.Preferences.DeleteDestinationPreference(ctx, connect.NewRequest(&v1.DeleteDestinationPreferenceRequest{Destination: rest[0]}))
+		return err
+	default:
+		return fmt.Errorf("unknown preference command %q\n\n%s", sub, usage)
 	}
 	return nil
 }

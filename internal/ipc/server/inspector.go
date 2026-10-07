@@ -25,11 +25,12 @@ var (
 		inspect.DecisionNoMatch:   v1.ResolutionDecision_RESOLUTION_DECISION_NO_MATCH,
 	}
 	reasons = map[inspect.Reason]v1.DecisionReason{
-		inspect.ReasonExactDeviceAddress: v1.DecisionReason_DECISION_REASON_EXACT_DEVICE_ADDRESS,
-		inspect.ReasonDeviceDNSName:      v1.DecisionReason_DECISION_REASON_DEVICE_DNS_NAME,
-		inspect.ReasonDeviceHostname:     v1.DecisionReason_DECISION_REASON_DEVICE_HOSTNAME,
-		inspect.ReasonMultipleMatches:    v1.DecisionReason_DECISION_REASON_MULTIPLE_MATCHES,
-		inspect.ReasonNoMatch:            v1.DecisionReason_DECISION_REASON_NO_MATCH,
+		inspect.ReasonExactDeviceAddress:    v1.DecisionReason_DECISION_REASON_EXACT_DEVICE_ADDRESS,
+		inspect.ReasonDeviceDNSName:         v1.DecisionReason_DECISION_REASON_DEVICE_DNS_NAME,
+		inspect.ReasonDeviceHostname:        v1.DecisionReason_DECISION_REASON_DEVICE_HOSTNAME,
+		inspect.ReasonMultipleMatches:       v1.DecisionReason_DECISION_REASON_MULTIPLE_MATCHES,
+		inspect.ReasonNoMatch:               v1.DecisionReason_DECISION_REASON_NO_MATCH,
+		inspect.ReasonDestinationPreference: v1.DecisionReason_DECISION_REASON_DESTINATION_PREFERENCE,
 	}
 	candidateStatuses = map[inspect.CandidateStatus]v1.CandidateStatus{
 		inspect.StatusSelected:  v1.CandidateStatus_CANDIDATE_STATUS_SELECTED,
@@ -65,6 +66,13 @@ func (h *handlers) InspectDestination(ctx context.Context, req *connect.Request[
 	}
 	for _, n := range res.NotInspected {
 		out.NotInspected = append(out.NotInspected, networkRef(n.Network, n.State))
+	}
+	if p := res.Preference; p != nil {
+		out.Preference = &v1.PreferenceUse{
+			Destination: p.Preference.Destination,
+			Network:     &v1.NetworkRef{Id: string(p.Preference.NetworkID), DisplayName: p.Network.DisplayName, Provider: providerToProto(p.Network.Provider)},
+			State:       preferenceStates[p.State],
+		}
 	}
 	return connect.NewResponse(out), nil
 }

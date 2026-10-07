@@ -88,6 +88,10 @@ export async function activateWorkspace(workspaceId: string, disconnectOthers: b
   return fromJson(ActivateWorkspaceResponseSchema, await invoke<JsonValue>("activate_workspace", { workspaceId, disconnectOthers }), options);
 }
 
+export const setDestinationPreference = (destination: string, networkId: string) =>
+  invoke<JsonValue>("set_destination_preference", { destination, networkId });
+export const deleteDestinationPreference = (destination: string) => invoke<void>("delete_destination_preference", { destination });
+
 export const getSettings = () => invoke<LoadedSettings>("get_settings");
 export const setSettings = (settings: Settings) => invoke<LoadedSettings>("set_settings", { settings });
 export const setTraySummary = (text: string) => invoke<void>("set_tray_summary", { text });

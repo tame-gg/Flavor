@@ -801,7 +801,7 @@ summary {
 
 .member-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 2fr) 168px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 2fr) 232px;
   gap: var(--space-4);
   align-items: center;
   padding: var(--space-2) 0;
@@ -980,4 +980,8 @@ summary {
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+.pref-row {
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) 168px;
 }

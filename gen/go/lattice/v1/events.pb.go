@@ -95,6 +95,8 @@ type DaemonEvent struct {
 	//	*DaemonEvent_WorkspaceChanged
 	//	*DaemonEvent_WorkspaceRemoved
 	//	*DaemonEvent_ActiveWorkspaceChanged
+	//	*DaemonEvent_DestinationPreferenceChanged
+	//	*DaemonEvent_DestinationPreferenceRemoved
 	Payload       isDaemonEvent_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -284,6 +286,24 @@ func (x *DaemonEvent) GetActiveWorkspaceChanged() *ActiveWorkspaceChanged {
 	return nil
 }
 
+func (x *DaemonEvent) GetDestinationPreferenceChanged() *DestinationPreferenceChanged {
+	if x != nil {
+		if x, ok := x.Payload.(*DaemonEvent_DestinationPreferenceChanged); ok {
+			return x.DestinationPreferenceChanged
+		}
+	}
+	return nil
+}
+
+func (x *DaemonEvent) GetDestinationPreferenceRemoved() *DestinationPreferenceRemoved {
+	if x != nil {
+		if x, ok := x.Payload.(*DaemonEvent_DestinationPreferenceRemoved); ok {
+			return x.DestinationPreferenceRemoved
+		}
+	}
+	return nil
+}
+
 type isDaemonEvent_Payload interface {
 	isDaemonEvent_Payload()
 }
@@ -344,6 +364,14 @@ type DaemonEvent_ActiveWorkspaceChanged struct {
 	ActiveWorkspaceChanged *ActiveWorkspaceChanged `protobuf:"bytes,23,opt,name=active_workspace_changed,json=activeWorkspaceChanged,proto3,oneof"`
 }
 
+type DaemonEvent_DestinationPreferenceChanged struct {
+	DestinationPreferenceChanged *DestinationPreferenceChanged `protobuf:"bytes,24,opt,name=destination_preference_changed,json=destinationPreferenceChanged,proto3,oneof"`
+}
+
+type DaemonEvent_DestinationPreferenceRemoved struct {
+	DestinationPreferenceRemoved *DestinationPreferenceRemoved `protobuf:"bytes,25,opt,name=destination_preference_removed,json=destinationPreferenceRemoved,proto3,oneof"`
+}
+
 func (*DaemonEvent_NetworkAdded) isDaemonEvent_Payload() {}
 
 func (*DaemonEvent_NetworkUpdated) isDaemonEvent_Payload() {}
@@ -371,6 +399,10 @@ func (*DaemonEvent_WorkspaceChanged) isDaemonEvent_Payload() {}
 func (*DaemonEvent_WorkspaceRemoved) isDaemonEvent_Payload() {}
 
 func (*DaemonEvent_ActiveWorkspaceChanged) isDaemonEvent_Payload() {}
+
+func (*DaemonEvent_DestinationPreferenceChanged) isDaemonEvent_Payload() {}
+
+func (*DaemonEvent_DestinationPreferenceRemoved) isDaemonEvent_Payload() {}
 
 type NetworkAdded struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1052,15 +1084,103 @@ func (x *ActiveWorkspaceChanged) GetWorkspaceId() string {
 	return ""
 }
 
+type DestinationPreferenceChanged struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Preference    *DestinationPreference `protobuf:"bytes,1,opt,name=preference,proto3" json:"preference,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DestinationPreferenceChanged) Reset() {
+	*x = DestinationPreferenceChanged{}
+	mi := &file_lattice_v1_events_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DestinationPreferenceChanged) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DestinationPreferenceChanged) ProtoMessage() {}
+
+func (x *DestinationPreferenceChanged) ProtoReflect() protoreflect.Message {
+	mi := &file_lattice_v1_events_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DestinationPreferenceChanged.ProtoReflect.Descriptor instead.
+func (*DestinationPreferenceChanged) Descriptor() ([]byte, []int) {
+	return file_lattice_v1_events_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *DestinationPreferenceChanged) GetPreference() *DestinationPreference {
+	if x != nil {
+		return x.Preference
+	}
+	return nil
+}
+
+type DestinationPreferenceRemoved struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Destination   string                 `protobuf:"bytes,1,opt,name=destination,proto3" json:"destination,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DestinationPreferenceRemoved) Reset() {
+	*x = DestinationPreferenceRemoved{}
+	mi := &file_lattice_v1_events_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DestinationPreferenceRemoved) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DestinationPreferenceRemoved) ProtoMessage() {}
+
+func (x *DestinationPreferenceRemoved) ProtoReflect() protoreflect.Message {
+	mi := &file_lattice_v1_events_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DestinationPreferenceRemoved.ProtoReflect.Descriptor instead.
+func (*DestinationPreferenceRemoved) Descriptor() ([]byte, []int) {
+	return file_lattice_v1_events_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *DestinationPreferenceRemoved) GetDestination() string {
+	if x != nil {
+		return x.Destination
+	}
+	return ""
+}
+
 var File_lattice_v1_events_proto protoreflect.FileDescriptor
 
 const file_lattice_v1_events_proto_rawDesc = "" +
 	"\n" +
 	"\x17lattice/v1/events.proto\x12\n" +
-	"lattice.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17lattice/v1/common.proto\x1a\x17lattice/v1/device.proto\x1a\x18lattice/v1/network.proto\x1a\x1blattice/v1/workspaces.proto\"i\n" +
+	"lattice.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17lattice/v1/common.proto\x1a\x17lattice/v1/device.proto\x1a\x18lattice/v1/network.proto\x1a\x1clattice/v1/preferences.proto\x1a\x1blattice/v1/workspaces.proto\"i\n" +
 	"\x12WatchEventsRequest\x12,\n" +
 	"\x12daemon_instance_id\x18\x01 \x01(\tR\x10daemonInstanceId\x12%\n" +
-	"\x0eafter_sequence\x18\x02 \x01(\x04R\rafterSequence\"\xc7\t\n" +
+	"\x0eafter_sequence\x18\x02 \x01(\x04R\rafterSequence\"\xab\v\n" +
 	"\vDaemonEvent\x12,\n" +
 	"\x12daemon_instance_id\x18\x01 \x01(\tR\x10daemonInstanceId\x12\x1f\n" +
 	"\vsequence_id\x18\x02 \x01(\x04R\n" +
@@ -1081,7 +1201,9 @@ const file_lattice_v1_events_proto_rawDesc = "" +
 	"\x0edaemon_warning\x18\x14 \x01(\v2\x19.lattice.v1.DaemonWarningH\x00R\rdaemonWarning\x12K\n" +
 	"\x11workspace_changed\x18\x15 \x01(\v2\x1c.lattice.v1.WorkspaceChangedH\x00R\x10workspaceChanged\x12K\n" +
 	"\x11workspace_removed\x18\x16 \x01(\v2\x1c.lattice.v1.WorkspaceRemovedH\x00R\x10workspaceRemoved\x12^\n" +
-	"\x18active_workspace_changed\x18\x17 \x01(\v2\".lattice.v1.ActiveWorkspaceChangedH\x00R\x16activeWorkspaceChangedB\t\n" +
+	"\x18active_workspace_changed\x18\x17 \x01(\v2\".lattice.v1.ActiveWorkspaceChangedH\x00R\x16activeWorkspaceChanged\x12p\n" +
+	"\x1edestination_preference_changed\x18\x18 \x01(\v2(.lattice.v1.DestinationPreferenceChangedH\x00R\x1cdestinationPreferenceChanged\x12p\n" +
+	"\x1edestination_preference_removed\x18\x19 \x01(\v2(.lattice.v1.DestinationPreferenceRemovedH\x00R\x1cdestinationPreferenceRemovedB\t\n" +
 	"\apayload\"=\n" +
 	"\fNetworkAdded\x12-\n" +
 	"\anetwork\x18\x01 \x01(\v2\x13.lattice.v1.NetworkR\anetwork\"?\n" +
@@ -1123,7 +1245,13 @@ const file_lattice_v1_events_proto_rawDesc = "" +
 	"\x10WorkspaceRemoved\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\";\n" +
 	"\x16ActiveWorkspaceChanged\x12!\n" +
-	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId2X\n" +
+	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\"a\n" +
+	"\x1cDestinationPreferenceChanged\x12A\n" +
+	"\n" +
+	"preference\x18\x01 \x01(\v2!.lattice.v1.DestinationPreferenceR\n" +
+	"preference\"@\n" +
+	"\x1cDestinationPreferenceRemoved\x12 \n" +
+	"\vdestination\x18\x01 \x01(\tR\vdestination2X\n" +
 	"\fEventService\x12H\n" +
 	"\vWatchEvents\x12\x1e.lattice.v1.WatchEventsRequest\x1a\x17.lattice.v1.DaemonEvent0\x01B\xa5\x01\n" +
 	"\x0ecom.lattice.v1B\vEventsProtoP\x01Z=git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1;latticev1\xa2\x02\x03LXX\xaa\x02\n" +
@@ -1142,34 +1270,37 @@ func file_lattice_v1_events_proto_rawDescGZIP() []byte {
 	return file_lattice_v1_events_proto_rawDescData
 }
 
-var file_lattice_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_lattice_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_lattice_v1_events_proto_goTypes = []any{
-	(*WatchEventsRequest)(nil),      // 0: lattice.v1.WatchEventsRequest
-	(*DaemonEvent)(nil),             // 1: lattice.v1.DaemonEvent
-	(*NetworkAdded)(nil),            // 2: lattice.v1.NetworkAdded
-	(*NetworkUpdated)(nil),          // 3: lattice.v1.NetworkUpdated
-	(*NetworkRemoved)(nil),          // 4: lattice.v1.NetworkRemoved
-	(*NetworkStateChanged)(nil),     // 5: lattice.v1.NetworkStateChanged
-	(*AuthenticationRequired)(nil),  // 6: lattice.v1.AuthenticationRequired
-	(*AuthenticationCompleted)(nil), // 7: lattice.v1.AuthenticationCompleted
-	(*ApprovalRequired)(nil),        // 8: lattice.v1.ApprovalRequired
-	(*PeerAdded)(nil),               // 9: lattice.v1.PeerAdded
-	(*PeerUpdated)(nil),             // 10: lattice.v1.PeerUpdated
-	(*PeerRemoved)(nil),             // 11: lattice.v1.PeerRemoved
-	(*DaemonWarning)(nil),           // 12: lattice.v1.DaemonWarning
-	(*WorkspaceChanged)(nil),        // 13: lattice.v1.WorkspaceChanged
-	(*WorkspaceRemoved)(nil),        // 14: lattice.v1.WorkspaceRemoved
-	(*ActiveWorkspaceChanged)(nil),  // 15: lattice.v1.ActiveWorkspaceChanged
-	(*timestamppb.Timestamp)(nil),   // 16: google.protobuf.Timestamp
-	(*Network)(nil),                 // 17: lattice.v1.Network
-	(NetworkConnectionState)(0),     // 18: lattice.v1.NetworkConnectionState
-	(ProviderType)(0),               // 19: lattice.v1.ProviderType
-	(*Device)(nil),                  // 20: lattice.v1.Device
-	(*DeviceIdentity)(nil),          // 21: lattice.v1.DeviceIdentity
-	(*Workspace)(nil),               // 22: lattice.v1.Workspace
+	(*WatchEventsRequest)(nil),           // 0: lattice.v1.WatchEventsRequest
+	(*DaemonEvent)(nil),                  // 1: lattice.v1.DaemonEvent
+	(*NetworkAdded)(nil),                 // 2: lattice.v1.NetworkAdded
+	(*NetworkUpdated)(nil),               // 3: lattice.v1.NetworkUpdated
+	(*NetworkRemoved)(nil),               // 4: lattice.v1.NetworkRemoved
+	(*NetworkStateChanged)(nil),          // 5: lattice.v1.NetworkStateChanged
+	(*AuthenticationRequired)(nil),       // 6: lattice.v1.AuthenticationRequired
+	(*AuthenticationCompleted)(nil),      // 7: lattice.v1.AuthenticationCompleted
+	(*ApprovalRequired)(nil),             // 8: lattice.v1.ApprovalRequired
+	(*PeerAdded)(nil),                    // 9: lattice.v1.PeerAdded
+	(*PeerUpdated)(nil),                  // 10: lattice.v1.PeerUpdated
+	(*PeerRemoved)(nil),                  // 11: lattice.v1.PeerRemoved
+	(*DaemonWarning)(nil),                // 12: lattice.v1.DaemonWarning
+	(*WorkspaceChanged)(nil),             // 13: lattice.v1.WorkspaceChanged
+	(*WorkspaceRemoved)(nil),             // 14: lattice.v1.WorkspaceRemoved
+	(*ActiveWorkspaceChanged)(nil),       // 15: lattice.v1.ActiveWorkspaceChanged
+	(*DestinationPreferenceChanged)(nil), // 16: lattice.v1.DestinationPreferenceChanged
+	(*DestinationPreferenceRemoved)(nil), // 17: lattice.v1.DestinationPreferenceRemoved
+	(*timestamppb.Timestamp)(nil),        // 18: google.protobuf.Timestamp
+	(*Network)(nil),                      // 19: lattice.v1.Network
+	(NetworkConnectionState)(0),          // 20: lattice.v1.NetworkConnectionState
+	(ProviderType)(0),                    // 21: lattice.v1.ProviderType
+	(*Device)(nil),                       // 22: lattice.v1.Device
+	(*DeviceIdentity)(nil),               // 23: lattice.v1.DeviceIdentity
+	(*Workspace)(nil),                    // 24: lattice.v1.Workspace
+	(*DestinationPreference)(nil),        // 25: lattice.v1.DestinationPreference
 }
 var file_lattice_v1_events_proto_depIdxs = []int32{
-	16, // 0: lattice.v1.DaemonEvent.timestamp:type_name -> google.protobuf.Timestamp
+	18, // 0: lattice.v1.DaemonEvent.timestamp:type_name -> google.protobuf.Timestamp
 	2,  // 1: lattice.v1.DaemonEvent.network_added:type_name -> lattice.v1.NetworkAdded
 	3,  // 2: lattice.v1.DaemonEvent.network_updated:type_name -> lattice.v1.NetworkUpdated
 	4,  // 3: lattice.v1.DaemonEvent.network_removed:type_name -> lattice.v1.NetworkRemoved
@@ -1184,22 +1315,25 @@ var file_lattice_v1_events_proto_depIdxs = []int32{
 	13, // 12: lattice.v1.DaemonEvent.workspace_changed:type_name -> lattice.v1.WorkspaceChanged
 	14, // 13: lattice.v1.DaemonEvent.workspace_removed:type_name -> lattice.v1.WorkspaceRemoved
 	15, // 14: lattice.v1.DaemonEvent.active_workspace_changed:type_name -> lattice.v1.ActiveWorkspaceChanged
-	17, // 15: lattice.v1.NetworkAdded.network:type_name -> lattice.v1.Network
-	17, // 16: lattice.v1.NetworkUpdated.network:type_name -> lattice.v1.Network
-	18, // 17: lattice.v1.NetworkStateChanged.state:type_name -> lattice.v1.NetworkConnectionState
-	19, // 18: lattice.v1.AuthenticationRequired.provider:type_name -> lattice.v1.ProviderType
-	19, // 19: lattice.v1.ApprovalRequired.provider:type_name -> lattice.v1.ProviderType
-	20, // 20: lattice.v1.PeerAdded.device:type_name -> lattice.v1.Device
-	20, // 21: lattice.v1.PeerUpdated.device:type_name -> lattice.v1.Device
-	21, // 22: lattice.v1.PeerRemoved.id:type_name -> lattice.v1.DeviceIdentity
-	22, // 23: lattice.v1.WorkspaceChanged.workspace:type_name -> lattice.v1.Workspace
-	0,  // 24: lattice.v1.EventService.WatchEvents:input_type -> lattice.v1.WatchEventsRequest
-	1,  // 25: lattice.v1.EventService.WatchEvents:output_type -> lattice.v1.DaemonEvent
-	25, // [25:26] is the sub-list for method output_type
-	24, // [24:25] is the sub-list for method input_type
-	24, // [24:24] is the sub-list for extension type_name
-	24, // [24:24] is the sub-list for extension extendee
-	0,  // [0:24] is the sub-list for field type_name
+	16, // 15: lattice.v1.DaemonEvent.destination_preference_changed:type_name -> lattice.v1.DestinationPreferenceChanged
+	17, // 16: lattice.v1.DaemonEvent.destination_preference_removed:type_name -> lattice.v1.DestinationPreferenceRemoved
+	19, // 17: lattice.v1.NetworkAdded.network:type_name -> lattice.v1.Network
+	19, // 18: lattice.v1.NetworkUpdated.network:type_name -> lattice.v1.Network
+	20, // 19: lattice.v1.NetworkStateChanged.state:type_name -> lattice.v1.NetworkConnectionState
+	21, // 20: lattice.v1.AuthenticationRequired.provider:type_name -> lattice.v1.ProviderType
+	21, // 21: lattice.v1.ApprovalRequired.provider:type_name -> lattice.v1.ProviderType
+	22, // 22: lattice.v1.PeerAdded.device:type_name -> lattice.v1.Device
+	22, // 23: lattice.v1.PeerUpdated.device:type_name -> lattice.v1.Device
+	23, // 24: lattice.v1.PeerRemoved.id:type_name -> lattice.v1.DeviceIdentity
+	24, // 25: lattice.v1.WorkspaceChanged.workspace:type_name -> lattice.v1.Workspace
+	25, // 26: lattice.v1.DestinationPreferenceChanged.preference:type_name -> lattice.v1.DestinationPreference
+	0,  // 27: lattice.v1.EventService.WatchEvents:input_type -> lattice.v1.WatchEventsRequest
+	1,  // 28: lattice.v1.EventService.WatchEvents:output_type -> lattice.v1.DaemonEvent
+	28, // [28:29] is the sub-list for method output_type
+	27, // [27:28] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_lattice_v1_events_proto_init() }
@@ -1210,6 +1344,7 @@ func file_lattice_v1_events_proto_init() {
 	file_lattice_v1_common_proto_init()
 	file_lattice_v1_device_proto_init()
 	file_lattice_v1_network_proto_init()
+	file_lattice_v1_preferences_proto_init()
 	file_lattice_v1_workspaces_proto_init()
 	file_lattice_v1_events_proto_msgTypes[1].OneofWrappers = []any{
 		(*DaemonEvent_NetworkAdded)(nil),
@@ -1226,6 +1361,8 @@ func file_lattice_v1_events_proto_init() {
 		(*DaemonEvent_WorkspaceChanged)(nil),
 		(*DaemonEvent_WorkspaceRemoved)(nil),
 		(*DaemonEvent_ActiveWorkspaceChanged)(nil),
+		(*DaemonEvent_DestinationPreferenceChanged)(nil),
+		(*DaemonEvent_DestinationPreferenceRemoved)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1233,7 +1370,7 @@ func file_lattice_v1_events_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_lattice_v1_events_proto_rawDesc), len(file_lattice_v1_events_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   16,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

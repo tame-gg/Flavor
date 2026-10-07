@@ -38,6 +38,8 @@ fn main() {
             commands::delete_workspace,
             commands::activate_workspace,
             commands::deactivate_workspace,
+            commands::set_destination_preference,
+            commands::delete_destination_preference,
             commands::open_auth_url,
             commands::get_settings,
             commands::set_settings,

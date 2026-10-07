@@ -163,10 +163,21 @@ export function App() {
           />
         )}
         {page === "inspector" && info.capabilities.includes(Capability.CONNECTION_INSPECTOR) && (
-          <InspectorPage query={inspectorQuery} onQueryChange={setInspectorQuery} onOpenNetwork={openNetwork} onShowDevice={showDevice} />
+          <InspectorPage
+            query={inspectorQuery}
+            onQueryChange={setInspectorQuery}
+            onOpenNetwork={openNetwork}
+            onShowDevice={showDevice}
+            canPrefer={info.capabilities.includes(Capability.DESTINATION_PREFERENCES)}
+          />
         )}
         {page === "conflicts" && info.capabilities.includes(Capability.CONFLICT_CENTER) && (
-          <ConflictsPage onInspect={inspect} onOpenNetwork={openNetwork} onShowDevice={showDevice} />
+          <ConflictsPage
+            onInspect={inspect}
+            onOpenNetwork={openNetwork}
+            onShowDevice={showDevice}
+            canPrefer={info.capabilities.includes(Capability.DESTINATION_PREFERENCES)}
+          />
         )}
         {page === "diagnostics" && <DiagnosticsPage />}
         {page === "settings" && <SettingsPage settings={settings} error={settingsError} onChange={(s) => void changeSettings(s)} />}

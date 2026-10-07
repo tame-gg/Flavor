@@ -38,6 +38,7 @@ func (h *handlers) ListConflicts(ctx context.Context, _ *connect.Request[v1.List
 			Scope:                  scopes[c.Scope],
 			Value:                  c.Value,
 			NetworkContextResolves: c.ContextResolves,
+			PreferredNetworkId:     string(c.PreferredNetwork),
 		}
 		for _, m := range c.Members {
 			pc.Members = append(pc.Members, &v1.ConflictMember{Network: networkRef(m.Network, m.State), Device: device(m.Device), UniqueName: m.UniqueName})

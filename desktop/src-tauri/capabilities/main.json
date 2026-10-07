@@ -24,6 +24,8 @@
     "allow-delete-workspace",
     "allow-activate-workspace",
     "allow-deactivate-workspace",
+    "allow-set-destination-preference",
+    "allow-delete-destination-preference",
     "allow-open-auth-url",
     "allow-get-settings",
     "allow-set-settings",

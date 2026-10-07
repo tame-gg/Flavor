@@ -11,6 +11,7 @@ fn main() {
             "lattice/v1/events.proto",
             "lattice/v1/inspector.proto",
             "lattice/v1/network.proto",
+            "lattice/v1/preferences.proto",
             "lattice/v1/workspaces.proto",
         ])
         .include_file("_connectrpc.rs")

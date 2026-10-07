@@ -247,6 +247,31 @@ pub async fn deactivate_workspace(daemon: State<'_, Daemon>) -> Result<()> {
 }
 
 #[tauri::command]
+pub async fn set_destination_preference(
+    daemon: State<'_, Daemon>,
+    destination: String,
+    network_id: String,
+) -> Result<DestinationPreference> {
+    let res = daemon
+        .client()?
+        .preferences
+        .set_destination_preference(SetDestinationPreferenceRequest { destination, network_id, ..Default::default() })
+        .await?
+        .into_owned();
+    Ok(res.preference.into_option().unwrap_or_default())
+}
+
+#[tauri::command]
+pub async fn delete_destination_preference(daemon: State<'_, Daemon>, destination: String) -> Result<()> {
+    daemon
+        .client()?
+        .preferences
+        .delete_destination_preference(DeleteDestinationPreferenceRequest { destination, ..Default::default() })
+        .await?;
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn open_auth_url(
     app: AppHandle,
     daemon: State<'_, Daemon>,

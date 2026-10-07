@@ -286,3 +286,50 @@ async fn workspaces_round_trip_through_rust_client() {
     );
     assert_eq!(err.lattice_code(), Some(LatticeErrorCode::LATTICE_ERROR_CODE_WORKSPACE_NOT_FOUND));
 }
+
+#[tokio::test]
+async fn destination_preference_changes_the_inspector_decision() {
+    let daemon = spawn_daemon().await;
+    let client = LatticeIpcClient::new(&daemon.socket);
+    let a = add(&client, "LunarLabs", "https://a.example.com").await;
+    let b = add(&client, "Home", "https://b.example.com").await;
+    for n in [&a, &b] {
+        client
+            .networks
+            .connect_network(ConnectNetworkRequest { network_id: n.id.clone(), ..Default::default() })
+            .await
+            .unwrap();
+    }
+    let inspect = || async {
+        client
+            .inspector
+            .inspect_destination(InspectDestinationRequest { destination: "100.64.0.2".into(), ..Default::default() })
+            .await
+            .unwrap()
+            .into_owned()
+    };
+    let mut before = inspect().await;
+    for _ in 0..100 {
+        if before.candidates.len() == 2 {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(20)).await;
+        before = inspect().await;
+    }
+    assert_eq!(before.decision, ResolutionDecision::RESOLUTION_DECISION_AMBIGUOUS);
+    client
+        .preferences
+        .set_destination_preference(SetDestinationPreferenceRequest {
+            destination: "100.64.0.2".into(),
+            network_id: b.id.clone(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+    let after = inspect().await;
+    assert_eq!(after.decision, ResolutionDecision::RESOLUTION_DECISION_UNIQUE);
+    assert_eq!(after.reason, DecisionReason::DECISION_REASON_DESTINATION_PREFERENCE);
+    assert_eq!(after.preference.state, PreferenceState::PREFERENCE_STATE_APPLIED);
+    let selected = after.candidates.iter().find(|c| c.status == CandidateStatus::CANDIDATE_STATUS_SELECTED).unwrap();
+    assert_eq!(selected.network.id, b.id);
+}

@@ -37,13 +37,14 @@ type Member struct {
 }
 
 type Conflict struct {
-	ID              string
-	Type            ConflictType
-	Severity        Severity
-	Scope           Scope
-	Value           string
-	Members         []Member
-	ContextResolves bool
+	ID               string
+	Type             ConflictType
+	Severity         Severity
+	Scope            Scope
+	Value            string
+	Members          []Member
+	ContextResolves  bool
+	PreferredNetwork domain.NetworkID
 }
 
 type ConflictReport struct {
@@ -57,7 +58,7 @@ var conflictSlugs = map[ConflictType]string{
 	ConflictHostname: "name",
 }
 
-func Conflicts(networks []Network) ConflictReport {
+func Conflicts(networks []Network, prefs []domain.DestinationPreference) ConflictReport {
 	var rep ConflictReport
 	var members []Member
 	seen := make(map[string]bool)
@@ -110,7 +111,9 @@ func Conflicts(networks []Network) ConflictReport {
 			if len(ms) < 2 || allLocal(ms) {
 				continue
 			}
-			rep.Conflicts = append(rep.Conflicts, classify(typ, value, ms))
+			c := classify(typ, value, ms)
+			c.PreferredNetwork = preferredFor(c, prefs)
+			rep.Conflicts = append(rep.Conflicts, c)
 		}
 	}
 	sort.Slice(rep.Conflicts, func(i, j int) bool {
@@ -186,4 +189,22 @@ func bareNames(d domain.Device) []string {
 		out = append(out, short)
 	}
 	return out
+}
+
+func preferredFor(c Conflict, prefs []domain.DestinationPreference) domain.NetworkID {
+	kind := domain.DestinationName
+	if c.Type == ConflictAddress {
+		kind = domain.DestinationAddress
+	}
+	for _, p := range prefs {
+		if p.Destination != c.Value || p.Kind != kind {
+			continue
+		}
+		for _, m := range c.Members {
+			if m.Network.ID == p.NetworkID {
+				return p.NetworkID
+			}
+		}
+	}
+	return ""
 }

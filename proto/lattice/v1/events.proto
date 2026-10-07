@@ -6,6 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "lattice/v1/common.proto";
 import "lattice/v1/device.proto";
 import "lattice/v1/network.proto";
+import "lattice/v1/preferences.proto";
 import "lattice/v1/workspaces.proto";
 
 service EventService {
@@ -36,6 +37,8 @@ message DaemonEvent {
     WorkspaceChanged workspace_changed = 21;
     WorkspaceRemoved workspace_removed = 22;
     ActiveWorkspaceChanged active_workspace_changed = 23;
+    DestinationPreferenceChanged destination_preference_changed = 24;
+    DestinationPreferenceRemoved destination_preference_removed = 25;
   }
 }
 
@@ -101,4 +104,12 @@ message WorkspaceRemoved {
 
 message ActiveWorkspaceChanged {
   string workspace_id = 1;
+}
+
+message DestinationPreferenceChanged {
+  DestinationPreference preference = 1;
+}
+
+message DestinationPreferenceRemoved {
+  string destination = 1;
 }

@@ -224,5 +224,23 @@ describe("DaemonSyncController", () => {
     expect(c.getState().workspaces.get("w2")?.networkIds).toEqual([]);
     expect(c.getState().activeWorkspaceId).toBe("w2");
   });
+
+  it("tracks destination preferences from the snapshot and events", async () => {
+    const { t, c } = setup(
+      create(GetStateSnapshotResponseSchema, {
+        daemonInstanceId: "i1",
+        snapshotSequence: 1n,
+        daemon: { protocolMajor: 1 },
+        destinationPreferences: [{ destination: "100.64.0.1", networkId: "a" }],
+      }),
+    );
+    await c.start();
+    expect(c.getState().preferences.get("100.64.0.1")?.networkId).toBe("a");
+    t.emit(event("i1", 2n, { case: "destinationPreferenceChanged", value: { preference: { destination: "100.64.0.1", networkId: "b" } } as never }));
+    t.emit(event("i1", 3n, { case: "destinationPreferenceChanged", value: { preference: { destination: "postgres", networkId: "a" } } as never }));
+    expect(c.getState().preferences.get("100.64.0.1")?.networkId).toBe("b");
+    t.emit(event("i1", 4n, { case: "destinationPreferenceRemoved", value: { destination: "100.64.0.1" } as never }));
+    expect([...c.getState().preferences.keys()]).toEqual(["postgres"]);
+  });
 });
 

@@ -2,21 +2,29 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"git.lunarlabs.dev/lattice/lattice/internal/domain"
 	"git.lunarlabs.dev/lattice/lattice/internal/inspect"
+	"git.lunarlabs.dev/lattice/lattice/internal/store"
 )
 
 func (s *Service) Inspect(ctx context.Context, destination string) (inspect.Result, uint64, error) {
-	q, err := inspect.ParseQuery(destination)
+	q, err := parseDestination(destination)
 	if err != nil {
-		return inspect.Result{}, 0, fail(CodeInvalidArgument, "enter an IP address or a device name, optionally with a port", false)
+		return inspect.Result{}, 0, err
 	}
 	nets, seq, err := s.liveNetworks(ctx)
 	if err != nil {
 		return inspect.Result{}, 0, err
 	}
-	return inspect.Resolve(q, nets), seq, nil
+	var pref *domain.DestinationPreference
+	if p, err := s.cfg.Store.Preferences().Get(ctx, q.Normalized()); err == nil {
+		pref = &p
+	} else if !errors.Is(err, store.ErrNotFound) {
+		return inspect.Result{}, 0, s.storeErr(err)
+	}
+	return inspect.Resolve(q, nets, pref), seq, nil
 }
 
 func (s *Service) Conflicts(ctx context.Context) (inspect.ConflictReport, uint64, error) {
@@ -24,7 +32,11 @@ func (s *Service) Conflicts(ctx context.Context) (inspect.ConflictReport, uint64
 	if err != nil {
 		return inspect.ConflictReport{}, 0, err
 	}
-	return inspect.Conflicts(nets), seq, nil
+	prefs, err := s.cfg.Store.Preferences().List(ctx)
+	if err != nil {
+		return inspect.ConflictReport{}, 0, s.storeErr(err)
+	}
+	return inspect.Conflicts(nets, prefs), seq, nil
 }
 
 func (s *Service) liveNetworks(ctx context.Context) ([]inspect.Network, uint64, error) {

@@ -18,11 +18,12 @@ func timestamp(t time.Time) *timestamppb.Timestamp {
 }
 
 var capabilities = map[string]v1.Capability{
-	"headscale":            v1.Capability_CAPABILITY_HEADSCALE,
-	"device_snapshots":     v1.Capability_CAPABILITY_DEVICE_SNAPSHOTS,
-	"connection_inspector": v1.Capability_CAPABILITY_CONNECTION_INSPECTOR,
-	"conflict_center":      v1.Capability_CAPABILITY_CONFLICT_CENTER,
-	"workspaces":           v1.Capability_CAPABILITY_WORKSPACES,
+	"headscale":               v1.Capability_CAPABILITY_HEADSCALE,
+	"device_snapshots":        v1.Capability_CAPABILITY_DEVICE_SNAPSHOTS,
+	"connection_inspector":    v1.Capability_CAPABILITY_CONNECTION_INSPECTOR,
+	"conflict_center":         v1.Capability_CAPABILITY_CONFLICT_CENTER,
+	"workspaces":              v1.Capability_CAPABILITY_WORKSPACES,
+	"destination_preferences": v1.Capability_CAPABILITY_DESTINATION_PREFERENCES,
 }
 
 func daemonInfo(info service.DaemonInfo) *v1.GetDaemonInfoResponse {
@@ -165,6 +166,10 @@ func event(ev events.Event, instance string) *v1.DaemonEvent {
 		out.Payload = &v1.DaemonEvent_WorkspaceRemoved{WorkspaceRemoved: &v1.WorkspaceRemoved{WorkspaceId: string(p.WorkspaceID)}}
 	case events.ActiveWorkspaceChanged:
 		out.Payload = &v1.DaemonEvent_ActiveWorkspaceChanged{ActiveWorkspaceChanged: &v1.ActiveWorkspaceChanged{WorkspaceId: string(p.WorkspaceID)}}
+	case events.DestinationPreferenceChanged:
+		out.Payload = &v1.DaemonEvent_DestinationPreferenceChanged{DestinationPreferenceChanged: &v1.DestinationPreferenceChanged{Preference: preference(p.Preference)}}
+	case events.DestinationPreferenceRemoved:
+		out.Payload = &v1.DaemonEvent_DestinationPreferenceRemoved{DestinationPreferenceRemoved: &v1.DestinationPreferenceRemoved{Destination: p.Destination}}
 	}
 	return out
 }

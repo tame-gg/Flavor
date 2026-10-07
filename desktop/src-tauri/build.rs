@@ -16,6 +16,8 @@ const COMMANDS: &[&str] = &[
     "delete_workspace",
     "activate_workspace",
     "deactivate_workspace",
+    "set_destination_preference",
+    "delete_destination_preference",
     "open_auth_url",
     "get_settings",
     "set_settings",

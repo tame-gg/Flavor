@@ -14,7 +14,34 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file lattice/v1/inspector.proto.
  */
 export const file_lattice_v1_inspector: GenFile = /*@__PURE__*/
-  fileDesc("ChpsYXR0aWNlL3YxL2luc3BlY3Rvci5wcm90bxIKbGF0dGljZS52MSKNAQoKTmV0d29ya1JlZhIKCgJpZBgBIAEoCRIUCgxkaXNwbGF5X25hbWUYAiABKAkSKgoIcHJvdmlkZXIYAyABKA4yGC5sYXR0aWNlLnYxLlByb3ZpZGVyVHlwZRIxCgVzdGF0ZRgEIAEoDjIiLmxhdHRpY2UudjEuTmV0d29ya0Nvbm5lY3Rpb25TdGF0ZSLMAQoTUmVzb2x1dGlvbkNhbmRpZGF0ZRInCgduZXR3b3JrGAEgASgLMhYubGF0dGljZS52MS5OZXR3b3JrUmVmEiIKBmRldmljZRgCIAEoCzISLmxhdHRpY2UudjEuRGV2aWNlEiQKBW1hdGNoGAMgASgOMhUubGF0dGljZS52MS5NYXRjaEtpbmQSFQoNbWF0Y2hlZF92YWx1ZRgEIAEoCRIrCgZzdGF0dXMYBSABKA4yGy5sYXR0aWNlLnYxLkNhbmRpZGF0ZVN0YXR1cyIwChlJbnNwZWN0RGVzdGluYXRpb25SZXF1ZXN0EhMKC2Rlc3RpbmF0aW9uGAEgASgJIpwDChpJbnNwZWN0RGVzdGluYXRpb25SZXNwb25zZRIaChJkYWVtb25faW5zdGFuY2VfaWQYASABKAkSGQoRc25hcHNob3Rfc2VxdWVuY2UYAiABKAQSDQoFcXVlcnkYAyABKAkSKQoEa2luZBgEIAEoDjIbLmxhdHRpY2UudjEuRGVzdGluYXRpb25LaW5kEhIKCm5vcm1hbGl6ZWQYBSABKAkSDAoEcG9ydBgGIAEoDRIwCghkZWNpc2lvbhgHIAEoDjIeLmxhdHRpY2UudjEuUmVzb2x1dGlvbkRlY2lzaW9uEioKBnJlYXNvbhgIIAEoDjIaLmxhdHRpY2UudjEuRGVjaXNpb25SZWFzb24SKQoKZGVjaWRlZF9ieRgJIAEoDjIVLmxhdHRpY2UudjEuTWF0Y2hLaW5kEjMKCmNhbmRpZGF0ZXMYCiADKAsyHy5sYXR0aWNlLnYxLlJlc29sdXRpb25DYW5kaWRhdGUSLQoNbm90X2luc3BlY3RlZBgLIAMoCzIWLmxhdHRpY2UudjEuTmV0d29ya1JlZipsCg9EZXN0aW5hdGlvbktpbmQSIAocREVTVElOQVRJT05fS0lORF9VTlNQRUNJRklFRBAAEhwKGERFU1RJTkFUSU9OX0tJTkRfQUREUkVTUxABEhkKFURFU1RJTkFUSU9OX0tJTkRfTkFNRRACKoYBCglNYXRjaEtpbmQSGgoWTUFUQ0hfS0lORF9VTlNQRUNJRklFRBAAEh0KGU1BVENIX0tJTkRfREVWSUNFX0FERFJFU1MQARIeChpNQVRDSF9LSU5EX0RFVklDRV9ETlNfTkFNRRACEh4KGk1BVENIX0tJTkRfREVWSUNFX0hPU1ROQU1FEAMqngEKElJlc29sdXRpb25EZWNpc2lvbhIjCh9SRVNPTFVUSU9OX0RFQ0lTSU9OX1VOU1BFQ0lGSUVEEAASHgoaUkVTT0xVVElPTl9ERUNJU0lPTl9VTklRVUUQARIhCh1SRVNPTFVUSU9OX0RFQ0lTSU9OX0FNQklHVU9VUxACEiAKHFJFU09MVVRJT05fREVDSVNJT05fTk9fTUFUQ0gQAyrpAQoORGVjaXNpb25SZWFzb24SHwobREVDSVNJT05fUkVBU09OX1VOU1BFQ0lGSUVEEAASKAokREVDSVNJT05fUkVBU09OX0VYQUNUX0RFVklDRV9BRERSRVNTEAESIwofREVDSVNJT05fUkVBU09OX0RFVklDRV9ETlNfTkFNRRACEiMKH0RFQ0lTSU9OX1JFQVNPTl9ERVZJQ0VfSE9TVE5BTUUQAxIkCiBERUNJU0lPTl9SRUFTT05fTVVMVElQTEVfTUFUQ0hFUxAEEhwKGERFQ0lTSU9OX1JFQVNPTl9OT19NQVRDSBAFKo0BCg9DYW5kaWRhdGVTdGF0dXMSIAocQ0FORElEQVRFX1NUQVRVU19VTlNQRUNJRklFRBAAEh0KGUNBTkRJREFURV9TVEFUVVNfU0VMRUNURUQQARIZChVDQU5ESURBVEVfU1RBVFVTX1RJRUQQAhIeChpDQU5ESURBVEVfU1RBVFVTX09VVFJBTktFRBADMncKEEluc3BlY3RvclNlcnZpY2USYwoSSW5zcGVjdERlc3RpbmF0aW9uEiUubGF0dGljZS52MS5JbnNwZWN0RGVzdGluYXRpb25SZXF1ZXN0GiYubGF0dGljZS52MS5JbnNwZWN0RGVzdGluYXRpb25SZXNwb25zZUKoAQoOY29tLmxhdHRpY2UudjFCDkluc3BlY3RvclByb3RvUAFaPWdpdC5sdW5hcmxhYnMuZGV2L2xhdHRpY2UvbGF0dGljZS9nZW4vZ28vbGF0dGljZS92MTtsYXR0aWNldjGiAgNMWFiqAgpMYXR0aWNlLlYxygIKTGF0dGljZVxWMeICFkxhdHRpY2VcVjFcR1BCTWV0YWRhdGHqAgtMYXR0aWNlOjpWMWIGcHJvdG8z", [file_lattice_v1_common, file_lattice_v1_device]);
+  fileDesc("ChpsYXR0aWNlL3YxL2luc3BlY3Rvci5wcm90bxIKbGF0dGljZS52MSJ5Cg1QcmVmZXJlbmNlVXNlEhMKC2Rlc3RpbmF0aW9uGAEgASgJEicKB25ldHdvcmsYAiABKAsyFi5sYXR0aWNlLnYxLk5ldHdvcmtSZWYSKgoFc3RhdGUYAyABKA4yGy5sYXR0aWNlLnYxLlByZWZlcmVuY2VTdGF0ZSKNAQoKTmV0d29ya1JlZhIKCgJpZBgBIAEoCRIUCgxkaXNwbGF5X25hbWUYAiABKAkSKgoIcHJvdmlkZXIYAyABKA4yGC5sYXR0aWNlLnYxLlByb3ZpZGVyVHlwZRIxCgVzdGF0ZRgEIAEoDjIiLmxhdHRpY2UudjEuTmV0d29ya0Nvbm5lY3Rpb25TdGF0ZSLMAQoTUmVzb2x1dGlvbkNhbmRpZGF0ZRInCgduZXR3b3JrGAEgASgLMhYubGF0dGljZS52MS5OZXR3b3JrUmVmEiIKBmRldmljZRgCIAEoCzISLmxhdHRpY2UudjEuRGV2aWNlEiQKBW1hdGNoGAMgASgOMhUubGF0dGljZS52MS5NYXRjaEtpbmQSFQoNbWF0Y2hlZF92YWx1ZRgEIAEoCRIrCgZzdGF0dXMYBSABKA4yGy5sYXR0aWNlLnYxLkNhbmRpZGF0ZVN0YXR1cyIwChlJbnNwZWN0RGVzdGluYXRpb25SZXF1ZXN0EhMKC2Rlc3RpbmF0aW9uGAEgASgJIssDChpJbnNwZWN0RGVzdGluYXRpb25SZXNwb25zZRIaChJkYWVtb25faW5zdGFuY2VfaWQYASABKAkSGQoRc25hcHNob3Rfc2VxdWVuY2UYAiABKAQSDQoFcXVlcnkYAyABKAkSKQoEa2luZBgEIAEoDjIbLmxhdHRpY2UudjEuRGVzdGluYXRpb25LaW5kEhIKCm5vcm1hbGl6ZWQYBSABKAkSDAoEcG9ydBgGIAEoDRIwCghkZWNpc2lvbhgHIAEoDjIeLmxhdHRpY2UudjEuUmVzb2x1dGlvbkRlY2lzaW9uEioKBnJlYXNvbhgIIAEoDjIaLmxhdHRpY2UudjEuRGVjaXNpb25SZWFzb24SKQoKZGVjaWRlZF9ieRgJIAEoDjIVLmxhdHRpY2UudjEuTWF0Y2hLaW5kEjMKCmNhbmRpZGF0ZXMYCiADKAsyHy5sYXR0aWNlLnYxLlJlc29sdXRpb25DYW5kaWRhdGUSLQoNbm90X2luc3BlY3RlZBgLIAMoCzIWLmxhdHRpY2UudjEuTmV0d29ya1JlZhItCgpwcmVmZXJlbmNlGAwgASgLMhkubGF0dGljZS52MS5QcmVmZXJlbmNlVXNlKmwKD0Rlc3RpbmF0aW9uS2luZBIgChxERVNUSU5BVElPTl9LSU5EX1VOU1BFQ0lGSUVEEAASHAoYREVTVElOQVRJT05fS0lORF9BRERSRVNTEAESGQoVREVTVElOQVRJT05fS0lORF9OQU1FEAIqhgEKCU1hdGNoS2luZBIaChZNQVRDSF9LSU5EX1VOU1BFQ0lGSUVEEAASHQoZTUFUQ0hfS0lORF9ERVZJQ0VfQUREUkVTUxABEh4KGk1BVENIX0tJTkRfREVWSUNFX0ROU19OQU1FEAISHgoaTUFUQ0hfS0lORF9ERVZJQ0VfSE9TVE5BTUUQAyqeAQoSUmVzb2x1dGlvbkRlY2lzaW9uEiMKH1JFU09MVVRJT05fREVDSVNJT05fVU5TUEVDSUZJRUQQABIeChpSRVNPTFVUSU9OX0RFQ0lTSU9OX1VOSVFVRRABEiEKHVJFU09MVVRJT05fREVDSVNJT05fQU1CSUdVT1VTEAISIAocUkVTT0xVVElPTl9ERUNJU0lPTl9OT19NQVRDSBADKpUCCg5EZWNpc2lvblJlYXNvbhIfChtERUNJU0lPTl9SRUFTT05fVU5TUEVDSUZJRUQQABIoCiRERUNJU0lPTl9SRUFTT05fRVhBQ1RfREVWSUNFX0FERFJFU1MQARIjCh9ERUNJU0lPTl9SRUFTT05fREVWSUNFX0ROU19OQU1FEAISIwofREVDSVNJT05fUkVBU09OX0RFVklDRV9IT1NUTkFNRRADEiQKIERFQ0lTSU9OX1JFQVNPTl9NVUxUSVBMRV9NQVRDSEVTEAQSHAoYREVDSVNJT05fUkVBU09OX05PX01BVENIEAUSKgomREVDSVNJT05fUkVBU09OX0RFU1RJTkFUSU9OX1BSRUZFUkVOQ0UQBiqNAQoPQ2FuZGlkYXRlU3RhdHVzEiAKHENBTkRJREFURV9TVEFUVVNfVU5TUEVDSUZJRUQQABIdChlDQU5ESURBVEVfU1RBVFVTX1NFTEVDVEVEEAESGQoVQ0FORElEQVRFX1NUQVRVU19USUVEEAISHgoaQ0FORElEQVRFX1NUQVRVU19PVVRSQU5LRUQQAyqnAQoPUHJlZmVyZW5jZVN0YXRlEiAKHFBSRUZFUkVOQ0VfU1RBVEVfVU5TUEVDSUZJRUQQABIcChhQUkVGRVJFTkNFX1NUQVRFX0FQUExJRUQQARIqCiZQUkVGRVJFTkNFX1NUQVRFX05FVFdPUktfTk9UX0NPTk5FQ1RFRBACEigKJFBSRUZFUkVOQ0VfU1RBVEVfTk9fTUFUQ0hfT05fTkVUV09SSxADMncKEEluc3BlY3RvclNlcnZpY2USYwoSSW5zcGVjdERlc3RpbmF0aW9uEiUubGF0dGljZS52MS5JbnNwZWN0RGVzdGluYXRpb25SZXF1ZXN0GiYubGF0dGljZS52MS5JbnNwZWN0RGVzdGluYXRpb25SZXNwb25zZUKoAQoOY29tLmxhdHRpY2UudjFCDkluc3BlY3RvclByb3RvUAFaPWdpdC5sdW5hcmxhYnMuZGV2L2xhdHRpY2UvbGF0dGljZS9nZW4vZ28vbGF0dGljZS92MTtsYXR0aWNldjGiAgNMWFiqAgpMYXR0aWNlLlYxygIKTGF0dGljZVxWMeICFkxhdHRpY2VcVjFcR1BCTWV0YWRhdGHqAgtMYXR0aWNlOjpWMWIGcHJvdG8z", [file_lattice_v1_common, file_lattice_v1_device]);
+
+/**
+ * @generated from message lattice.v1.PreferenceUse
+ */
+export type PreferenceUse = Message<"lattice.v1.PreferenceUse"> & {
+  /**
+   * @generated from field: string destination = 1;
+   */
+  destination: string;
+
+  /**
+   * @generated from field: lattice.v1.NetworkRef network = 2;
+   */
+  network?: NetworkRef | undefined;
+
+  /**
+   * @generated from field: lattice.v1.PreferenceState state = 3;
+   */
+  state: PreferenceState;
+};
+
+/**
+ * Describes the message lattice.v1.PreferenceUse.
+ * Use `create(PreferenceUseSchema)` to create a new message.
+ */
+export const PreferenceUseSchema: GenMessage<PreferenceUse> = /*@__PURE__*/
+  messageDesc(file_lattice_v1_inspector, 0);
 
 /**
  * @generated from message lattice.v1.NetworkRef
@@ -46,7 +73,7 @@ export type NetworkRef = Message<"lattice.v1.NetworkRef"> & {
  * Use `create(NetworkRefSchema)` to create a new message.
  */
 export const NetworkRefSchema: GenMessage<NetworkRef> = /*@__PURE__*/
-  messageDesc(file_lattice_v1_inspector, 0);
+  messageDesc(file_lattice_v1_inspector, 1);
 
 /**
  * @generated from message lattice.v1.ResolutionCandidate
@@ -83,7 +110,7 @@ export type ResolutionCandidate = Message<"lattice.v1.ResolutionCandidate"> & {
  * Use `create(ResolutionCandidateSchema)` to create a new message.
  */
 export const ResolutionCandidateSchema: GenMessage<ResolutionCandidate> = /*@__PURE__*/
-  messageDesc(file_lattice_v1_inspector, 1);
+  messageDesc(file_lattice_v1_inspector, 2);
 
 /**
  * @generated from message lattice.v1.InspectDestinationRequest
@@ -100,7 +127,7 @@ export type InspectDestinationRequest = Message<"lattice.v1.InspectDestinationRe
  * Use `create(InspectDestinationRequestSchema)` to create a new message.
  */
 export const InspectDestinationRequestSchema: GenMessage<InspectDestinationRequest> = /*@__PURE__*/
-  messageDesc(file_lattice_v1_inspector, 2);
+  messageDesc(file_lattice_v1_inspector, 3);
 
 /**
  * @generated from message lattice.v1.InspectDestinationResponse
@@ -160,6 +187,11 @@ export type InspectDestinationResponse = Message<"lattice.v1.InspectDestinationR
    * @generated from field: repeated lattice.v1.NetworkRef not_inspected = 11;
    */
   notInspected: NetworkRef[];
+
+  /**
+   * @generated from field: lattice.v1.PreferenceUse preference = 12;
+   */
+  preference?: PreferenceUse | undefined;
 };
 
 /**
@@ -167,7 +199,7 @@ export type InspectDestinationResponse = Message<"lattice.v1.InspectDestinationR
  * Use `create(InspectDestinationResponseSchema)` to create a new message.
  */
 export const InspectDestinationResponseSchema: GenMessage<InspectDestinationResponse> = /*@__PURE__*/
-  messageDesc(file_lattice_v1_inspector, 3);
+  messageDesc(file_lattice_v1_inspector, 4);
 
 /**
  * @generated from enum lattice.v1.DestinationKind
@@ -290,6 +322,11 @@ export enum DecisionReason {
    * @generated from enum value: DECISION_REASON_NO_MATCH = 5;
    */
   NO_MATCH = 5,
+
+  /**
+   * @generated from enum value: DECISION_REASON_DESTINATION_PREFERENCE = 6;
+   */
+  DESTINATION_PREFERENCE = 6,
 }
 
 /**
@@ -328,6 +365,37 @@ export enum CandidateStatus {
  */
 export const CandidateStatusSchema: GenEnum<CandidateStatus> = /*@__PURE__*/
   enumDesc(file_lattice_v1_inspector, 4);
+
+/**
+ * @generated from enum lattice.v1.PreferenceState
+ */
+export enum PreferenceState {
+  /**
+   * @generated from enum value: PREFERENCE_STATE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: PREFERENCE_STATE_APPLIED = 1;
+   */
+  APPLIED = 1,
+
+  /**
+   * @generated from enum value: PREFERENCE_STATE_NETWORK_NOT_CONNECTED = 2;
+   */
+  NETWORK_NOT_CONNECTED = 2,
+
+  /**
+   * @generated from enum value: PREFERENCE_STATE_NO_MATCH_ON_NETWORK = 3;
+   */
+  NO_MATCH_ON_NETWORK = 3,
+}
+
+/**
+ * Describes the enum lattice.v1.PreferenceState.
+ */
+export const PreferenceStateSchema: GenEnum<PreferenceState> = /*@__PURE__*/
+  enumDesc(file_lattice_v1_inspector, 5);
 
 /**
  * @generated from service lattice.v1.InspectorService

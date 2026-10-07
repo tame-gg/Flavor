@@ -4,6 +4,7 @@ import type { GetDaemonInfoResponse, GetStateSnapshotResponse } from "@gen/latti
 import type { Device } from "@gen/lattice/v1/device_pb";
 import type { DaemonEvent } from "@gen/lattice/v1/events_pb";
 import { AuthenticationPromptSchema, type Network } from "@gen/lattice/v1/network_pb";
+import type { DestinationPreference } from "@gen/lattice/v1/preferences_pb";
 import type { Workspace } from "@gen/lattice/v1/workspaces_pb";
 import type { StreamMessage, UiError } from "../../lib/api/types";
 
@@ -20,6 +21,7 @@ export type SyncState = {
   devices: ReadonlyMap<string, Device>;
   workspaces: ReadonlyMap<string, Workspace>;
   activeWorkspaceId: string;
+  preferences: ReadonlyMap<string, DestinationPreference>;
   warnings: readonly string[];
   lastError: UiError | null;
 };
@@ -50,6 +52,7 @@ const initial: SyncState = {
   devices: new Map(),
   workspaces: new Map(),
   activeWorkspaceId: "",
+  preferences: new Map(),
   warnings: [],
   lastError: null,
 };
@@ -128,6 +131,7 @@ export class DaemonSyncController {
       devices,
       workspaces: new Map(snap.workspaces.map((w) => [w.id, w])),
       activeWorkspaceId: snap.activeWorkspaceId,
+      preferences: new Map(snap.destinationPreferences.map((p) => [p.destination, p])),
       warnings: [],
     });
     const watchId = ++this.watchId;
@@ -171,6 +175,7 @@ export class DaemonSyncController {
     let warnings = this.state.warnings;
     let workspaces = this.state.workspaces;
     let activeWorkspaceId = this.state.activeWorkspaceId;
+    let preferences = this.state.preferences;
     const editDevices = () => {
       if (devices === this.state.devices) devices = new Map(devices);
       return devices as Map<string, Device>;
@@ -266,8 +271,19 @@ export class DaemonSyncController {
         activeWorkspaceId = p.value.workspaceId;
         break;
       }
+      case "destinationPreferenceChanged": {
+        const pref = p.value.preference;
+        if (pref) preferences = new Map(preferences).set(pref.destination, pref);
+        break;
+      }
+      case "destinationPreferenceRemoved": {
+        const next = new Map(preferences);
+        next.delete(p.value.destination);
+        preferences = next;
+        break;
+      }
     }
-    this.set({ sequence: ev.sequenceId, networks, devices, warnings, workspaces, activeWorkspaceId });
+    this.set({ sequence: ev.sequenceId, networks, devices, warnings, workspaces, activeWorkspaceId, preferences });
   }
 
   private fail(error: UiError): void {

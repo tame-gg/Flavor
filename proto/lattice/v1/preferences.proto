@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package lattice.v1;
+
+import "google/protobuf/timestamp.proto";
+import "lattice/v1/inspector.proto";
+
+service PreferenceService {
+  rpc ListDestinationPreferences(ListDestinationPreferencesRequest) returns (ListDestinationPreferencesResponse);
+  rpc SetDestinationPreference(SetDestinationPreferenceRequest) returns (SetDestinationPreferenceResponse);
+  rpc DeleteDestinationPreference(DeleteDestinationPreferenceRequest) returns (DeleteDestinationPreferenceResponse);
+}
+
+message DestinationPreference {
+  string destination = 1;
+  DestinationKind kind = 2;
+  string network_id = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+message ListDestinationPreferencesRequest {}
+
+message ListDestinationPreferencesResponse {
+  string daemon_instance_id = 1;
+  uint64 snapshot_sequence = 2;
+  repeated DestinationPreference preferences = 3;
+}
+
+message SetDestinationPreferenceRequest {
+  string destination = 1;
+  string network_id = 2;
+}
+
+message SetDestinationPreferenceResponse {
+  DestinationPreference preference = 1;
+}
+
+message DeleteDestinationPreferenceRequest {
+  string destination = 1;
+}
+
+message DeleteDestinationPreferenceResponse {}

@@ -6,7 +6,7 @@ use buffa::Message as _;
 use connectrpc::client::{ClientConfig, Http2Connection, SharedHttp2Connection};
 use connectrpc::ErrorCode;
 use lattice_proto::lattice::v1::{
-    ConflictServiceClient, DaemonServiceClient, DeviceServiceClient, DiagnosticsServiceClient, EventServiceClient, InspectorServiceClient, WorkspaceServiceClient,
+    ConflictServiceClient, DaemonServiceClient, DeviceServiceClient, DiagnosticsServiceClient, EventServiceClient, InspectorServiceClient, PreferenceServiceClient, WorkspaceServiceClient,
     LatticeErrorCode, LatticeErrorDetail, NetworkServiceClient,
 };
 
@@ -27,6 +27,7 @@ pub struct LatticeIpcClient {
     pub inspector: InspectorServiceClient<Transport>,
     pub conflicts: ConflictServiceClient<Transport>,
     pub workspaces: WorkspaceServiceClient<Transport>,
+    pub preferences: PreferenceServiceClient<Transport>,
 }
 
 impl LatticeIpcClient {
@@ -42,7 +43,8 @@ impl LatticeIpcClient {
             events: EventServiceClient::new(transport.clone(), config()),
             inspector: InspectorServiceClient::new(transport.clone(), config()),
             conflicts: ConflictServiceClient::new(transport.clone(), config()),
-            workspaces: WorkspaceServiceClient::new(transport, config()),
+            workspaces: WorkspaceServiceClient::new(transport.clone(), config()),
+            preferences: PreferenceServiceClient::new(transport, config()),
         }
     }
 }

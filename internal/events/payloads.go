@@ -89,3 +89,15 @@ type ActiveWorkspaceChanged struct {
 }
 
 func (ActiveWorkspaceChanged) eventPayload() {}
+
+type DestinationPreferenceChanged struct {
+	Preference domain.DestinationPreference
+}
+
+func (DestinationPreferenceChanged) eventPayload() {}
+
+type DestinationPreferenceRemoved struct {
+	Destination string
+}
+
+func (DestinationPreferenceRemoved) eventPayload() {}

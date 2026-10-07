@@ -55,6 +55,13 @@ suite("conflict descriptions", () => {
     expect(filterConflicts(all, "ambiguous", "all").map((c) => c.id)).toEqual(["address:100.64.0.7", "dns:db.example.com"]);
     expect(filterConflicts(all, "all", ConflictType.DNS_NAME_COLLISION)).toHaveLength(1);
     expect(filterConflicts(all, "expected", ConflictType.DNS_NAME_COLLISION)).toHaveLength(0);
-    expect(counts(all)).toEqual({ ambiguous: 2, expected: 1 });
+    expect(counts(all)).toEqual({ ambiguous: 2, expected: 1, resolved: 0 });
+  });
+
+  it("moves a conflict settled by a preference into its own category", () => {
+    const settled = create(ConflictSchema, { ...dns, preferredNetworkId: "a" });
+    expect(counts([expected, settled])).toEqual({ ambiguous: 0, expected: 1, resolved: 1 });
+    expect(filterConflicts([expected, settled], "resolved", "all")).toEqual([settled]);
+    expect(filterConflicts([expected, settled], "ambiguous", "all")).toEqual([]);
   });
 });

@@ -27,7 +27,7 @@ func resolve(t *testing.T, raw string, nets ...inspect.Network) inspect.Result {
 	if err != nil {
 		t.Fatalf("parse %q: %v", raw, err)
 	}
-	return inspect.Resolve(q, nets)
+	return inspect.Resolve(q, nets, nil)
 }
 
 var (
@@ -106,15 +106,14 @@ func TestFullDNSNameIsUnique(t *testing.T) {
 }
 
 func TestDNSNameOutranksHostname(t *testing.T) {
-	other := live("C", "Customer", dev("C", "1", "db.home.ts.net", "", "100.64.5.5"))
-	r := resolve(t, "db.home.ts.net", other, home)
-	if r.Decision != inspect.DecisionUnique || r.Reason != inspect.ReasonDeviceDNSName || r.Candidates[0].Network.ID != "B" {
+	byDNS := live("C", "Customer", dev("C", "1", "storage", "nas", "100.64.5.5"))
+	byHost := live("B", "Home", dev("B", "1", "nas", "nas.home.ts.net", "100.64.0.9"))
+	r := resolve(t, "nas", byHost, byDNS)
+	if r.Decision != inspect.DecisionUnique || r.Reason != inspect.ReasonDeviceDNSName || len(r.Candidates) != 2 {
 		t.Fatalf("%+v", r)
 	}
-	for _, c := range r.Candidates[1:] {
-		if c.Status != inspect.StatusOutranked {
-			t.Fatalf("%+v", c)
-		}
+	if r.Candidates[0].Network.ID != "C" || r.Candidates[1].Status != inspect.StatusOutranked {
+		t.Fatalf("%+v", r.Candidates)
 	}
 }
 

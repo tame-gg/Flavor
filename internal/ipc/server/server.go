@@ -33,6 +33,7 @@ func New(svc *service.Service) *http.Server {
 	mux.Handle(latticev1connect.NewInspectorServiceHandler(h, opts...))
 	mux.Handle(latticev1connect.NewConflictServiceHandler(h, opts...))
 	mux.Handle(latticev1connect.NewWorkspaceServiceHandler(h, opts...))
+	mux.Handle(latticev1connect.NewPreferenceServiceHandler(h, opts...))
 	var p http.Protocols
 	p.SetUnencryptedHTTP2(true)
 	return &http.Server{
@@ -68,6 +69,9 @@ func (h *handlers) GetStateSnapshot(ctx context.Context, _ *connect.Request[v1.G
 		out.Workspaces = append(out.Workspaces, workspace(w))
 	}
 	out.ActiveWorkspaceId = string(snap.ActiveWorkspace)
+	for _, p := range snap.Preferences {
+		out.DestinationPreferences = append(out.DestinationPreferences, preference(p))
+	}
 	return connect.NewResponse(out), nil
 }
 

@@ -1,0 +1,64 @@
+package session
+
+import (
+	"net/netip"
+	"testing"
+
+	"git.lunarlabs.dev/lattice/lattice/internal/domain"
+)
+
+func TestConnectedInvariant(t *testing.T) {
+	addr := netip.MustParseAddr("100.64.0.1")
+	ok := statusSnap{
+		BackendState: "Running",
+		TailscaleIPs: []netip.Addr{addr},
+		Self:         &peerSnap{NodeID: "n1", Addresses: []netip.Addr{addr}},
+	}
+	if !connectedInvariant(ok) {
+		t.Fatal("expected connected")
+	}
+	if connectedInvariant(statusSnap{BackendState: "Running", TailscaleIPs: []netip.Addr{addr}}) {
+		t.Fatal("missing self")
+	}
+	if connectedInvariant(statusSnap{BackendState: "Running", Self: &peerSnap{NodeID: "n1"}}) {
+		t.Fatal("missing ips")
+	}
+	if mapConnectionState(ok, false) != domain.StateConnected {
+		t.Fatal(mapConnectionState(ok, false))
+	}
+	degraded := ok
+	degraded.Health = []string{"dns"}
+	if mapConnectionState(degraded, false) != domain.StateDegraded {
+		t.Fatal("degraded")
+	}
+	if mapConnectionState(statusSnap{BackendState: "NeedsMachineAuth"}, false) != domain.StateAwaitingApproval {
+		t.Fatal("approval")
+	}
+}
+
+func TestParseAuthURL(t *testing.T) {
+	if _, err := parseAuthURL("javascript:alert(1)"); err == nil {
+		t.Fatal("expected reject")
+	}
+	if _, err := parseAuthURL("https://login.tailscale.com/a/x"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := parseAuthURL("http://127.0.0.1:8080/a/x"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDeviceEqual(t *testing.T) {
+	a := domain.Device{
+		ID:       domain.DeviceIdentity{NetworkID: "n", NodeID: "a"},
+		Hostname: "h", Addresses: []netip.Addr{netip.MustParseAddr("100.64.0.1")}, Online: true,
+	}
+	b := cloneDevice(a)
+	if !deviceEqual(a, b) {
+		t.Fatal("equal")
+	}
+	b.Hostname = "x"
+	if deviceEqual(a, b) {
+		t.Fatal("hostname")
+	}
+}

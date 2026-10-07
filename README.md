@@ -18,7 +18,7 @@ In progress. Slice 1 proves multi-session Tailscale + Headscale connectivity wit
 ## Development (target)
 
 ```bash
-go run ./cmd/latticed
+./scripts/go.sh run ./cmd/latticed
 ```
 
 Desktop (`desktop/`) lands in later milestones.

@@ -1,0 +1,33 @@
+services:
+  headscale-a:
+    image: headscale/headscale:0.26.1
+    command: serve
+    volumes:
+      - ./config/a:/etc/headscale
+      - headscale-a-data:/var/lib/headscale
+    ports:
+      - "18080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  headscale-b:
+    image: headscale/headscale:0.26.1
+    command: serve
+    profiles: ["dual"]
+    volumes:
+      - ./config/b:/etc/headscale
+      - headscale-b-data:/var/lib/headscale
+    ports:
+      - "18081:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  headscale-a-data:
+  headscale-b-data:

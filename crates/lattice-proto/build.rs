@@ -9,6 +9,7 @@ fn main() {
             "lattice/v1/device.proto",
             "lattice/v1/diagnostics.proto",
             "lattice/v1/events.proto",
+            "lattice/v1/forward.proto",
             "lattice/v1/inspector.proto",
             "lattice/v1/network.proto",
             "lattice/v1/preferences.proto",

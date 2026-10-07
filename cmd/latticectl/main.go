@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"text/tabwriter"
 	"time"
 
@@ -34,6 +36,8 @@ commands:
   remove [--delete-identity] <network-id>
   diag                                 safe diagnostics summary
   explain <destination>                which network an address or name belongs to, and why
+  forward [--network N] [--listen ADDR] <destination:port>
+                                       listen on loopback and forward through the chosen network
   conflicts                            addresses and names that exist more than once
   workspace list
   workspace create --name NAME [--description TEXT] [network-id...]
@@ -62,8 +66,14 @@ func main() {
 	if err != nil {
 		fail(err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
+	base, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	ctx := base
+	if !longRunning[flag.Arg(0)] {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(base, 60*time.Second)
+		defer cancel()
+	}
 	if err := run(ctx, client.New(paths.Socket), flag.Arg(0), flag.Args()[1:], *asJSON, os.Stdin, os.Stdout); err != nil {
 		fail(err)
 	}
@@ -254,6 +264,8 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSO
 			return emit(out, res.Msg)
 		}
 		return printConflicts(out, res.Msg)
+	case "forward":
+		return runForward(ctx, c, args, out)
 	case "workspace", "workspaces":
 		return runWorkspace(ctx, c, args, asJSON, out)
 	case "preference", "preferences", "prefer":
@@ -588,4 +600,67 @@ func matchText(c *v1.ResolutionCandidate) string {
 		return kind + " " + c.MatchedValue
 	}
 	return kind
+}
+
+var longRunning = map[string]bool{"forward": true}
+
+func splitFlags(args []string) (positional []string, flags []string) {
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		if strings.HasPrefix(a, "-") {
+			flags = append(flags, a)
+			if !strings.Contains(a, "=") && i+1 < len(args) {
+				flags = append(flags, args[i+1])
+				i++
+			}
+			continue
+		}
+		positional = append(positional, a)
+	}
+	return positional, flags
+}
+
+func reasonText(r v1.DecisionReason) string {
+	return strings.ReplaceAll(enumName(r.String(), "DECISION_REASON_"), "_", " ")
+}
+
+func runForward(ctx context.Context, c *client.Client, args []string, out io.Writer) error {
+	positional, flags := splitFlags(args)
+	fs := flag.NewFlagSet("forward", flag.ContinueOnError)
+	network := fs.String("network", "", "network id or name to use")
+	listen := fs.String("listen", "", "loopback address to listen on (default 127.0.0.1 with a free port)")
+	if err := fs.Parse(flags); err != nil {
+		return err
+	}
+	if len(positional) != 1 {
+		return fmt.Errorf("forward: expected one destination with a port\n\n%s", usage)
+	}
+	stream, err := c.Forwards.Forward(ctx, connect.NewRequest(&v1.ForwardRequest{Destination: positional[0], Listen: *listen, Network: *network}))
+	if err != nil {
+		return err
+	}
+	for stream.Receive() {
+		ev := stream.Msg()
+		switch {
+		case ev.GetStarted() != nil:
+			s := ev.GetStarted()
+			r := s.GetRoute()
+			fmt.Fprintf(out, "Forwarding\n\n  %s\n      ↓\n  %s\n      ↓\n  %s\n      ↓\n  %s\n\nReason: %s\n",
+				s.ListenAddress, positional[0], r.GetNetwork().GetDisplayName(), r.Target, reasonText(r.GetDecision().GetReason()))
+			fmt.Fprintln(out, "Each new connection is checked again before it is forwarded. Ctrl+C to stop.")
+		case ev.GetOpened() != nil:
+			o := ev.GetOpened()
+			fmt.Fprintf(out, "opened  #%d  %s -> %s %s\n", o.Id, o.Client, o.GetRoute().GetNetwork().GetDisplayName(), o.GetRoute().Target)
+		case ev.GetClosed() != nil:
+			o := ev.GetClosed()
+			fmt.Fprintf(out, "closed  #%d  sent %d B, received %d B\n", o.Id, o.BytesSent, o.BytesReceived)
+		case ev.GetRefused() != nil:
+			o := ev.GetRefused()
+			fmt.Fprintf(out, "refused #%d  %s: %s\n", o.Id, o.Client, o.GetReason().GetSafeMessage())
+		}
+	}
+	if err := stream.Err(); err != nil && ctx.Err() == nil {
+		return err
+	}
+	return nil
 }

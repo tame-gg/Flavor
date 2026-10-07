@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"net"
 	"net/netip"
 	"sync"
 	"time"
@@ -29,6 +30,7 @@ type Engine struct {
 	statusGate     chan struct{}
 	activeWatchers int
 	tracker        *tracker
+	dial           func(ctx context.Context, network, address string) (net.Conn, error)
 }
 
 func NewEngine() *Engine {
@@ -114,6 +116,27 @@ func (e *Engine) Watch(ctx context.Context, emit func(session.EngineNotify)) err
 			emit(n)
 		}
 	}
+}
+
+var ErrNoDialer = errors.New("sessiontest: no dialer configured")
+
+func (e *Engine) SetDial(fn func(ctx context.Context, network, address string) (net.Conn, error)) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.dial = fn
+}
+
+func (e *Engine) Dial(ctx context.Context, network, address string) (net.Conn, error) {
+	e.mu.Lock()
+	fn, closed := e.dial, e.closed
+	e.mu.Unlock()
+	if closed {
+		return nil, net.ErrClosed
+	}
+	if fn == nil {
+		return nil, ErrNoDialer
+	}
+	return fn(ctx, network, address)
 }
 
 func (e *Engine) SetStatus(st session.EngineStatus) {

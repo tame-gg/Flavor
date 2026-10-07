@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net"
 
 	"git.lunarlabs.dev/lattice/lattice/internal/provider"
 	"tailscale.com/client/local"
@@ -59,6 +60,10 @@ func (e *tsnetEngine) Start() error {
 
 func (e *tsnetEngine) Close() error {
 	return e.srv.Close()
+}
+
+func (e *tsnetEngine) Dial(ctx context.Context, network, address string) (net.Conn, error) {
+	return e.srv.Dial(ctx, network, address)
 }
 
 func (e *tsnetEngine) ClearAuthKey() {

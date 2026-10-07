@@ -36,6 +36,7 @@ var (
 		inspect.ReasonSubnetRoute:           v1.DecisionReason_DECISION_REASON_SUBNET_ROUTE,
 		inspect.ReasonLongestPrefix:         v1.DecisionReason_DECISION_REASON_LONGEST_PREFIX,
 		inspect.ReasonNetworkQualifiedName:  v1.DecisionReason_DECISION_REASON_NETWORK_QUALIFIED_NAME,
+		inspect.ReasonExplicitNetwork:       v1.DecisionReason_DECISION_REASON_EXPLICIT_NETWORK,
 	}
 	candidateStatuses = map[inspect.CandidateStatus]v1.CandidateStatus{
 		inspect.StatusSelected:  v1.CandidateStatus_CANDIDATE_STATUS_SELECTED,
@@ -49,8 +50,12 @@ func (h *handlers) InspectDestination(ctx context.Context, req *connect.Request[
 	if err != nil {
 		return nil, toConnect(err)
 	}
+	return connect.NewResponse(inspection(res, seq, h.svc.InstanceID())), nil
+}
+
+func inspection(res inspect.Result, seq uint64, instance string) *v1.InspectDestinationResponse {
 	out := &v1.InspectDestinationResponse{
-		DaemonInstanceId: h.svc.InstanceID(),
+		DaemonInstanceId: instance,
 		SnapshotSequence: seq,
 		Query:            res.Query.Raw,
 		Kind:             destinationKinds[res.Query.Kind],
@@ -81,7 +86,7 @@ func (h *handlers) InspectDestination(ctx context.Context, req *connect.Request[
 			State:       preferenceStates[p.State],
 		}
 	}
-	return connect.NewResponse(out), nil
+	return out
 }
 
 func networkRef(n domain.Network, state domain.NetworkConnectionState) *v1.NetworkRef {

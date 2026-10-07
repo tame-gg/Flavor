@@ -155,3 +155,20 @@ func TestSubnetConflicts(t *testing.T) {
 		t.Fatalf("nested routes inside one network are not a cross-network conflict: %+v", rep.Conflicts)
 	}
 }
+
+func TestExplicitNetworkContext(t *testing.T) {
+	q, _ := inspect.ParseQuery("100.64.0.1:22")
+	q.Context = "B"
+	pref := &domain.DestinationPreference{Destination: "100.64.0.1", Kind: domain.DestinationAddress, NetworkID: "A"}
+	r := inspect.Resolve(q, []inspect.Network{lunar, home}, pref)
+	if r.Decision != inspect.DecisionUnique || r.Reason != inspect.ReasonExplicitNetwork || r.Candidates[0].Network.ID != "B" || len(r.Candidates) != 1 {
+		t.Fatalf("explicit network must win over preferences and drop other networks: %+v", r)
+	}
+	if r.Preference != nil {
+		t.Fatal("preference reported although an explicit network was given")
+	}
+	off := inspect.Network{Network: domain.Network{ID: "B", DisplayName: "Home"}, State: domain.StateDisconnected}
+	if r := inspect.Resolve(q, []inspect.Network{lunar, off}, nil); r.Decision != inspect.DecisionNoMatch || len(r.NotInspected) != 1 {
+		t.Fatalf("explicit network that is down: %+v", r)
+	}
+}

@@ -61,6 +61,9 @@ type Service struct {
 	mu           sync.Mutex
 	ops          map[domain.NetworkID]string
 	shuttingDown bool
+	forwardSlot  *slots
+	forwards     map[uint64]context.CancelFunc
+	nextForward  uint64
 }
 
 func New(cfg Config) *Service {
@@ -73,7 +76,12 @@ func New(cfg Config) *Service {
 	if cfg.NodeHostname == "" {
 		cfg.NodeHostname = DefaultNodeHostname()
 	}
-	return &Service{cfg: cfg, ops: make(map[domain.NetworkID]string)}
+	return &Service{
+		cfg:         cfg,
+		ops:         make(map[domain.NetworkID]string),
+		forwardSlot: newSlots(MaxForwards),
+		forwards:    make(map[uint64]context.CancelFunc),
+	}
 }
 
 type DaemonInfo struct {
@@ -124,6 +132,9 @@ func (s *Service) pendingOp(id domain.NetworkID) string {
 func (s *Service) Shutdown(ctx context.Context) error {
 	s.mu.Lock()
 	s.shuttingDown = true
+	for _, cancel := range s.forwards {
+		cancel()
+	}
 	s.mu.Unlock()
 	return s.cfg.Sessions.StopAll(ctx)
 }

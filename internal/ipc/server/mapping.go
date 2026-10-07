@@ -24,6 +24,7 @@ var capabilities = map[string]v1.Capability{
 	"conflict_center":         v1.Capability_CAPABILITY_CONFLICT_CENTER,
 	"workspaces":              v1.Capability_CAPABILITY_WORKSPACES,
 	"destination_preferences": v1.Capability_CAPABILITY_DESTINATION_PREFERENCES,
+	"forwarding":              v1.Capability_CAPABILITY_FORWARDING,
 }
 
 func daemonInfo(info service.DaemonInfo) *v1.GetDaemonInfoResponse {

@@ -164,6 +164,9 @@ const (
 	LatticeErrorCode_LATTICE_ERROR_CODE_INTERNAL                   LatticeErrorCode = 15
 	LatticeErrorCode_LATTICE_ERROR_CODE_WORKSPACE_NOT_FOUND        LatticeErrorCode = 16
 	LatticeErrorCode_LATTICE_ERROR_CODE_DEVICE_NOT_FOUND           LatticeErrorCode = 17
+	LatticeErrorCode_LATTICE_ERROR_CODE_DESTINATION_AMBIGUOUS      LatticeErrorCode = 18
+	LatticeErrorCode_LATTICE_ERROR_CODE_DESTINATION_NOT_FOUND      LatticeErrorCode = 19
+	LatticeErrorCode_LATTICE_ERROR_CODE_DESTINATION_UNREACHABLE    LatticeErrorCode = 20
 )
 
 // Enum value maps for LatticeErrorCode.
@@ -187,6 +190,9 @@ var (
 		15: "LATTICE_ERROR_CODE_INTERNAL",
 		16: "LATTICE_ERROR_CODE_WORKSPACE_NOT_FOUND",
 		17: "LATTICE_ERROR_CODE_DEVICE_NOT_FOUND",
+		18: "LATTICE_ERROR_CODE_DESTINATION_AMBIGUOUS",
+		19: "LATTICE_ERROR_CODE_DESTINATION_NOT_FOUND",
+		20: "LATTICE_ERROR_CODE_DESTINATION_UNREACHABLE",
 	}
 	LatticeErrorCode_value = map[string]int32{
 		"LATTICE_ERROR_CODE_UNSPECIFIED":                0,
@@ -207,6 +213,9 @@ var (
 		"LATTICE_ERROR_CODE_INTERNAL":                   15,
 		"LATTICE_ERROR_CODE_WORKSPACE_NOT_FOUND":        16,
 		"LATTICE_ERROR_CODE_DEVICE_NOT_FOUND":           17,
+		"LATTICE_ERROR_CODE_DESTINATION_AMBIGUOUS":      18,
+		"LATTICE_ERROR_CODE_DESTINATION_NOT_FOUND":      19,
+		"LATTICE_ERROR_CODE_DESTINATION_UNREACHABLE":    20,
 	}
 )
 
@@ -247,6 +256,7 @@ const (
 	Capability_CAPABILITY_CONFLICT_CENTER         Capability = 4
 	Capability_CAPABILITY_WORKSPACES              Capability = 5
 	Capability_CAPABILITY_DESTINATION_PREFERENCES Capability = 6
+	Capability_CAPABILITY_FORWARDING              Capability = 7
 )
 
 // Enum value maps for Capability.
@@ -259,6 +269,7 @@ var (
 		4: "CAPABILITY_CONFLICT_CENTER",
 		5: "CAPABILITY_WORKSPACES",
 		6: "CAPABILITY_DESTINATION_PREFERENCES",
+		7: "CAPABILITY_FORWARDING",
 	}
 	Capability_value = map[string]int32{
 		"CAPABILITY_UNSPECIFIED":             0,
@@ -268,6 +279,7 @@ var (
 		"CAPABILITY_CONFLICT_CENTER":         4,
 		"CAPABILITY_WORKSPACES":              5,
 		"CAPABILITY_DESTINATION_PREFERENCES": 6,
+		"CAPABILITY_FORWARDING":              7,
 	}
 )
 
@@ -384,7 +396,7 @@ const file_lattice_v1_common_proto_rawDesc = "" +
 	"%NETWORK_CONNECTION_STATE_RECONNECTING\x10\b\x12%\n" +
 	"!NETWORK_CONNECTION_STATE_REMOVING\x10\t\x12\"\n" +
 	"\x1eNETWORK_CONNECTION_STATE_ERROR\x10\n" +
-	"*\xa2\x06\n" +
+	"*\xae\a\n" +
 	"\x10LatticeErrorCode\x12\"\n" +
 	"\x1eLATTICE_ERROR_CODE_UNSPECIFIED\x10\x00\x12(\n" +
 	"$LATTICE_ERROR_CODE_NETWORK_NOT_FOUND\x10\x01\x12*\n" +
@@ -404,7 +416,10 @@ const file_lattice_v1_common_proto_rawDesc = "" +
 	"#LATTICE_ERROR_CODE_INVALID_ARGUMENT\x10\x0e\x12\x1f\n" +
 	"\x1bLATTICE_ERROR_CODE_INTERNAL\x10\x0f\x12*\n" +
 	"&LATTICE_ERROR_CODE_WORKSPACE_NOT_FOUND\x10\x10\x12'\n" +
-	"#LATTICE_ERROR_CODE_DEVICE_NOT_FOUND\x10\x11*\xeb\x01\n" +
+	"#LATTICE_ERROR_CODE_DEVICE_NOT_FOUND\x10\x11\x12,\n" +
+	"(LATTICE_ERROR_CODE_DESTINATION_AMBIGUOUS\x10\x12\x12,\n" +
+	"(LATTICE_ERROR_CODE_DESTINATION_NOT_FOUND\x10\x13\x12.\n" +
+	"*LATTICE_ERROR_CODE_DESTINATION_UNREACHABLE\x10\x14*\x86\x02\n" +
 	"\n" +
 	"Capability\x12\x1a\n" +
 	"\x16CAPABILITY_UNSPECIFIED\x10\x00\x12\x18\n" +
@@ -413,7 +428,8 @@ const file_lattice_v1_common_proto_rawDesc = "" +
 	"\x1fCAPABILITY_CONNECTION_INSPECTOR\x10\x03\x12\x1e\n" +
 	"\x1aCAPABILITY_CONFLICT_CENTER\x10\x04\x12\x19\n" +
 	"\x15CAPABILITY_WORKSPACES\x10\x05\x12&\n" +
-	"\"CAPABILITY_DESTINATION_PREFERENCES\x10\x06B\xa5\x01\n" +
+	"\"CAPABILITY_DESTINATION_PREFERENCES\x10\x06\x12\x19\n" +
+	"\x15CAPABILITY_FORWARDING\x10\aB\xa5\x01\n" +
 	"\x0ecom.lattice.v1B\vCommonProtoP\x01Z=git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1;latticev1\xa2\x02\x03LXX\xaa\x02\n" +
 	"Lattice.V1\xca\x02\n" +
 	"Lattice\\V1\xe2\x02\x16Lattice\\V1\\GPBMetadata\xea\x02\vLattice::V1b\x06proto3"

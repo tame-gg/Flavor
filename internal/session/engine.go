@@ -3,6 +3,7 @@ package session
 import (
 	"context"
 	"log/slog"
+	"net"
 	"net/netip"
 	"time"
 
@@ -53,6 +54,7 @@ type Engine interface {
 	Status(ctx context.Context) (EngineStatus, error)
 	Watch(ctx context.Context, emit func(EngineNotify)) error
 	ClearAuthKey()
+	Dial(ctx context.Context, network, address string) (net.Conn, error)
 }
 
 type EngineFactory func(cfg provider.ResolvedSessionConfig, authKey string, log *slog.Logger) (Engine, error)

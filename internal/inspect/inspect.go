@@ -29,6 +29,7 @@ type Query struct {
 	Port    uint16
 	Device  string
 	Network string
+	Context domain.NetworkID
 }
 
 func (q Query) Qualified() bool { return q.Network != "" }
@@ -77,6 +78,7 @@ const (
 	ReasonSubnetRoute
 	ReasonLongestPrefix
 	ReasonNetworkQualifiedName
+	ReasonExplicitNetwork
 )
 
 type PreferenceState int
@@ -186,6 +188,12 @@ func validName(name string) bool {
 
 func Resolve(q Query, networks []Network, pref *domain.DestinationPreference) Result {
 	res := resolveMatches(q, networks)
+	if q.Context != "" {
+		if res.Decision == DecisionUnique {
+			res.Reason = ReasonExplicitNetwork
+		}
+		return res
+	}
 	if pref != nil && pref.Destination == q.Normalized() && pref.Kind == q.DestinationKind() {
 		applyPreference(&res, networks, *pref)
 	}
@@ -246,6 +254,9 @@ func resolveMatches(q Query, networks []Network) Result {
 	}
 	seen := make(map[string]bool)
 	for _, n := range networks {
+		if q.Context != "" && n.Network.ID != q.Context {
+			continue
+		}
 		if !n.Live {
 			res.NotInspected = append(res.NotInspected, Network{Network: n.Network, State: n.State})
 			continue

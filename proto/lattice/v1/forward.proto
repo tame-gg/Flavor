@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package lattice.v1;
+
+import "lattice/v1/common.proto";
+import "lattice/v1/inspector.proto";
+
+service ForwardService {
+  rpc Forward(ForwardRequest) returns (stream ForwardResponse);
+}
+
+message ForwardRequest {
+  string destination = 1;
+  string listen = 2;
+  string network = 3;
+}
+
+message ForwardRoute {
+  InspectDestinationResponse decision = 1;
+  NetworkRef network = 2;
+  string target = 3;
+}
+
+message ForwardStarted {
+  string listen_address = 1;
+  ForwardRoute route = 2;
+}
+
+message ForwardConnection {
+  uint64 id = 1;
+  string client = 2;
+  ForwardRoute route = 3;
+  uint64 bytes_sent = 4;
+  uint64 bytes_received = 5;
+}
+
+message ForwardRefused {
+  uint64 id = 1;
+  string client = 2;
+  LatticeErrorDetail reason = 3;
+}
+
+message ForwardResponse {
+  oneof event {
+    ForwardStarted started = 1;
+    ForwardConnection opened = 2;
+    ForwardConnection closed = 3;
+    ForwardRefused refused = 4;
+  }
+}

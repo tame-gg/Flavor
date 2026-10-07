@@ -34,6 +34,7 @@ func New(svc *service.Service) *http.Server {
 	mux.Handle(latticev1connect.NewConflictServiceHandler(h, opts...))
 	mux.Handle(latticev1connect.NewWorkspaceServiceHandler(h, opts...))
 	mux.Handle(latticev1connect.NewPreferenceServiceHandler(h, opts...))
+	mux.Handle(latticev1connect.NewForwardServiceHandler(h, opts...))
 	var p http.Protocols
 	p.SetUnencryptedHTTP2(true)
 	return &http.Server{
@@ -227,16 +228,19 @@ func resyncError(msg string) error {
 }
 
 var connectCodes = map[service.Code]connect.Code{
-	service.CodeNetworkNotFound:   connect.CodeNotFound,
-	service.CodeInvalidControlURL: connect.CodeInvalidArgument,
-	service.CodeInvalidArgument:   connect.CodeInvalidArgument,
-	service.CodeAlreadyConnected:  connect.CodeAlreadyExists,
-	service.CodeBusy:              connect.CodeAborted,
-	service.CodeStateDirectory:    connect.CodeFailedPrecondition,
-	service.CodeShuttingDown:      connect.CodeUnavailable,
-	service.CodeInternal:          connect.CodeInternal,
-	service.CodeWorkspaceNotFound: connect.CodeNotFound,
-	service.CodeDeviceNotFound:    connect.CodeNotFound,
+	service.CodeNetworkNotFound:        connect.CodeNotFound,
+	service.CodeInvalidControlURL:      connect.CodeInvalidArgument,
+	service.CodeInvalidArgument:        connect.CodeInvalidArgument,
+	service.CodeAlreadyConnected:       connect.CodeAlreadyExists,
+	service.CodeBusy:                   connect.CodeAborted,
+	service.CodeStateDirectory:         connect.CodeFailedPrecondition,
+	service.CodeShuttingDown:           connect.CodeUnavailable,
+	service.CodeInternal:               connect.CodeInternal,
+	service.CodeWorkspaceNotFound:      connect.CodeNotFound,
+	service.CodeDeviceNotFound:         connect.CodeNotFound,
+	service.CodeDestinationAmbiguous:   connect.CodeFailedPrecondition,
+	service.CodeDestinationNotFound:    connect.CodeNotFound,
+	service.CodeDestinationUnreachable: connect.CodeUnavailable,
 }
 
 func toConnect(err error) error {

@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"flag"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/netip"
 	"os"
 	"os/signal"
@@ -34,6 +36,7 @@ func main() {
 		default:
 			e.SetStatus(status(cfg, n, *peers))
 		}
+		e.SetDial(identify(cfg))
 	}}
 
 	log := logging.New(os.Stderr, slog.LevelInfo)
@@ -102,4 +105,17 @@ func routesFor(peer, network int) []netip.Prefix {
 		out = append(out, netip.MustParsePrefix(r))
 	}
 	return out
+}
+
+func identify(cfg provider.ResolvedSessionConfig) func(context.Context, string, string) (net.Conn, error) {
+	return func(_ context.Context, _, address string) (net.Conn, error) {
+		ours, theirs := net.Pipe()
+		go func() {
+			defer theirs.Close()
+			_, _ = bufio.NewReader(theirs).ReadString('\n')
+			body := fmt.Sprintf("network=%s target=%s\n", cfg.NetworkID, address)
+			fmt.Fprintf(theirs, "HTTP/1.0 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n\r\n%s", len(body), body)
+		}()
+		return ours, nil
+	}
 }

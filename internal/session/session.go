@@ -4,8 +4,10 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/netip"
 	"slices"
 	"sync"
@@ -465,6 +467,21 @@ func (s *Session) publish(p events.Payload) {
 		return
 	}
 	_, _ = s.bus.Publish(p)
+}
+
+var ErrNotRunning = errors.New("network session is not running")
+
+func (s *Session) Dial(ctx context.Context, network, address string) (net.Conn, error) {
+	s.lifeMu.Lock()
+	var eng Engine
+	if g := s.gen; g != nil && g.phase == backendStarted {
+		eng = g.eng
+	}
+	s.lifeMu.Unlock()
+	if eng == nil {
+		return nil, ErrNotRunning
+	}
+	return eng.Dial(ctx, network, address)
 }
 
 func (s *Session) State() domain.NetworkConnectionState {

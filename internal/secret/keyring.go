@@ -2,7 +2,6 @@ package secret
 
 import (
 	"errors"
-	"strings"
 
 	"github.com/zalando/go-keyring"
 )
@@ -28,8 +27,7 @@ func mapKeyringErr(err error) error {
 	if errors.Is(err, ErrNotFound) || errors.Is(err, keyring.ErrNotFound) {
 		return ErrNotFound
 	}
-	msg := strings.ToLower(err.Error())
-	if strings.Contains(msg, "locked") || strings.Contains(msg, "unlock") {
+	if errors.Is(err, ErrLocked) {
 		return ErrLocked
 	}
 	return ErrUnavailable

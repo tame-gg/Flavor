@@ -64,7 +64,7 @@ func (f *fakeKeyring) Delete(service, user string) error {
 func TestSecretServiceViaFake(t *testing.T) {
 	ctx := context.Background()
 	fk := newFakeKeyring()
-	store := secret.NewSecretServiceForTest("dev.lunarlabs.Lattice", fk)
+	store := secret.NewSecretServiceForTest("dev.lunarlabs.lattice", fk)
 	st := store.Status(ctx)
 	if st.Backend != secret.BackendSecretService || st.State != secret.StateAvailable {
 		t.Fatalf("status=%+v", st)
@@ -103,7 +103,7 @@ func TestSecretServiceMapsUnavailable(t *testing.T) {
 	fk := newFakeKeyring()
 	fk.getErr = errors.New("dbus: connection refused")
 	fk.setErr = errors.New("dbus: connection refused")
-	store := secret.NewSecretServiceForTest("dev.lunarlabs.Lattice", fk)
+	store := secret.NewSecretServiceForTest("dev.lunarlabs.lattice", fk)
 	st := store.Status(ctx)
 	if st.State != secret.StateUnavailable {
 		t.Fatalf("status=%+v", st)
@@ -114,11 +114,22 @@ func TestSecretServiceMapsUnavailable(t *testing.T) {
 	}
 }
 
-func TestSecretServiceMapsLockedHeuristic(t *testing.T) {
+func TestSecretServiceUnlockTextIsUnavailableNotLocked(t *testing.T) {
 	ctx := context.Background()
 	fk := newFakeKeyring()
 	fk.getErr = errors.New("failed to unlock correct collection")
-	store := secret.NewSecretServiceForTest("dev.lunarlabs.Lattice", fk)
+	store := secret.NewSecretServiceForTest("dev.lunarlabs.lattice", fk)
+	st := store.Status(ctx)
+	if st.State != secret.StateUnavailable {
+		t.Fatalf("status=%+v want unavailable", st)
+	}
+}
+
+func TestSecretServiceMapsExplicitLocked(t *testing.T) {
+	ctx := context.Background()
+	fk := newFakeKeyring()
+	fk.getErr = secret.ErrLocked
+	store := secret.NewSecretServiceForTest("dev.lunarlabs.lattice", fk)
 	st := store.Status(ctx)
 	if st.State != secret.StateLocked {
 		t.Fatalf("status=%+v", st)

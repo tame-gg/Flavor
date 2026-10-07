@@ -8,6 +8,7 @@ require (
 	github.com/zalando/go-keyring v0.2.6
 	golang.org/x/net v0.40.0
 	google.golang.org/protobuf v1.36.12
+	gvisor.dev/gvisor v0.0.0-20250205023644-9414b50a5633
 	modernc.org/sqlite v1.34.5
 	tailscale.com v1.90.9
 )
@@ -60,7 +61,6 @@ require (
 	golang.org/x/time v0.11.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
 	golang.zx2c4.com/wireguard/windows v0.5.3 // indirect
-	gvisor.dev/gvisor v0.0.0-20250205023644-9414b50a5633 // indirect
 	modernc.org/libc v1.55.3 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect

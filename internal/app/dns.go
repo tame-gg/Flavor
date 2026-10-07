@@ -7,22 +7,54 @@ import (
 	"net"
 	"net/netip"
 
+	"git.lunarlabs.dev/lattice/lattice/internal/dataplane"
+	"git.lunarlabs.dev/lattice/lattice/internal/domain"
 	"git.lunarlabs.dev/lattice/lattice/internal/service"
+	"git.lunarlabs.dev/lattice/lattice/internal/session"
 	"git.lunarlabs.dev/lattice/lattice/internal/store"
 	"git.lunarlabs.dev/lattice/lattice/internal/syndns"
 	"git.lunarlabs.dev/lattice/lattice/internal/synthetic"
 )
 
-func serveExperimentalDNS(ctx context.Context, listen string, db *store.DB, svc *service.Service, log *slog.Logger) (net.Addr, error) {
-	ap, err := netip.ParseAddrPort(listen)
-	if err != nil || !ap.Addr().Unmap().IsLoopback() {
-		return nil, errors.New("listen address must be a loopback IP and port")
+func startSynthetic(ctx context.Context, opts Options, db *store.DB, svc *service.Service, sessions *session.Manager, log *slog.Logger) (*dataplane.Plane, error) {
+	if opts.ExperimentalDNS == "" && opts.TUN == nil {
+		return nil, nil
 	}
 	alloc, err := synthetic.Open(ctx, db, nil)
 	if err != nil {
 		return nil, err
 	}
+	if err := alloc.EnsurePool(ctx, synthetic.LocalPrefixes()); err != nil {
+		log.Warn("ipv4 synthetic addresses disabled", "err", err.Error())
+	}
 	engine := &syndns.Engine{Resolver: svc, Addresser: alloc, Ambiguous: svc.WarnAmbiguousName}
+	if opts.ExperimentalDNS != "" {
+		addr, err := serveExperimentalDNS(ctx, opts.ExperimentalDNS, engine)
+		if err != nil {
+			return nil, err
+		}
+		log.Info("experimental synthetic dns listening", "addr", addr.String())
+		if opts.OnDNSReady != nil {
+			opts.OnDNSReady(addr)
+		}
+	}
+	if opts.TUN == nil {
+		return nil, nil
+	}
+	return dataplane.Start(ctx, opts.TUN, alloc, engine, func(ctx context.Context, id domain.NetworkID, proto, address string) (net.Conn, error) {
+		s, ok := sessions.Get(id)
+		if !ok {
+			return nil, session.ErrNotRunning
+		}
+		return s.Dial(ctx, proto, address)
+	}, log)
+}
+
+func serveExperimentalDNS(ctx context.Context, listen string, engine *syndns.Engine) (net.Addr, error) {
+	ap, err := netip.ParseAddrPort(listen)
+	if err != nil || !ap.Addr().Unmap().IsLoopback() {
+		return nil, errors.New("listen address must be a loopback IP and port")
+	}
 	var lc net.ListenConfig
 	pc, err := lc.ListenPacket(ctx, "udp", ap.String())
 	if err != nil {
@@ -32,20 +64,6 @@ func serveExperimentalDNS(ctx context.Context, listen string, db *store.DB, svc 
 		<-ctx.Done()
 		_ = pc.Close()
 	}()
-	go func() {
-		buf := make([]byte, 1500)
-		for {
-			n, from, err := pc.ReadFrom(buf)
-			if err != nil {
-				return
-			}
-			resp, err := engine.Answer(ctx, buf[:n])
-			if err != nil {
-				log.Debug("dropping malformed dns query")
-				continue
-			}
-			_, _ = pc.WriteTo(resp, from)
-		}
-	}()
+	go engine.ServePacket(ctx, pc)
 	return pc.LocalAddr(), nil
 }

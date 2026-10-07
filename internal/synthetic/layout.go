@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"errors"
 	"net/netip"
+
+	"git.lunarlabs.dev/lattice/lattice/internal/store"
 )
 
 const (
@@ -15,7 +17,7 @@ const (
 
 var (
 	ErrNotSynthetic   = errors.New("address is not a Lattice synthetic address")
-	ErrInvalidIndex   = errors.New("network index must be between 1 and 65535")
+	ErrInvalidIndex   = errors.New("network index must be between 1 and 65534")
 	ErrCounterSpent   = errors.New("synthetic IPv6 counter exhausted")
 	ErrInvalidPrefix  = errors.New("invalid Lattice ULA prefix")
 	ErrNotIPv4        = errors.New("embedding requires an IPv4 target")
@@ -53,7 +55,7 @@ func NetworkPrefix(ula netip.Prefix, index uint16) (netip.Prefix, error) {
 	if !ValidULA(ula) {
 		return netip.Prefix{}, ErrInvalidPrefix
 	}
-	if index == 0 {
+	if index == 0 || index > store.MaxNetworkIndex {
 		return netip.Prefix{}, ErrInvalidIndex
 	}
 	b := ula.Addr().As16()
@@ -65,6 +67,22 @@ func ResolverAddress(ula netip.Prefix) netip.Addr {
 	b := ula.Addr().As16()
 	b[15] = 0x53
 	return netip.AddrFrom16(b)
+}
+
+func HostAddress(ula netip.Prefix) netip.Addr {
+	return ula.Addr().Next()
+}
+
+func HostV4(pool netip.Prefix) netip.Addr {
+	return pool.Masked().Addr().Next()
+}
+
+func ResolverV4(pool netip.Prefix) netip.Addr {
+	return HostV4(pool).Next()
+}
+
+func firstMappableV4(pool netip.Prefix) netip.Addr {
+	return ResolverV4(pool).Next()
 }
 
 func EmbedV4(ula netip.Prefix, index uint16, v4 netip.Addr) (netip.Addr, error) {
@@ -104,7 +122,7 @@ func Decode(ula netip.Prefix, a netip.Addr) (Decoded, error) {
 	}
 	b := a.As16()
 	d := Decoded{Index: binary.BigEndian.Uint16(b[6:8])}
-	if d.Index == 0 {
+	if d.Index == 0 || d.Index > store.MaxNetworkIndex {
 		return Decoded{}, ErrInvalidIndex
 	}
 	switch binary.BigEndian.Uint16(b[8:10]) {

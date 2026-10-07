@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net"
 	"net/http"
@@ -35,6 +36,7 @@ type Options struct {
 	OnReady         func(config.Paths)
 	ExperimentalDNS string
 	OnDNSReady      func(net.Addr)
+	TUN             io.ReadWriteCloser
 }
 
 func Run(ctx context.Context, opts Options) error {
@@ -113,17 +115,11 @@ func Run(ctx context.Context, opts Options) error {
 
 	runCtx, cancelRun := context.WithCancel(ctx)
 	defer cancelRun()
-	if opts.ExperimentalDNS != "" {
-		addr, err := serveExperimentalDNS(runCtx, opts.ExperimentalDNS, db, svc, log)
-		if err != nil {
-			cancelRun()
-			_ = httpSrv.Close()
-			return fmt.Errorf("experimental dns: %w", err)
-		}
-		log.Info("experimental synthetic dns listening", "addr", addr.String())
-		if opts.OnDNSReady != nil {
-			opts.OnDNSReady(addr)
-		}
+	plane, err := startSynthetic(runCtx, opts, db, svc, sessions, log)
+	if err != nil {
+		cancelRun()
+		_ = httpSrv.Close()
+		return fmt.Errorf("synthetic addressing: %w", err)
 	}
 	go svc.ReconcileAutoConnect(runCtx)
 
@@ -136,6 +132,9 @@ func Run(ctx context.Context, opts Options) error {
 		}
 	}
 	cancelRun()
+	if plane != nil {
+		plane.Close()
+	}
 
 	log.Info("latticed shutting down")
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), opts.ShutdownTimeout)

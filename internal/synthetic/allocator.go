@@ -3,6 +3,7 @@ package synthetic
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/netip"
 	"sync"
 	"time"
@@ -58,7 +59,7 @@ func (a *Allocator) Pool() netip.Prefix {
 
 func (a *Allocator) SetPool(ctx context.Context, p netip.Prefix) error {
 	p = p.Masked()
-	if !p.Addr().Is4() || p.Bits() < CompatibilityRange.Bits() || !CompatibilityRange.Contains(p.Addr()) || p.Bits() > 30 {
+	if !p.Addr().Is4() || p.Bits() < CompatibilityRange.Bits() || !CompatibilityRange.Contains(p.Addr()) || p.Bits() > 29 {
 		return ErrPoolOutside
 	}
 	if err := a.db.Synthetic().SetV4Pool(ctx, p); err != nil {
@@ -93,7 +94,7 @@ func (a *Allocator) For(ctx context.Context, network domain.NetworkID, real neti
 		return Addresses{}, err
 	}
 	if pool := a.Pool(); pool.IsValid() {
-		if out.V4, err = a.db.Synthetic().MapV4(ctx, network, real, pool, a.now()); err != nil {
+		if out.V4, err = a.db.Synthetic().MapV4(ctx, network, real, pool, firstMappableV4(pool), a.now()); err != nil {
 			return out, err
 		}
 	}
@@ -169,6 +170,33 @@ func (a *Allocator) ReclaimIdle(ctx context.Context, idle time.Duration, max int
 	return out, nil
 }
 
+func (a *Allocator) EnsurePool(ctx context.Context, occupied []netip.Prefix) error {
+	pool := a.Pool()
+	if !pool.IsValid() {
+		p, err := ChoosePool(occupied)
+		if err != nil {
+			return err
+		}
+		return a.SetPool(ctx, p)
+	}
+	if o, busy := overlap(pool, occupied); busy {
+		a.mu.Lock()
+		a.pool = netip.Prefix{}
+		a.mu.Unlock()
+		return fmt.Errorf("%w: stored pool %s overlaps %s; IPv4 synthetic addresses are disabled", ErrPoolOverlaps, pool, o)
+	}
+	return nil
+}
+
+func overlap(p netip.Prefix, occupied []netip.Prefix) (netip.Prefix, bool) {
+	for _, o := range occupied {
+		if o.Addr().Is4() && o.Bits() > 0 && p.Overlaps(o) {
+			return o, true
+		}
+	}
+	return netip.Prefix{}, false
+}
+
 func ChoosePool(occupied []netip.Prefix) (netip.Prefix, error) {
 	step := uint32(1) << (32 - PoolBits)
 	top := CompatibilityRange.Addr().As4()
@@ -177,14 +205,7 @@ func ChoosePool(occupied []netip.Prefix) (netip.Prefix, error) {
 	for i := count; i > 0; i-- {
 		v := base + (i-1)*step
 		cand := netip.PrefixFrom(netip.AddrFrom4([4]byte{byte(v >> 24), byte(v >> 16), byte(v >> 8), byte(v)}), PoolBits)
-		clear := true
-		for _, o := range occupied {
-			if o.Addr().Is4() && o.Bits() > 0 && cand.Overlaps(o) {
-				clear = false
-				break
-			}
-		}
-		if clear {
+		if _, busy := overlap(cand, occupied); !busy {
 			return cand, nil
 		}
 	}

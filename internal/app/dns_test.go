@@ -2,6 +2,8 @@ package app_test
 
 import (
 	"context"
+	"encoding/binary"
+	"io"
 	"net"
 	"net/netip"
 	"strings"
@@ -12,6 +14,7 @@ import (
 	v1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1"
 	"git.lunarlabs.dev/lattice/lattice/internal/app"
 	"git.lunarlabs.dev/lattice/lattice/internal/syndns"
+	"git.lunarlabs.dev/lattice/lattice/internal/synthetic"
 	"golang.org/x/net/dns/dnsmessage"
 )
 
@@ -25,6 +28,16 @@ type dnsAnswer struct {
 
 func ask(t *testing.T, server string, name string, qtype dnsmessage.Type, edns bool) dnsAnswer {
 	t.Helper()
+	c, err := net.Dial("udp", server)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+	return askOn(t, c, false, name, qtype, edns)
+}
+
+func askOn(t *testing.T, c net.Conn, framed bool, name string, qtype dnsmessage.Type, edns bool) dnsAnswer {
+	t.Helper()
 	b := dnsmessage.NewBuilder(nil, dnsmessage.Header{ID: 7, RecursionDesired: true})
 	_ = b.StartQuestions()
 	_ = b.Question(dnsmessage.Question{Name: dnsmessage.MustNewName(name + "."), Type: qtype, Class: dnsmessage.ClassINET})
@@ -35,17 +48,24 @@ func ask(t *testing.T, server string, name string, qtype dnsmessage.Type, edns b
 		_ = b.OPTResource(h, dnsmessage.OPTResource{})
 	}
 	q, _ := b.Finish()
-	c, err := net.Dial("udp", server)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer c.Close()
 	_ = c.SetDeadline(time.Now().Add(3 * time.Second))
+	if framed {
+		q = append(binary.BigEndian.AppendUint16(nil, uint16(len(q))), q...)
+	}
 	if _, err := c.Write(q); err != nil {
 		t.Fatal(err)
 	}
 	buf := make([]byte, 1500)
-	n, err := c.Read(buf)
+	var n int
+	var err error
+	if framed {
+		if _, err = io.ReadFull(c, buf[:2]); err == nil {
+			n = int(binary.BigEndian.Uint16(buf[:2]))
+			_, err = io.ReadFull(c, buf[:n])
+		}
+	} else {
+		n, err = c.Read(buf)
+	}
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,8 +145,13 @@ func TestExperimentalSyntheticDNS(t *testing.T) {
 		t.Fatalf("stable and friendly names must answer the same: %v vs %v", stable.addrs, home.addrs)
 	}
 
-	if v4 := ask(t, server, "postgres.home.lattice.internal", dnsmessage.TypeA, false); v4.rcode != dnsmessage.RCodeSuccess || len(v4.addrs) != 0 || v4.soa == nil {
-		t.Fatalf("IPv6-only development mode answers A with empty NOERROR: %+v", v4)
+	v4 := ask(t, server, "postgres.home.lattice.internal", dnsmessage.TypeA, false)
+	lunar4 := ask(t, server, "postgres.lunarlabs.lattice.internal", dnsmessage.TypeA, false)
+	if v4.rcode != dnsmessage.RCodeSuccess || len(v4.addrs) != 1 || !synthetic.CompatibilityRange.Contains(v4.addrs[0]) {
+		t.Fatalf("A answers come from the IPv4 compatibility pool: %+v", v4)
+	}
+	if len(lunar4.addrs) != 1 || lunar4.addrs[0] == v4.addrs[0] {
+		t.Fatalf("the two postgres devices must get distinct IPv4 synthetic addresses: %v %v", v4.addrs, lunar4.addrs)
 	}
 
 	amb := ask(t, server, "postgres", dnsmessage.TypeAAAA, true)

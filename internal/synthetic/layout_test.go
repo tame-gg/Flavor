@@ -29,15 +29,17 @@ func TestNewULAIsRandomRFC4193(t *testing.T) {
 
 func TestNetworkPrefixesAreUniquePerIndex(t *testing.T) {
 	seen := map[netip.Prefix]bool{}
-	for _, i := range []uint16{1, 2, 255, 256, 65535} {
+	for _, i := range []uint16{1, 2, 255, 256, 65534} {
 		p, err := synthetic.NetworkPrefix(ula, i)
 		if err != nil || p.Bits() != 64 || !ula.Contains(p.Addr()) || seen[p] {
 			t.Fatalf("%d: %v %v", i, p, err)
 		}
 		seen[p] = true
 	}
-	if _, err := synthetic.NetworkPrefix(ula, 0); !errors.Is(err, synthetic.ErrInvalidIndex) {
-		t.Fatal("index 0 is reserved")
+	for _, i := range []uint16{0, 0xFFFF} {
+		if _, err := synthetic.NetworkPrefix(ula, i); !errors.Is(err, synthetic.ErrInvalidIndex) {
+			t.Fatalf("index %#x is reserved", i)
+		}
 	}
 	if got := synthetic.ResolverAddress(ula).String(); got != "fd12:3456:789a::53" {
 		t.Fatal(got)

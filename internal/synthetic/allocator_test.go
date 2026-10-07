@@ -3,6 +3,7 @@ package synthetic
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/netip"
 	"path/filepath"
 	"strings"
@@ -125,12 +126,15 @@ func TestIPv4AllocationReclaimAndQuarantine(t *testing.T) {
 	if err := a.SetPool(ctx, netip.MustParsePrefix("10.0.0.0/24")); !errors.Is(err, ErrPoolOutside) {
 		t.Fatal("pool outside 198.18.0.0/15 accepted")
 	}
-	if err := a.SetPool(ctx, netip.MustParsePrefix("198.19.255.248/29")); err != nil {
+	if err := a.SetPool(ctx, netip.MustParsePrefix("198.19.255.252/30")); !errors.Is(err, ErrPoolOutside) {
+		t.Fatal("a pool with no mappable address accepted")
+	}
+	if err := a.SetPool(ctx, netip.MustParsePrefix("198.19.255.240/28")); err != nil {
 		t.Fatal(err)
 	}
-	reals := []string{"100.64.0.1", "100.64.0.2", "100.64.0.3", "100.64.0.4", "100.64.0.5", "100.64.0.6"}
 	got := map[netip.Addr]string{}
-	for i, r := range reals {
+	for i := range 12 {
+		r := fmt.Sprintf("100.64.0.%d", i+1)
 		c.t = c.t.Add(time.Minute)
 		x, err := a.For(ctx, ids[0], netip.MustParseAddr(r))
 		if err != nil {
@@ -140,8 +144,8 @@ func TestIPv4AllocationReclaimAndQuarantine(t *testing.T) {
 			t.Fatalf("%s got %v (taken by %q)", r, x.V4, got[x.V4])
 		}
 		got[x.V4] = r
-		if i == 0 && x.V4.String() != "198.19.255.249" {
-			t.Fatalf("network address must be skipped: %v", x.V4)
+		if i == 0 && x.V4.String() != "198.19.255.243" {
+			t.Fatalf("network, host and resolver addresses must be skipped: %v", x.V4)
 		}
 	}
 	other, err := a.For(ctx, ids[1], netip.MustParseAddr("100.64.0.1"))
@@ -157,7 +161,7 @@ func TestIPv4AllocationReclaimAndQuarantine(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(reclaimed) != 2 || reclaimed[0].String() != "198.19.255.249" {
+	if len(reclaimed) != 2 || reclaimed[0].String() != "198.19.255.243" {
 		t.Fatalf("least recently used first, skipping active flows: %v", reclaimed)
 	}
 	for _, r := range reclaimed {
@@ -191,15 +195,17 @@ func TestNetworkRemovalQuarantinesDurably(t *testing.T) {
 	path, db, c, ids := setup(t)
 	c.t = time.Now()
 	a, _ := Open(ctx, db, c.now)
-	if err := a.SetPool(ctx, netip.MustParsePrefix("198.19.255.252/30")); err != nil {
+	if err := a.SetPool(ctx, netip.MustParsePrefix("198.19.255.248/29")); err != nil {
 		t.Fatal(err)
 	}
 	gone, err := a.For(ctx, ids[0], netip.MustParseAddr("100.64.0.1"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := a.For(ctx, ids[0], netip.MustParseAddr("100.64.0.2")); err != nil {
-		t.Fatal(err)
+	for _, r := range []string{"100.64.0.2", "100.64.0.3", "100.64.0.4"} {
+		if _, err := a.For(ctx, ids[0], netip.MustParseAddr(r)); err != nil {
+			t.Fatal(err)
+		}
 	}
 	if err := db.SoftRemove(ctx, ids[0]); err != nil {
 		t.Fatal(err)
@@ -257,6 +263,31 @@ func TestNetworkIndexQuarantine(t *testing.T) {
 	}
 	if idx, _ := syn.NetworkIndex(ctx, other.ID, time.Now().Add(store.IndexQuarantine+time.Hour)); idx != first {
 		t.Fatalf("index should be reusable after quarantine, got %d", idx)
+	}
+}
+
+func TestEnsurePool(t *testing.T) {
+	ctx := context.Background()
+	_, db, c, _ := setup(t)
+	a, _ := Open(ctx, db, c.now)
+	if err := a.EnsurePool(ctx, []netip.Prefix{netip.MustParsePrefix("198.19.240.0/24")}); err != nil {
+		t.Fatal(err)
+	}
+	if got := a.Pool().String(); got != "198.19.224.0/20" {
+		t.Fatalf("pool must avoid local prefixes: %s", got)
+	}
+	if HostV4(a.Pool()).String() != "198.19.224.1" || ResolverV4(a.Pool()).String() != "198.19.224.2" {
+		t.Fatal("host and resolver are the first two hosts of the pool")
+	}
+	if err := a.EnsurePool(ctx, nil); err != nil || a.Pool().String() != "198.19.224.0/20" {
+		t.Fatalf("a stored pool is kept: %v %v", a.Pool(), err)
+	}
+	if err := a.EnsurePool(ctx, []netip.Prefix{netip.MustParsePrefix("198.19.230.0/24")}); !errors.Is(err, ErrPoolOverlaps) || a.Pool().IsValid() {
+		t.Fatalf("a stored pool that now overlaps must disable IPv4: %v %v", a.Pool(), err)
+	}
+	b, _ := Open(ctx, db, c.now)
+	if b.Pool().String() != "198.19.224.0/20" {
+		t.Fatal("disabling IPv4 for one run must not forget the stored pool")
 	}
 }
 

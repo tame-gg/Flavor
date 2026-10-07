@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	MaxNetworkIndex = 0xFFFE
 	V4Quarantine    = 24 * time.Hour
 	IndexQuarantine = 7 * 24 * time.Hour
 )
@@ -109,7 +110,7 @@ func (r *SyntheticRepository) NetworkIndex(ctx context.Context, id domain.Networ
 		if err != nil {
 			return err
 		}
-		for i := 1; i <= 65535; i++ {
+		for i := 1; i <= MaxNetworkIndex; i++ {
 			if !blocked[int64(i)] {
 				idx = uint16(i)
 				break
@@ -164,7 +165,7 @@ func (r *SyntheticRepository) MapV6(ctx context.Context, id domain.NetworkID, re
 	return out, err
 }
 
-func (r *SyntheticRepository) MapV4(ctx context.Context, id domain.NetworkID, real netip.Addr, pool netip.Prefix, now time.Time) (netip.Addr, error) {
+func (r *SyntheticRepository) MapV4(ctx context.Context, id domain.NetworkID, real netip.Addr, pool netip.Prefix, first netip.Addr, now time.Time) (netip.Addr, error) {
 	var out netip.Addr
 	err := r.tx(ctx, func(tx *sql.Tx) error {
 		var raw string
@@ -183,10 +184,7 @@ func (r *SyntheticRepository) MapV4(ctx context.Context, id domain.NetworkID, re
 		if err != nil {
 			return err
 		}
-		for a := pool.Masked().Addr().Next(); pool.Contains(a); a = a.Next() {
-			if !pool.Contains(a.Next()) {
-				break
-			}
+		for a := first; pool.Contains(a) && pool.Contains(a.Next()); a = a.Next() {
 			if !blocked[a.String()] {
 				out = a
 				break

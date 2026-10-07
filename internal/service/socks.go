@@ -9,6 +9,8 @@ import (
 	"net/netip"
 	"strconv"
 	"time"
+
+	"git.lunarlabs.dev/lattice/lattice/internal/relay"
 )
 
 const socksHandshakeTimeout = 10 * time.Second
@@ -71,7 +73,7 @@ func (s *Service) serveSocks(ctx context.Context, c net.Conn, id uint64, emit fu
 	socksReply(c, socksSucceeded)
 	_ = c.SetDeadline(time.Time{})
 	emit(ForwardEvent{Kind: ForwardOpened, ConnID: id, Client: client, Destination: dest, Route: route})
-	sent, received := pipe(c, up)
+	sent, received := relay.Pipe(c, up)
 	emit(ForwardEvent{Kind: ForwardClosed, ConnID: id, Client: client, Destination: dest, Route: route, BytesSent: sent, BytesReceived: received})
 }
 

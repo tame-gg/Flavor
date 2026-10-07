@@ -2,12 +2,13 @@ package service
 
 import (
 	"context"
-	"io"
 	"net"
 	"net/netip"
 	"os"
 	"sync"
 	"sync/atomic"
+
+	"git.lunarlabs.dev/lattice/lattice/internal/relay"
 )
 
 const (
@@ -155,38 +156,12 @@ func (s *Service) serveForward(ctx context.Context, req ForwardRequest, c net.Co
 		var up net.Conn
 		if up, err = s.Dial(ctx, route); err == nil {
 			emit(ForwardEvent{Kind: ForwardOpened, ConnID: id, Client: client, Route: route})
-			sent, received := pipe(c, up)
+			sent, received := relay.Pipe(c, up)
 			emit(ForwardEvent{Kind: ForwardClosed, ConnID: id, Client: client, Route: route, BytesSent: sent, BytesReceived: received})
 			return
 		}
 	}
 	emit(ForwardEvent{Kind: ForwardRefused, ConnID: id, Client: client, Route: route, Err: err})
-}
-
-func pipe(client, upstream net.Conn) (sent, received uint64) {
-	defer upstream.Close()
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		n, _ := io.Copy(upstream, client)
-		sent = uint64(n)
-		closeWrite(upstream)
-	}()
-	n, _ := io.Copy(client, upstream)
-	received = uint64(n)
-	closeWrite(client)
-	wg.Wait()
-	return sent, received
-}
-
-func closeWrite(c net.Conn) {
-	if cw, ok := c.(interface{ CloseWrite() error }); ok {
-		if cw.CloseWrite() == nil {
-			return
-		}
-	}
-	_ = c.Close()
 }
 
 type connSet struct {

@@ -152,6 +152,21 @@ NETWORK    DEVICE    MATCH           STATUS  ADDRESSES
 Home       desktop   device address  tied    100.64.0.1
 LunarLabs  prod-api  device address  tied    100.64.0.1
 
+$ latticectl forward postgres.home.lattice.internal:5432
+Forwarding
+
+  127.0.0.1:41753
+      ↓
+  postgres.home.lattice.internal:5432
+      ↓
+  Home
+      ↓
+  100.64.0.9:5432
+
+Reason: network qualified name
+
+$ latticectl socks          # SOCKS5 on 127.0.0.1:1080, this user only
+$ curl --proxy socks5h://127.0.0.1:1080 http://grafana.home.lattice.internal:3000/
 $ latticectl preference set 100.64.0.1 --network LunarLabs
 $ latticectl workspace create --name "On Call" <network-id> <network-id>
 $ latticectl workspace activate --disconnect-others "On Call"
@@ -163,6 +178,8 @@ $ latticectl diag
 ```
 
 Pre-auth keys are read from stdin, so they never appear in the process list or in command-line arguments.
+
+`forward` and `socks` run until you press Ctrl+C. They listen on loopback only, refuse connections from other local users, re-check every new connection with the same decision engine as the inspector, and never guess: an address that exists on two networks is refused until you use a Lattice name, a preference or `--network`.
 
 ## Security model
 

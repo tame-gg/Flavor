@@ -183,17 +183,18 @@ func (ResolutionDecision) EnumDescriptor() ([]byte, []int) {
 type DecisionReason int32
 
 const (
-	DecisionReason_DECISION_REASON_UNSPECIFIED            DecisionReason = 0
-	DecisionReason_DECISION_REASON_EXACT_DEVICE_ADDRESS   DecisionReason = 1
-	DecisionReason_DECISION_REASON_DEVICE_DNS_NAME        DecisionReason = 2
-	DecisionReason_DECISION_REASON_DEVICE_HOSTNAME        DecisionReason = 3
-	DecisionReason_DECISION_REASON_MULTIPLE_MATCHES       DecisionReason = 4
-	DecisionReason_DECISION_REASON_NO_MATCH               DecisionReason = 5
-	DecisionReason_DECISION_REASON_DESTINATION_PREFERENCE DecisionReason = 6
-	DecisionReason_DECISION_REASON_SUBNET_ROUTE           DecisionReason = 7
-	DecisionReason_DECISION_REASON_LONGEST_PREFIX         DecisionReason = 8
-	DecisionReason_DECISION_REASON_NETWORK_QUALIFIED_NAME DecisionReason = 9
-	DecisionReason_DECISION_REASON_EXPLICIT_NETWORK       DecisionReason = 10
+	DecisionReason_DECISION_REASON_UNSPECIFIED             DecisionReason = 0
+	DecisionReason_DECISION_REASON_EXACT_DEVICE_ADDRESS    DecisionReason = 1
+	DecisionReason_DECISION_REASON_DEVICE_DNS_NAME         DecisionReason = 2
+	DecisionReason_DECISION_REASON_DEVICE_HOSTNAME         DecisionReason = 3
+	DecisionReason_DECISION_REASON_MULTIPLE_MATCHES        DecisionReason = 4
+	DecisionReason_DECISION_REASON_NO_MATCH                DecisionReason = 5
+	DecisionReason_DECISION_REASON_DESTINATION_PREFERENCE  DecisionReason = 6
+	DecisionReason_DECISION_REASON_SUBNET_ROUTE            DecisionReason = 7
+	DecisionReason_DECISION_REASON_LONGEST_PREFIX          DecisionReason = 8
+	DecisionReason_DECISION_REASON_NETWORK_QUALIFIED_NAME  DecisionReason = 9
+	DecisionReason_DECISION_REASON_EXPLICIT_NETWORK        DecisionReason = 10
+	DecisionReason_DECISION_REASON_AMBIGUOUS_NETWORK_LABEL DecisionReason = 11
 )
 
 // Enum value maps for DecisionReason.
@@ -210,19 +211,21 @@ var (
 		8:  "DECISION_REASON_LONGEST_PREFIX",
 		9:  "DECISION_REASON_NETWORK_QUALIFIED_NAME",
 		10: "DECISION_REASON_EXPLICIT_NETWORK",
+		11: "DECISION_REASON_AMBIGUOUS_NETWORK_LABEL",
 	}
 	DecisionReason_value = map[string]int32{
-		"DECISION_REASON_UNSPECIFIED":            0,
-		"DECISION_REASON_EXACT_DEVICE_ADDRESS":   1,
-		"DECISION_REASON_DEVICE_DNS_NAME":        2,
-		"DECISION_REASON_DEVICE_HOSTNAME":        3,
-		"DECISION_REASON_MULTIPLE_MATCHES":       4,
-		"DECISION_REASON_NO_MATCH":               5,
-		"DECISION_REASON_DESTINATION_PREFERENCE": 6,
-		"DECISION_REASON_SUBNET_ROUTE":           7,
-		"DECISION_REASON_LONGEST_PREFIX":         8,
-		"DECISION_REASON_NETWORK_QUALIFIED_NAME": 9,
-		"DECISION_REASON_EXPLICIT_NETWORK":       10,
+		"DECISION_REASON_UNSPECIFIED":             0,
+		"DECISION_REASON_EXACT_DEVICE_ADDRESS":    1,
+		"DECISION_REASON_DEVICE_DNS_NAME":         2,
+		"DECISION_REASON_DEVICE_HOSTNAME":         3,
+		"DECISION_REASON_MULTIPLE_MATCHES":        4,
+		"DECISION_REASON_NO_MATCH":                5,
+		"DECISION_REASON_DESTINATION_PREFERENCE":  6,
+		"DECISION_REASON_SUBNET_ROUTE":            7,
+		"DECISION_REASON_LONGEST_PREFIX":          8,
+		"DECISION_REASON_NETWORK_QUALIFIED_NAME":  9,
+		"DECISION_REASON_EXPLICIT_NETWORK":        10,
+		"DECISION_REASON_AMBIGUOUS_NETWORK_LABEL": 11,
 	}
 )
 
@@ -928,7 +931,7 @@ const file_lattice_v1_inspector_proto_rawDesc = "" +
 	"\x1fRESOLUTION_DECISION_UNSPECIFIED\x10\x00\x12\x1e\n" +
 	"\x1aRESOLUTION_DECISION_UNIQUE\x10\x01\x12!\n" +
 	"\x1dRESOLUTION_DECISION_AMBIGUOUS\x10\x02\x12 \n" +
-	"\x1cRESOLUTION_DECISION_NO_MATCH\x10\x03*\xad\x03\n" +
+	"\x1cRESOLUTION_DECISION_NO_MATCH\x10\x03*\xda\x03\n" +
 	"\x0eDecisionReason\x12\x1f\n" +
 	"\x1bDECISION_REASON_UNSPECIFIED\x10\x00\x12(\n" +
 	"$DECISION_REASON_EXACT_DEVICE_ADDRESS\x10\x01\x12#\n" +
@@ -941,7 +944,8 @@ const file_lattice_v1_inspector_proto_rawDesc = "" +
 	"\x1eDECISION_REASON_LONGEST_PREFIX\x10\b\x12*\n" +
 	"&DECISION_REASON_NETWORK_QUALIFIED_NAME\x10\t\x12$\n" +
 	" DECISION_REASON_EXPLICIT_NETWORK\x10\n" +
-	"*\x8d\x01\n" +
+	"\x12+\n" +
+	"'DECISION_REASON_AMBIGUOUS_NETWORK_LABEL\x10\v*\x8d\x01\n" +
 	"\x0fCandidateStatus\x12 \n" +
 	"\x1cCANDIDATE_STATUS_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19CANDIDATE_STATUS_SELECTED\x10\x01\x12\x19\n" +

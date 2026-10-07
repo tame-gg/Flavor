@@ -101,3 +101,10 @@ type DestinationPreferenceRemoved struct {
 }
 
 func (DestinationPreferenceRemoved) eventPayload() {}
+
+type DaemonWarning struct {
+	Code        string
+	SafeMessage string
+}
+
+func (DaemonWarning) eventPayload() {}

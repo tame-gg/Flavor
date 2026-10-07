@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"syscall"
@@ -32,6 +33,8 @@ type Options struct {
 	EngineFactory   session.EngineFactory
 	ShutdownTimeout time.Duration
 	OnReady         func(config.Paths)
+	ExperimentalDNS string
+	OnDNSReady      func(net.Addr)
 }
 
 func Run(ctx context.Context, opts Options) error {
@@ -110,6 +113,18 @@ func Run(ctx context.Context, opts Options) error {
 
 	runCtx, cancelRun := context.WithCancel(ctx)
 	defer cancelRun()
+	if opts.ExperimentalDNS != "" {
+		addr, err := serveExperimentalDNS(runCtx, opts.ExperimentalDNS, db, svc, log)
+		if err != nil {
+			cancelRun()
+			_ = httpSrv.Close()
+			return fmt.Errorf("experimental dns: %w", err)
+		}
+		log.Info("experimental synthetic dns listening", "addr", addr.String())
+		if opts.OnDNSReady != nil {
+			opts.OnDNSReady(addr)
+		}
+	}
 	go svc.ReconcileAutoConnect(runCtx)
 
 	var runErr error

@@ -117,5 +117,16 @@ describe("explain", () => {
     expect(explain(tie).title).toBe("10.10.1.1 is routed by 2 networks");
     expect(candidateLabel(routed, CandidateStatus.OUTRANKED, MatchKind.SUBNET_ROUTE)).toBe("Less specific route");
   });
+
+  it("explains a Lattice name whose network label is shared", () => {
+    const r = create(InspectDestinationResponseSchema, {
+      normalized: "postgres.home.lattice.internal",
+      kind: DestinationKind.NAME,
+      decision: ResolutionDecision.AMBIGUOUS,
+      reason: DecisionReason.AMBIGUOUS_NETWORK_LABEL,
+      candidates: [candidate("b", "Home", "postgres", CandidateStatus.TIED, MatchKind.QUALIFIED_NAME)],
+    });
+    expect(explain(r).title).toBe("postgres.home.lattice.internal uses a network name more than one network shares");
+  });
 });
 

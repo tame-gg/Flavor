@@ -37,6 +37,7 @@ var (
 		inspect.ReasonLongestPrefix:         v1.DecisionReason_DECISION_REASON_LONGEST_PREFIX,
 		inspect.ReasonNetworkQualifiedName:  v1.DecisionReason_DECISION_REASON_NETWORK_QUALIFIED_NAME,
 		inspect.ReasonExplicitNetwork:       v1.DecisionReason_DECISION_REASON_EXPLICIT_NETWORK,
+		inspect.ReasonAmbiguousNetworkLabel: v1.DecisionReason_DECISION_REASON_AMBIGUOUS_NETWORK_LABEL,
 	}
 	candidateStatuses = map[inspect.CandidateStatus]v1.CandidateStatus{
 		inspect.StatusSelected:  v1.CandidateStatus_CANDIDATE_STATUS_SELECTED,

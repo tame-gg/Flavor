@@ -47,7 +47,7 @@ func TestMigrateFreshDB(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if ver != 3 {
+	if ver != 4 {
 		t.Fatalf("version=%d", ver)
 	}
 }

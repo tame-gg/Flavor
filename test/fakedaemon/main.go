@@ -25,6 +25,7 @@ import (
 func main() {
 	runtimeDir := flag.String("runtime-dir", "", "runtime directory parent")
 	peers := flag.Int("peers", 3, "synthetic peers per connected network")
+	experimentalDNS := flag.String("experimental-dns", "", "serve synthetic DNS on this loopback address")
 	flag.Parse()
 
 	seq := &sessiontest.Sequence{Prepare: func(n int, cfg provider.ResolvedSessionConfig, e *sessiontest.Engine) {
@@ -47,6 +48,7 @@ func main() {
 		SecretMode:      secret.ModeMemory,
 		Log:             log,
 		EngineFactory:   seq.Factory,
+		ExperimentalDNS: *experimentalDNS,
 	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

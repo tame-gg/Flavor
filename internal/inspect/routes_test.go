@@ -172,3 +172,11 @@ func TestExplicitNetworkContext(t *testing.T) {
 		t.Fatalf("explicit network that is down: %+v", r)
 	}
 }
+
+func TestSharedFriendlyLabelIsAmbiguousEvenWhenOnlyOneIsConnected(t *testing.T) {
+	off := inspect.Network{Network: domain.Network{ID: "C", DisplayName: "home"}, State: domain.StateDisconnected}
+	r := resolve(t, "postgres.home.lattice.internal", home, off)
+	if r.Decision != inspect.DecisionAmbiguous || r.Reason != inspect.ReasonAmbiguousNetworkLabel || len(r.Candidates) != 1 {
+		t.Fatalf("an answer that flips when the other network connects must not be given: %+v", r)
+	}
+}

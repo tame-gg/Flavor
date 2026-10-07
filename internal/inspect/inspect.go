@@ -79,6 +79,7 @@ const (
 	ReasonLongestPrefix
 	ReasonNetworkQualifiedName
 	ReasonExplicitNetwork
+	ReasonAmbiguousNetworkLabel
 )
 
 type PreferenceState int
@@ -245,10 +246,16 @@ func resolveMatches(q Query, networks []Network) Result {
 	}
 	netLabels := naming.NetworkLabels(all)
 	stableNet := ""
+	sharedLabel := 0
 	if q.Qualified() {
 		for _, l := range netLabels {
 			if l.Stable == q.Network {
 				stableNet = q.Network
+			}
+		}
+		for _, n := range all {
+			if naming.FriendlyNetworkCandidate(n) == q.Network {
+				sharedLabel++
 			}
 		}
 	}
@@ -311,6 +318,13 @@ func resolveMatches(q Query, networks []Network) Result {
 
 	if len(res.Candidates) == 0 {
 		res.Decision, res.Reason = DecisionNoMatch, ReasonNoMatch
+		return res
+	}
+	if stableNet == "" && sharedLabel > 1 {
+		for i := range res.Candidates {
+			res.Candidates[i].Status = StatusTied
+		}
+		res.Decision, res.Reason, res.DecidedBy = DecisionAmbiguous, ReasonAmbiguousNetworkLabel, MatchQualifiedName
 		return res
 	}
 	best := res.Candidates[0]

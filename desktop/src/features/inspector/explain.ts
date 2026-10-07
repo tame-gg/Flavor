@@ -77,6 +77,12 @@ export function explain(r: InspectDestinationResponse): { title: string; detail:
       return { title: `${device} on ${network}`, detail: `Matched by ${by}.${others}` };
     }
     case ResolutionDecision.AMBIGUOUS: {
+      if (r.reason === DecisionReason.AMBIGUOUS_NETWORK_LABEL) {
+        return {
+          title: `${r.normalized} uses a network name more than one network shares`,
+          detail: "Several networks have the same name, so this Lattice name could point at either of them. Use the device's stable name, which includes the network ID.",
+        };
+      }
       const count = new Set(tied.map((c) => c.network?.id)).size;
       if (r.decidedBy === MatchKind.SUBNET_ROUTE) {
         return {

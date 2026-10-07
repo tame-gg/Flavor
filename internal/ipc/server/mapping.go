@@ -174,6 +174,8 @@ func event(ev events.Event, instance string) *v1.DaemonEvent {
 		out.Payload = &v1.DaemonEvent_ActiveWorkspaceChanged{ActiveWorkspaceChanged: &v1.ActiveWorkspaceChanged{WorkspaceId: string(p.WorkspaceID)}}
 	case events.DestinationPreferenceChanged:
 		out.Payload = &v1.DaemonEvent_DestinationPreferenceChanged{DestinationPreferenceChanged: &v1.DestinationPreferenceChanged{Preference: preference(p.Preference)}}
+	case events.DaemonWarning:
+		out.Payload = &v1.DaemonEvent_DaemonWarning{DaemonWarning: &v1.DaemonWarning{Code: p.Code, SafeMessage: p.SafeMessage}}
 	case events.DestinationPreferenceRemoved:
 		out.Payload = &v1.DaemonEvent_DestinationPreferenceRemoved{DestinationPreferenceRemoved: &v1.DestinationPreferenceRemoved{Destination: p.Destination}}
 	}

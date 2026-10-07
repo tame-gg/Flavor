@@ -64,6 +64,7 @@ type Service struct {
 	forwardSlot  *slots
 	forwards     map[uint64]context.CancelFunc
 	nextForward  uint64
+	warned       map[string]time.Time
 }
 
 func New(cfg Config) *Service {

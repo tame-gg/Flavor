@@ -77,6 +77,8 @@ const (
 	MatchKind_MATCH_KIND_DEVICE_ADDRESS  MatchKind = 1
 	MatchKind_MATCH_KIND_DEVICE_DNS_NAME MatchKind = 2
 	MatchKind_MATCH_KIND_DEVICE_HOSTNAME MatchKind = 3
+	MatchKind_MATCH_KIND_SUBNET_ROUTE    MatchKind = 4
+	MatchKind_MATCH_KIND_QUALIFIED_NAME  MatchKind = 5
 )
 
 // Enum value maps for MatchKind.
@@ -86,12 +88,16 @@ var (
 		1: "MATCH_KIND_DEVICE_ADDRESS",
 		2: "MATCH_KIND_DEVICE_DNS_NAME",
 		3: "MATCH_KIND_DEVICE_HOSTNAME",
+		4: "MATCH_KIND_SUBNET_ROUTE",
+		5: "MATCH_KIND_QUALIFIED_NAME",
 	}
 	MatchKind_value = map[string]int32{
 		"MATCH_KIND_UNSPECIFIED":     0,
 		"MATCH_KIND_DEVICE_ADDRESS":  1,
 		"MATCH_KIND_DEVICE_DNS_NAME": 2,
 		"MATCH_KIND_DEVICE_HOSTNAME": 3,
+		"MATCH_KIND_SUBNET_ROUTE":    4,
+		"MATCH_KIND_QUALIFIED_NAME":  5,
 	}
 )
 
@@ -184,6 +190,9 @@ const (
 	DecisionReason_DECISION_REASON_MULTIPLE_MATCHES       DecisionReason = 4
 	DecisionReason_DECISION_REASON_NO_MATCH               DecisionReason = 5
 	DecisionReason_DECISION_REASON_DESTINATION_PREFERENCE DecisionReason = 6
+	DecisionReason_DECISION_REASON_SUBNET_ROUTE           DecisionReason = 7
+	DecisionReason_DECISION_REASON_LONGEST_PREFIX         DecisionReason = 8
+	DecisionReason_DECISION_REASON_NETWORK_QUALIFIED_NAME DecisionReason = 9
 )
 
 // Enum value maps for DecisionReason.
@@ -196,6 +205,9 @@ var (
 		4: "DECISION_REASON_MULTIPLE_MATCHES",
 		5: "DECISION_REASON_NO_MATCH",
 		6: "DECISION_REASON_DESTINATION_PREFERENCE",
+		7: "DECISION_REASON_SUBNET_ROUTE",
+		8: "DECISION_REASON_LONGEST_PREFIX",
+		9: "DECISION_REASON_NETWORK_QUALIFIED_NAME",
 	}
 	DecisionReason_value = map[string]int32{
 		"DECISION_REASON_UNSPECIFIED":            0,
@@ -205,6 +217,9 @@ var (
 		"DECISION_REASON_MULTIPLE_MATCHES":       4,
 		"DECISION_REASON_NO_MATCH":               5,
 		"DECISION_REASON_DESTINATION_PREFERENCE": 6,
+		"DECISION_REASON_SUBNET_ROUTE":           7,
+		"DECISION_REASON_LONGEST_PREFIX":         8,
+		"DECISION_REASON_NETWORK_QUALIFIED_NAME": 9,
 	}
 )
 
@@ -474,6 +489,7 @@ type ResolutionCandidate struct {
 	Match         MatchKind              `protobuf:"varint,3,opt,name=match,proto3,enum=lattice.v1.MatchKind" json:"match,omitempty"`
 	MatchedValue  string                 `protobuf:"bytes,4,opt,name=matched_value,json=matchedValue,proto3" json:"matched_value,omitempty"`
 	Status        CandidateStatus        `protobuf:"varint,5,opt,name=status,proto3,enum=lattice.v1.CandidateStatus" json:"status,omitempty"`
+	QualifiedName string                 `protobuf:"bytes,6,opt,name=qualified_name,json=qualifiedName,proto3" json:"qualified_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -541,6 +557,13 @@ func (x *ResolutionCandidate) GetStatus() CandidateStatus {
 		return x.Status
 	}
 	return CandidateStatus_CANDIDATE_STATUS_UNSPECIFIED
+}
+
+func (x *ResolutionCandidate) GetQualifiedName() string {
+	if x != nil {
+		return x.QualifiedName
+	}
+	return ""
 }
 
 type InspectDestinationRequest struct {
@@ -734,13 +757,14 @@ const file_lattice_v1_inspector_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\x124\n" +
 	"\bprovider\x18\x03 \x01(\x0e2\x18.lattice.v1.ProviderTypeR\bprovider\x128\n" +
-	"\x05state\x18\x04 \x01(\x0e2\".lattice.v1.NetworkConnectionStateR\x05state\"\xfa\x01\n" +
+	"\x05state\x18\x04 \x01(\x0e2\".lattice.v1.NetworkConnectionStateR\x05state\"\xa1\x02\n" +
 	"\x13ResolutionCandidate\x120\n" +
 	"\anetwork\x18\x01 \x01(\v2\x16.lattice.v1.NetworkRefR\anetwork\x12*\n" +
 	"\x06device\x18\x02 \x01(\v2\x12.lattice.v1.DeviceR\x06device\x12+\n" +
 	"\x05match\x18\x03 \x01(\x0e2\x15.lattice.v1.MatchKindR\x05match\x12#\n" +
 	"\rmatched_value\x18\x04 \x01(\tR\fmatchedValue\x123\n" +
-	"\x06status\x18\x05 \x01(\x0e2\x1b.lattice.v1.CandidateStatusR\x06status\"=\n" +
+	"\x06status\x18\x05 \x01(\x0e2\x1b.lattice.v1.CandidateStatusR\x06status\x12%\n" +
+	"\x0equalified_name\x18\x06 \x01(\tR\rqualifiedName\"=\n" +
 	"\x19InspectDestinationRequest\x12 \n" +
 	"\vdestination\x18\x01 \x01(\tR\vdestination\"\xd1\x04\n" +
 	"\x1aInspectDestinationResponse\x12,\n" +
@@ -767,17 +791,19 @@ const file_lattice_v1_inspector_proto_rawDesc = "" +
 	"\x0fDestinationKind\x12 \n" +
 	"\x1cDESTINATION_KIND_UNSPECIFIED\x10\x00\x12\x1c\n" +
 	"\x18DESTINATION_KIND_ADDRESS\x10\x01\x12\x19\n" +
-	"\x15DESTINATION_KIND_NAME\x10\x02*\x86\x01\n" +
+	"\x15DESTINATION_KIND_NAME\x10\x02*\xc2\x01\n" +
 	"\tMatchKind\x12\x1a\n" +
 	"\x16MATCH_KIND_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19MATCH_KIND_DEVICE_ADDRESS\x10\x01\x12\x1e\n" +
 	"\x1aMATCH_KIND_DEVICE_DNS_NAME\x10\x02\x12\x1e\n" +
-	"\x1aMATCH_KIND_DEVICE_HOSTNAME\x10\x03*\x9e\x01\n" +
+	"\x1aMATCH_KIND_DEVICE_HOSTNAME\x10\x03\x12\x1b\n" +
+	"\x17MATCH_KIND_SUBNET_ROUTE\x10\x04\x12\x1d\n" +
+	"\x19MATCH_KIND_QUALIFIED_NAME\x10\x05*\x9e\x01\n" +
 	"\x12ResolutionDecision\x12#\n" +
 	"\x1fRESOLUTION_DECISION_UNSPECIFIED\x10\x00\x12\x1e\n" +
 	"\x1aRESOLUTION_DECISION_UNIQUE\x10\x01\x12!\n" +
 	"\x1dRESOLUTION_DECISION_AMBIGUOUS\x10\x02\x12 \n" +
-	"\x1cRESOLUTION_DECISION_NO_MATCH\x10\x03*\x95\x02\n" +
+	"\x1cRESOLUTION_DECISION_NO_MATCH\x10\x03*\x87\x03\n" +
 	"\x0eDecisionReason\x12\x1f\n" +
 	"\x1bDECISION_REASON_UNSPECIFIED\x10\x00\x12(\n" +
 	"$DECISION_REASON_EXACT_DEVICE_ADDRESS\x10\x01\x12#\n" +
@@ -785,7 +811,10 @@ const file_lattice_v1_inspector_proto_rawDesc = "" +
 	"\x1fDECISION_REASON_DEVICE_HOSTNAME\x10\x03\x12$\n" +
 	" DECISION_REASON_MULTIPLE_MATCHES\x10\x04\x12\x1c\n" +
 	"\x18DECISION_REASON_NO_MATCH\x10\x05\x12*\n" +
-	"&DECISION_REASON_DESTINATION_PREFERENCE\x10\x06*\x8d\x01\n" +
+	"&DECISION_REASON_DESTINATION_PREFERENCE\x10\x06\x12 \n" +
+	"\x1cDECISION_REASON_SUBNET_ROUTE\x10\a\x12\"\n" +
+	"\x1eDECISION_REASON_LONGEST_PREFIX\x10\b\x12*\n" +
+	"&DECISION_REASON_NETWORK_QUALIFIED_NAME\x10\t*\x8d\x01\n" +
 	"\x0fCandidateStatus\x12 \n" +
 	"\x1cCANDIDATE_STATUS_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19CANDIDATE_STATUS_SELECTED\x10\x01\x12\x19\n" +

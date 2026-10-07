@@ -20,6 +20,8 @@ enum MatchKind {
   MATCH_KIND_DEVICE_ADDRESS = 1;
   MATCH_KIND_DEVICE_DNS_NAME = 2;
   MATCH_KIND_DEVICE_HOSTNAME = 3;
+  MATCH_KIND_SUBNET_ROUTE = 4;
+  MATCH_KIND_QUALIFIED_NAME = 5;
 }
 
 enum ResolutionDecision {
@@ -37,6 +39,9 @@ enum DecisionReason {
   DECISION_REASON_MULTIPLE_MATCHES = 4;
   DECISION_REASON_NO_MATCH = 5;
   DECISION_REASON_DESTINATION_PREFERENCE = 6;
+  DECISION_REASON_SUBNET_ROUTE = 7;
+  DECISION_REASON_LONGEST_PREFIX = 8;
+  DECISION_REASON_NETWORK_QUALIFIED_NAME = 9;
 }
 
 enum CandidateStatus {
@@ -72,6 +77,7 @@ message ResolutionCandidate {
   MatchKind match = 3;
   string matched_value = 4;
   CandidateStatus status = 5;
+  string qualified_name = 6;
 }
 
 message InspectDestinationRequest {

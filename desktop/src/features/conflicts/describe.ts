@@ -5,6 +5,7 @@ export const typeLabel: Record<ConflictType, string> = {
   [ConflictType.ADDRESS_COLLISION]: "Address",
   [ConflictType.DNS_NAME_COLLISION]: "DNS name",
   [ConflictType.HOSTNAME_COLLISION]: "Device name",
+  [ConflictType.SUBNET_OVERLAP]: "Subnet route",
 };
 
 export type SeverityFilter = "all" | "ambiguous" | "expected" | "resolved";
@@ -16,6 +17,12 @@ export function networkCount(c: Conflict): number {
 
 export function describe(c: Conflict): string {
   const n = networkCount(c);
+  if (c.type === ConflictType.SUBNET_OVERLAP) {
+    if (c.severity === ConflictSeverity.AMBIGUOUS) {
+      return `${n} networks advertise ${c.value}. Addresses inside it cannot be assigned to one network automatically.`;
+    }
+    return `${c.value} sits inside a wider route on another network. The more specific route decides for addresses inside ${c.value}.`;
+  }
   if (c.scope === ConflictScope.WITHIN_NETWORK) {
     return `${c.members.length} devices on ${c.members[0]?.network?.displayName ?? "one network"} report ${c.value}.`;
   }

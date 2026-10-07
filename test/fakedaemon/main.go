@@ -59,6 +59,12 @@ var peerTags = map[string][]string{
 	"prod-api": {"tag:prod", "tag:api"},
 }
 
+var subnetRoutes = [][]string{
+	{"10.10.0.0/16", "10.0.0.0/8"},
+	{"10.10.0.0/16"},
+	{"10.20.30.0/24"},
+}
+
 var peerOS = []string{"linux", "linux", "linux", "windows", "macOS", "linux"}
 
 func status(cfg provider.ResolvedSessionConfig, n, peers int) session.EngineStatus {
@@ -81,7 +87,19 @@ func status(cfg provider.ResolvedSessionConfig, n, peers int) session.EngineStat
 			Online:    i%4 != 3,
 			OS:        peerOS[(i+n)%len(peerOS)],
 			Tags:      peerTags[node],
+			Routes:    routesFor(i, n),
 		})
 	}
 	return st
+}
+
+func routesFor(peer, network int) []netip.Prefix {
+	if peer != 0 {
+		return nil
+	}
+	var out []netip.Prefix
+	for _, r := range subnetRoutes[network%len(subnetRoutes)] {
+		out = append(out, netip.MustParsePrefix(r))
+	}
+	return out
 }

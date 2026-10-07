@@ -28,6 +28,7 @@ message Network {
   AuthenticationPrompt authentication = 8;
   google.protobuf.Timestamp created_at = 9;
   google.protobuf.Timestamp updated_at = 10;
+  string label = 11;
 }
 
 message AuthenticationPrompt {

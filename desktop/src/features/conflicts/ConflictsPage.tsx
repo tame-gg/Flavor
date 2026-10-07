@@ -98,6 +98,7 @@ export function ConflictsPage({ onInspect, onOpenNetwork, onShowDevice, canPrefe
               <option value={ConflictType.ADDRESS_COLLISION}>Addresses</option>
               <option value={ConflictType.DNS_NAME_COLLISION}>DNS names</option>
               <option value={ConflictType.HOSTNAME_COLLISION}>Device names</option>
+              <option value={ConflictType.SUBNET_OVERLAP}>Subnet routes</option>
             </select>
           </div>
 
@@ -153,6 +154,8 @@ function ConflictCard({ conflict: c, onInspect, onOpenNetwork, onShowDevice, can
     }
   };
   const spans = new Set(c.members.map((m) => m.network?.id)).size > 1;
+  const subnet = c.type === ConflictType.SUBNET_OVERLAP;
+  const target = subnet ? c.sampleAddress : c.value;
   return (
     <li className="card candidate">
       <div className="row">
@@ -164,9 +167,11 @@ function ConflictCard({ conflict: c, onInspect, onOpenNetwork, onShowDevice, can
           <span className={`badge ${ambiguous ? "badge-warn" : "badge-info"}`}>{ambiguous ? "Ambiguous" : "Expected overlap"}</span>
         )}
         <span className="spacer" />
-        <Button aria-label={`Inspect ${c.value}`} onClick={() => onInspect(c.value)}>
-          Inspect
-        </Button>
+        {target && (
+          <Button aria-label={`Inspect ${target}`} onClick={() => onInspect(target)}>
+            {subnet ? `Inspect ${target}` : "Inspect"}
+          </Button>
+        )}
       </div>
       <p className="muted">{describe(c)}</p>
       {preferredName && <p className="muted small">Lattice prefers {preferredName} for {c.value}. System routing is not changed.</p>}
@@ -175,7 +180,7 @@ function ConflictCard({ conflict: c, onInspect, onOpenNetwork, onShowDevice, can
         <div className="member-row member-head" role="row">
           <span role="columnheader">Network</span>
           <span role="columnheader">Device</span>
-          <span role="columnheader">Network-specific name</span>
+          <span role="columnheader">{subnet ? "Route" : "Network-specific name"}</span>
           <span role="columnheader" className="sr-only">
             Actions
           </span>
@@ -198,7 +203,9 @@ function ConflictCard({ conflict: c, onInspect, onOpenNetwork, onShowDevice, can
                 </span>
               </span>
               <span role="cell" className="cell row">
-                {m.uniqueName ? (
+                {subnet ? (
+                  <span className="mono small cell">{m.route}</span>
+                ) : m.uniqueName ? (
                   <>
                     <span className="mono small cell">{m.uniqueName}</span>
                     <CopyButton value={m.uniqueName} label="Copy" />
@@ -208,7 +215,7 @@ function ConflictCard({ conflict: c, onInspect, onOpenNetwork, onShowDevice, can
                 )}
               </span>
               <span role="cell" className="row member-actions">
-                {canPrefer && spans && net.id !== c.preferredNetworkId && (
+                {canPrefer && spans && !subnet && net.id !== c.preferredNetworkId && (
                   <Button variant="ghost" disabled={!canMutate} aria-label={`Prefer ${net.displayName} for ${c.value}`} onClick={() => void prefer(net.id)}>
                     Prefer
                   </Button>

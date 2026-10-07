@@ -25,4 +25,5 @@ type Device struct {
 	Local     bool
 	OS        string
 	Tags      []string
+	Routes    []netip.Prefix
 }

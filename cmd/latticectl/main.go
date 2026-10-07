@@ -309,7 +309,7 @@ func printExplain(out io.Writer, r *v1.InspectDestinationResponse) error {
 		for _, c := range r.Candidates {
 			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
 				c.Network.GetDisplayName(), c.Device.GetHostname(),
-				strings.ReplaceAll(enumName(c.Match.String(), "MATCH_KIND_"), "_", " "),
+				matchText(c),
 				enumName(c.Status.String(), "CANDIDATE_STATUS_"),
 				strings.Join(c.Device.GetAddresses(), ","))
 		}
@@ -337,7 +337,12 @@ func printConflicts(out io.Writer, r *v1.ListConflictsResponse) error {
 		}
 		kind := strings.ReplaceAll(enumName(c.Type.String(), "CONFLICT_TYPE_"), "_", " ")
 		state := "expected overlap: network-specific DNS names stay unambiguous"
-		if c.Severity == v1.ConflictSeverity_CONFLICT_SEVERITY_AMBIGUOUS {
+		if c.Type == v1.ConflictType_CONFLICT_TYPE_SUBNET_OVERLAP {
+			state = "expected overlap: the more specific route decides"
+		}
+		if c.Severity == v1.ConflictSeverity_CONFLICT_SEVERITY_AMBIGUOUS && c.Type == v1.ConflictType_CONFLICT_TYPE_SUBNET_OVERLAP {
+			state = "ambiguous: the same route is advertised on several networks"
+		} else if c.Severity == v1.ConflictSeverity_CONFLICT_SEVERITY_AMBIGUOUS {
 			state = "ambiguous: no network-specific name tells these apart"
 			if c.Scope == v1.ConflictScope_CONFLICT_SCOPE_WITHIN_NETWORK {
 				state = "ambiguous: several devices on one network share it"
@@ -345,13 +350,20 @@ func printConflicts(out io.Writer, r *v1.ListConflictsResponse) error {
 		}
 		fmt.Fprintf(out, "%s  %s\n  %s\n  id %s\n", c.Value, kind, state, c.Id)
 		w := tabwriter.NewWriter(out, 0, 4, 2, ' ', 0)
-		fmt.Fprintln(w, "  NETWORK\tDEVICE\tADDRESSES\tUNIQUE NAME")
-		for _, m := range c.Members {
-			name := m.UniqueName
-			if name == "" {
-				name = "-"
+		if c.Type == v1.ConflictType_CONFLICT_TYPE_SUBNET_OVERLAP {
+			fmt.Fprintln(w, "  NETWORK\tROUTER\tROUTE")
+			for _, m := range c.Members {
+				fmt.Fprintf(w, "  %s\t%s\t%s\n", m.Network.GetDisplayName(), m.Device.GetHostname(), m.Route)
 			}
-			fmt.Fprintf(w, "  %s\t%s\t%s\t%s\n", m.Network.GetDisplayName(), m.Device.GetHostname(), strings.Join(m.Device.GetAddresses(), ","), name)
+		} else {
+			fmt.Fprintln(w, "  NETWORK\tDEVICE\tADDRESSES\tUNIQUE NAME")
+			for _, m := range c.Members {
+				name := m.UniqueName
+				if name == "" {
+					name = "-"
+				}
+				fmt.Fprintf(w, "  %s\t%s\t%s\t%s\n", m.Network.GetDisplayName(), m.Device.GetHostname(), strings.Join(m.Device.GetAddresses(), ","), name)
+			}
 		}
 		if err := w.Flush(); err != nil {
 			return err
@@ -568,4 +580,12 @@ func runPreference(ctx context.Context, c *client.Client, args []string, asJSON 
 		return fmt.Errorf("unknown preference command %q\n\n%s", sub, usage)
 	}
 	return nil
+}
+
+func matchText(c *v1.ResolutionCandidate) string {
+	kind := strings.ReplaceAll(enumName(c.Match.String(), "MATCH_KIND_"), "_", " ")
+	if c.Match == v1.MatchKind_MATCH_KIND_SUBNET_ROUTE {
+		return kind + " " + c.MatchedValue
+	}
+	return kind
 }

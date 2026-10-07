@@ -90,5 +90,32 @@ describe("explain", () => {
     });
     expect(preferenceNote(offline)).toBe("Your preference for LunarLabs is not applied because LunarLabs is not connected.");
   });
+
+  it("explains subnet routes and the longest-prefix rule", () => {
+    const routed = create(InspectDestinationResponseSchema, {
+      normalized: "10.20.5.12",
+      kind: DestinationKind.ADDRESS,
+      decision: ResolutionDecision.UNIQUE,
+      reason: DecisionReason.LONGEST_PREFIX,
+      decidedBy: MatchKind.SUBNET_ROUTE,
+      candidates: [
+        { ...candidate("b", "Customer", "vpn", CandidateStatus.SELECTED, MatchKind.SUBNET_ROUTE), matchedValue: "10.20.0.0/16" },
+        { ...candidate("a", "Company", "edge", CandidateStatus.OUTRANKED, MatchKind.SUBNET_ROUTE), matchedValue: "10.0.0.0/8" },
+      ],
+    });
+    expect(explain(routed)).toEqual({
+      title: "Customer, via vpn",
+      detail: "vpn routes 10.20.0.0/16 on Customer. It is more specific than the other matching route, so it wins.",
+    });
+    const tie = create(InspectDestinationResponseSchema, {
+      normalized: "10.10.1.1",
+      kind: DestinationKind.ADDRESS,
+      decision: ResolutionDecision.AMBIGUOUS,
+      decidedBy: MatchKind.SUBNET_ROUTE,
+      candidates: [candidate("a", "A", "x", CandidateStatus.TIED, MatchKind.SUBNET_ROUTE), candidate("b", "B", "y", CandidateStatus.TIED, MatchKind.SUBNET_ROUTE)],
+    });
+    expect(explain(tie).title).toBe("10.10.1.1 is routed by 2 networks");
+    expect(candidateLabel(routed, CandidateStatus.OUTRANKED, MatchKind.SUBNET_ROUTE)).toBe("Less specific route");
+  });
 });
 

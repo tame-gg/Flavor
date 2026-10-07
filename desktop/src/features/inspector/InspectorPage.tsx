@@ -166,7 +166,7 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
                   <CandidateRow
                     key={`${c.device?.id?.networkId}:${c.device?.id?.nodeId}`}
                     candidate={c}
-                    label={candidateLabel(result, c.status)}
+                    label={candidateLabel(result, c.status, c.match)}
                     onOpenNetwork={onOpenNetwork}
                     onShowDevice={onShowDevice}
                     onPrefer={
@@ -277,9 +277,18 @@ function CandidateRow({
         )}
         <dt>Addresses</dt>
         <dd className="mono">{d.addresses.join(", ")}</dd>
+        {c.qualifiedName && (
+          <>
+            <dt>Lattice name</dt>
+            <dd className="row">
+              <span className="mono grow">{c.qualifiedName}</span>
+              <CopyButton value={c.qualifiedName} label="Copy" />
+            </dd>
+          </>
+        )}
       </dl>
       <div className="row">
-        {address && <CopyButton value={address} label="Copy address" />}
+        {address && <CopyButton value={address} label={c.match === MatchKind.SUBNET_ROUTE ? "Copy router address" : "Copy address"} />}
         {d.dnsName && <CopyButton value={d.dnsName} label="Copy DNS name" />}
         <span className="spacer" />
         {onPrefer && (

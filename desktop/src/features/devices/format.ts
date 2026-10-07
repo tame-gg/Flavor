@@ -14,3 +14,16 @@ export function sshTarget(dnsName: string, addresses: readonly string[]): string
   const host = dnsName.replace(/\.$/, "") || addresses[0];
   return host ? `ssh ${host}` : null;
 }
+
+export const qualifiedSuffix = "lattice.internal";
+
+export function latticeName(
+  device: { hostname: string; dnsName: string },
+  network: { id: string; label: string } | undefined,
+): string | null {
+  if (!network) return null;
+  const host = device.hostname.toLowerCase();
+  const bare = host && !host.includes(".") ? host : device.dnsName.toLowerCase().split(".")[0];
+  if (!bare) return null;
+  return `${bare}.${network.label || network.id.toLowerCase()}.${qualifiedSuffix}`;
+}

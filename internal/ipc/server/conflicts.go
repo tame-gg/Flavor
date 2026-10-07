@@ -13,6 +13,7 @@ var (
 		inspect.ConflictAddress:  v1.ConflictType_CONFLICT_TYPE_ADDRESS_COLLISION,
 		inspect.ConflictDNSName:  v1.ConflictType_CONFLICT_TYPE_DNS_NAME_COLLISION,
 		inspect.ConflictHostname: v1.ConflictType_CONFLICT_TYPE_HOSTNAME_COLLISION,
+		inspect.ConflictSubnet:   v1.ConflictType_CONFLICT_TYPE_SUBNET_OVERLAP,
 	}
 	severities = map[inspect.Severity]v1.ConflictSeverity{
 		inspect.SeverityAmbiguous: v1.ConflictSeverity_CONFLICT_SEVERITY_AMBIGUOUS,
@@ -39,9 +40,14 @@ func (h *handlers) ListConflicts(ctx context.Context, _ *connect.Request[v1.List
 			Value:                  c.Value,
 			NetworkContextResolves: c.ContextResolves,
 			PreferredNetworkId:     string(c.PreferredNetwork),
+			SampleAddress:          sampleAddress(c),
 		}
 		for _, m := range c.Members {
-			pc.Members = append(pc.Members, &v1.ConflictMember{Network: networkRef(m.Network, m.State), Device: device(m.Device), UniqueName: m.UniqueName})
+			pm := &v1.ConflictMember{Network: networkRef(m.Network, m.State), Device: device(m.Device), UniqueName: m.UniqueName}
+			if m.Route.IsValid() {
+				pm.Route = m.Route.String()
+			}
+			pc.Members = append(pc.Members, pm)
 		}
 		out.Conflicts = append(out.Conflicts, pc)
 	}
@@ -49,4 +55,11 @@ func (h *handlers) ListConflicts(ctx context.Context, _ *connect.Request[v1.List
 		out.NotInspected = append(out.NotInspected, networkRef(n.Network, n.State))
 	}
 	return connect.NewResponse(out), nil
+}
+
+func sampleAddress(c inspect.Conflict) string {
+	if !c.SampleAddress.IsValid() {
+		return ""
+	}
+	return c.SampleAddress.String()
 }

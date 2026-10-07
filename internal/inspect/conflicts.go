@@ -1,6 +1,7 @@
 package inspect
 
 import (
+	"net/netip"
 	"sort"
 	"strings"
 
@@ -13,6 +14,7 @@ const (
 	ConflictAddress ConflictType = iota + 1
 	ConflictDNSName
 	ConflictHostname
+	ConflictSubnet
 )
 
 type Severity int
@@ -34,6 +36,7 @@ type Member struct {
 	State      domain.NetworkConnectionState
 	Device     domain.Device
 	UniqueName string
+	Route      netip.Prefix
 }
 
 type Conflict struct {
@@ -45,6 +48,7 @@ type Conflict struct {
 	Members          []Member
 	ContextResolves  bool
 	PreferredNetwork domain.NetworkID
+	SampleAddress    netip.Addr
 }
 
 type ConflictReport struct {
@@ -56,6 +60,7 @@ var conflictSlugs = map[ConflictType]string{
 	ConflictAddress:  "address",
 	ConflictDNSName:  "dns",
 	ConflictHostname: "name",
+	ConflictSubnet:   "subnet",
 }
 
 func Conflicts(networks []Network, prefs []domain.DestinationPreference) ConflictReport {
@@ -116,6 +121,7 @@ func Conflicts(networks []Network, prefs []domain.DestinationPreference) Conflic
 			rep.Conflicts = append(rep.Conflicts, c)
 		}
 	}
+	rep.Conflicts = append(rep.Conflicts, subnetConflicts(members)...)
 	sort.Slice(rep.Conflicts, func(i, j int) bool {
 		a, b := rep.Conflicts[i], rep.Conflicts[j]
 		if a.Severity != b.Severity {
@@ -207,4 +213,71 @@ func preferredFor(c Conflict, prefs []domain.DestinationPreference) domain.Netwo
 		}
 	}
 	return ""
+}
+
+func subnetConflicts(members []Member) []Conflict {
+	type entry struct {
+		m Member
+		r netip.Prefix
+	}
+	var entries []entry
+	for _, m := range members {
+		for _, r := range m.Device.Routes {
+			m.Route = r
+			entries = append(entries, entry{m, r})
+		}
+	}
+	var out []Conflict
+	byPrefix := make(map[netip.Prefix][]Member)
+	for _, e := range entries {
+		byPrefix[e.r] = append(byPrefix[e.r], e.m)
+	}
+	for r, ms := range byPrefix {
+		if distinctNetworks(ms) > 1 {
+			c := classify(ConflictSubnet, r.String(), ms)
+			c.ID = "subnet:" + r.String()
+			c.Severity, c.ContextResolves, c.SampleAddress = SeverityAmbiguous, false, sample(r)
+			out = append(out, c)
+		}
+	}
+	for narrow, inner := range byPrefix {
+		var ms []Member
+		for _, e := range entries {
+			if e.r.Bits() < narrow.Bits() && e.r.Contains(narrow.Addr()) && !sameNetwork(e.m, inner) {
+				ms = append(ms, e.m)
+			}
+		}
+		if len(ms) == 0 {
+			continue
+		}
+		c := classify(ConflictSubnet, narrow.String(), append(ms, inner...))
+		c.ID = "overlap:" + narrow.String()
+		c.Severity, c.ContextResolves, c.SampleAddress = SeverityExpected, true, sample(narrow)
+		out = append(out, c)
+	}
+	return out
+}
+
+func distinctNetworks(ms []Member) int {
+	seen := make(map[domain.NetworkID]bool)
+	for _, m := range ms {
+		seen[m.Network.ID] = true
+	}
+	return len(seen)
+}
+
+func sameNetwork(m Member, others []Member) bool {
+	for _, o := range others {
+		if o.Network.ID == m.Network.ID {
+			return true
+		}
+	}
+	return false
+}
+
+func sample(p netip.Prefix) netip.Addr {
+	if a := p.Addr().Next(); a.IsValid() && p.Contains(a) {
+		return a
+	}
+	return p.Addr()
 }

@@ -44,7 +44,21 @@ func projectPeer(p *ipnstate.PeerStatus) EnginePeer {
 		LastSeen:  p.LastSeen.UTC(),
 		OS:        p.OS,
 		Tags:      tags(p),
+		Routes:    routes(p),
 	}
+}
+
+func routes(p *ipnstate.PeerStatus) []netip.Prefix {
+	if p.PrimaryRoutes == nil {
+		return nil
+	}
+	var out []netip.Prefix
+	for _, r := range p.PrimaryRoutes.All() {
+		if r.IsValid() && r.Bits() > 0 {
+			out = append(out, r.Masked())
+		}
+	}
+	return out
 }
 
 func tags(p *ipnstate.PeerStatus) []string {
@@ -96,7 +110,7 @@ func mapConnectionState(snap EngineStatus, hadAuthPrompt bool) domain.NetworkCon
 }
 
 func deviceEqual(a, b domain.Device) bool {
-	if a.ID != b.ID || a.Hostname != b.Hostname || a.DNSName != b.DNSName || a.Online != b.Online || a.Local != b.Local || a.OS != b.OS || !slices.Equal(a.Tags, b.Tags) {
+	if a.ID != b.ID || a.Hostname != b.Hostname || a.DNSName != b.DNSName || a.Online != b.Online || a.Local != b.Local || a.OS != b.OS || !slices.Equal(a.Tags, b.Tags) || !slices.Equal(a.Routes, b.Routes) {
 		return false
 	}
 	if !a.LastSeen.Equal(b.LastSeen) {
@@ -119,6 +133,7 @@ func cloneDevice(d domain.Device) domain.Device {
 		out.Addresses = append([]netip.Addr(nil), d.Addresses...)
 	}
 	out.Tags = slices.Clone(d.Tags)
+	out.Routes = slices.Clone(d.Routes)
 	if !d.LastSeen.IsZero() {
 		out.LastSeen = d.LastSeen.UTC()
 	}

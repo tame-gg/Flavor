@@ -4,7 +4,7 @@ import { CopyButton } from "../../components/ui/CopyButton";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { useDaemon } from "../../app/sync/useDaemon";
 import { providerName } from "../networks/format";
-import { lastSeen, sshTarget } from "./format";
+import { lastSeen, latticeName, sshTarget } from "./format";
 
 type Props = {
   deviceKey: string;
@@ -38,6 +38,7 @@ export function DeviceDetails({ deviceKey, onClose, onInspect, onOpenNetwork, ca
   const seen = !d.online ? lastSeen(d.lastSeen ? timestampDate(d.lastSeen) : undefined) : null;
   const ssh = d.local ? null : sshTarget(d.dnsName, d.addresses);
   const destination = dns || d.addresses[0];
+  const qualified = latticeName(d, network);
 
   return (
     <aside className="card details stack" aria-label={`Details for ${name}`}>
@@ -81,6 +82,19 @@ export function DeviceDetails({ deviceKey, onClose, onInspect, onOpenNetwork, ca
             </dd>
           </div>
         ))}
+        {d.routes.map((r, i) => (
+          <div key={r} className="dl-row">
+            <dt>{i === 0 ? "Routes" : ""}</dt>
+            <dd className="row">
+              <span className="mono grow">{r}</span>
+              {canInspect && (
+                <Button variant="ghost" aria-label={`Inspect route ${r}`} onClick={() => onInspect(r.split("/")[0])}>
+                  Inspect
+                </Button>
+              )}
+            </dd>
+          </div>
+        ))}
         {d.os && (
           <>
             <dt>OS</dt>
@@ -118,6 +132,12 @@ export function DeviceDetails({ deviceKey, onClose, onInspect, onOpenNetwork, ca
           <dd className="mono">{d.id.networkId}</dd>
           <dt>Node ID</dt>
           <dd className="mono">{d.id.nodeId}</dd>
+          {qualified && (
+            <>
+              <dt>Lattice name</dt>
+              <dd className="mono">{qualified}</dd>
+            </>
+          )}
         </dl>
       </details>
     </aside>

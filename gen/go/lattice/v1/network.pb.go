@@ -34,6 +34,7 @@ type Network struct {
 	Authentication *AuthenticationPrompt  `protobuf:"bytes,8,opt,name=authentication,proto3" json:"authentication,omitempty"`
 	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt      *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Label          string                 `protobuf:"bytes,11,opt,name=label,proto3" json:"label,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -136,6 +137,13 @@ func (x *Network) GetUpdatedAt() *timestamppb.Timestamp {
 		return x.UpdatedAt
 	}
 	return nil
+}
+
+func (x *Network) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
 }
 
 type AuthenticationPrompt struct {
@@ -1109,7 +1117,7 @@ var File_lattice_v1_network_proto protoreflect.FileDescriptor
 const file_lattice_v1_network_proto_rawDesc = "" +
 	"\n" +
 	"\x18lattice/v1/network.proto\x12\n" +
-	"lattice.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17lattice/v1/common.proto\"\xd5\x03\n" +
+	"lattice.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x17lattice/v1/common.proto\"\xeb\x03\n" +
 	"\aNetwork\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\x124\n" +
@@ -1124,7 +1132,8 @@ const file_lattice_v1_network_proto_rawDesc = "" +
 	"created_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
 	"updated_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xcf\x01\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x14\n" +
+	"\x05label\x18\v \x01(\tR\x05label\"\xcf\x01\n" +
 	"\x14AuthenticationPrompt\x12\x17\n" +
 	"\aflow_id\x18\x01 \x01(\tR\x06flowId\x12\x12\n" +
 	"\x04kind\x18\x02 \x01(\tR\x04kind\x12\x19\n" +

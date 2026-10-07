@@ -335,6 +335,7 @@ func (s *Session) applyStatus(snap EngineStatus) {
 			LastSeen:  p.LastSeen,
 			OS:        p.OS,
 			Tags:      slices.Clone(p.Tags),
+			Routes:    slices.Clone(p.Routes),
 		}
 	}
 	if snap.Self != nil && snap.Self.NodeID != "" {

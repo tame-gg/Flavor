@@ -77,6 +77,17 @@ func TestProjectPeerCarriesOSAndTags(t *testing.T) {
 	if p.OS != "linux" || len(p.Tags) != 2 || p.Tags[1] != "tag:prod" || p.DNSName != "postgres.example.ts.net" {
 		t.Fatalf("%+v", p)
 	}
+	primary := views.SliceOf([]netip.Prefix{netip.MustParsePrefix("10.10.20.7/24"), netip.MustParsePrefix("0.0.0.0/0"), netip.MustParsePrefix("fd00:1::/64")})
+	router := projectPeer(&ipnstate.PeerStatus{ID: "r", PrimaryRoutes: &primary})
+	if len(router.Routes) != 2 || router.Routes[0].String() != "10.10.20.0/24" || router.Routes[1].String() != "fd00:1::/64" {
+		t.Fatalf("subnet routes must be masked and exclude default routes: %v", router.Routes)
+	}
+	a2 := domain.Device{ID: domain.DeviceIdentity{NodeID: "r"}, Routes: router.Routes}
+	b2 := a2
+	b2.Routes = router.Routes[:1]
+	if deviceEqual(a2, b2) {
+		t.Fatal("route change not detected")
+	}
 	if bare := projectPeer(&ipnstate.PeerStatus{ID: "n2"}); bare.Tags != nil {
 		t.Fatalf("%+v", bare)
 	}

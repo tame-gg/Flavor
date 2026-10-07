@@ -85,6 +85,7 @@ type Device struct {
 	Local         bool                   `protobuf:"varint,7,opt,name=local,proto3" json:"local,omitempty"`
 	Os            string                 `protobuf:"bytes,8,opt,name=os,proto3" json:"os,omitempty"`
 	Tags          []string               `protobuf:"bytes,9,rep,name=tags,proto3" json:"tags,omitempty"`
+	Routes        []string               `protobuf:"bytes,10,rep,name=routes,proto3" json:"routes,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -178,6 +179,13 @@ func (x *Device) GetOs() string {
 func (x *Device) GetTags() []string {
 	if x != nil {
 		return x.Tags
+	}
+	return nil
+}
+
+func (x *Device) GetRoutes() []string {
+	if x != nil {
+		return x.Routes
 	}
 	return nil
 }
@@ -295,7 +303,7 @@ const file_lattice_v1_device_proto_rawDesc = "" +
 	"\x0eDeviceIdentity\x12\x1d\n" +
 	"\n" +
 	"network_id\x18\x01 \x01(\tR\tnetworkId\x12\x17\n" +
-	"\anode_id\x18\x02 \x01(\tR\x06nodeId\"\x94\x02\n" +
+	"\anode_id\x18\x02 \x01(\tR\x06nodeId\"\xac\x02\n" +
 	"\x06Device\x12*\n" +
 	"\x02id\x18\x01 \x01(\v2\x1a.lattice.v1.DeviceIdentityR\x02id\x12\x1a\n" +
 	"\bhostname\x18\x02 \x01(\tR\bhostname\x12\x19\n" +
@@ -305,7 +313,9 @@ const file_lattice_v1_device_proto_rawDesc = "" +
 	"\tlast_seen\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\blastSeen\x12\x14\n" +
 	"\x05local\x18\a \x01(\bR\x05local\x12\x0e\n" +
 	"\x02os\x18\b \x01(\tR\x02os\x12\x12\n" +
-	"\x04tags\x18\t \x03(\tR\x04tags\"3\n" +
+	"\x04tags\x18\t \x03(\tR\x04tags\x12\x16\n" +
+	"\x06routes\x18\n" +
+	" \x03(\tR\x06routes\"3\n" +
 	"\x12ListDevicesRequest\x12\x1d\n" +
 	"\n" +
 	"network_id\x18\x01 \x01(\tR\tnetworkId\"\x9e\x01\n" +

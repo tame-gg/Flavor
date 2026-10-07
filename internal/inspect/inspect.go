@@ -13,6 +13,8 @@ import (
 
 var ErrInvalidDestination = errors.New("invalid destination")
 
+const QualifiedSuffix = "lattice.internal"
+
 type QueryKind int
 
 const (
@@ -26,7 +28,11 @@ type Query struct {
 	Address netip.Addr
 	Name    string
 	Port    uint16
+	Device  string
+	Network string
 }
+
+func (q Query) Qualified() bool { return q.Network != "" }
 
 func (q Query) DestinationKind() domain.DestinationKind {
 	if q.Kind == KindAddress {
@@ -48,6 +54,8 @@ const (
 	MatchDeviceAddress MatchKind = iota + 1
 	MatchDeviceDNSName
 	MatchDeviceHostname
+	MatchSubnetRoute
+	MatchQualifiedName
 )
 
 type Decision int
@@ -67,6 +75,9 @@ const (
 	ReasonMultipleMatches
 	ReasonNoMatch
 	ReasonDestinationPreference
+	ReasonSubnetRoute
+	ReasonLongestPrefix
+	ReasonNetworkQualifiedName
 )
 
 type PreferenceState int
@@ -104,6 +115,7 @@ type Candidate struct {
 	Device       domain.Device
 	Match        MatchKind
 	MatchedValue string
+	Prefix       netip.Prefix
 	Status       CandidateStatus
 }
 
@@ -144,6 +156,13 @@ func ParseQuery(raw string) (Query, error) {
 		return q, ErrInvalidDestination
 	}
 	q.Kind, q.Name = KindName, name
+	if rest, ok := strings.CutSuffix(name, "."+QualifiedSuffix); ok {
+		device, network, ok := strings.Cut(rest, ".")
+		if !ok || strings.Contains(network, ".") {
+			return q, ErrInvalidDestination
+		}
+		q.Device, q.Network = device, network
+	}
 	return q, nil
 }
 
@@ -221,18 +240,22 @@ func resolveMatches(q Query, networks []Network) Result {
 			if d.ID.NetworkID != n.Network.ID || seen[d.ID.Key()] {
 				continue
 			}
-			kind, value, ok := match(q, d)
+			c, ok := match(q, n.Network, d)
 			if !ok {
 				continue
 			}
 			seen[d.ID.Key()] = true
-			res.Candidates = append(res.Candidates, Candidate{Network: n.Network, State: n.State, Device: d, Match: kind, MatchedValue: value})
+			c.Network, c.State, c.Device = n.Network, n.State, d
+			res.Candidates = append(res.Candidates, c)
 		}
 	}
 	sort.SliceStable(res.Candidates, func(i, j int) bool {
 		a, b := res.Candidates[i], res.Candidates[j]
 		if a.Match != b.Match {
 			return a.Match < b.Match
+		}
+		if a.Prefix.Bits() != b.Prefix.Bits() {
+			return a.Prefix.Bits() > b.Prefix.Bits()
 		}
 		if a.Network.DisplayName != b.Network.DisplayName {
 			return a.Network.DisplayName < b.Network.DisplayName
@@ -250,19 +273,22 @@ func resolveMatches(q Query, networks []Network) Result {
 		res.Decision, res.Reason = DecisionNoMatch, ReasonNoMatch
 		return res
 	}
-	best := res.Candidates[0].Match
+	best := res.Candidates[0]
 	tied := 0
 	for i := range res.Candidates {
-		switch {
-		case res.Candidates[i].Match == best:
+		c := res.Candidates[i]
+		if c.Match == best.Match && c.Prefix.Bits() == best.Prefix.Bits() {
 			tied++
-		default:
+		} else {
 			res.Candidates[i].Status = StatusOutranked
 		}
 	}
-	res.DecidedBy = best
+	res.DecidedBy = best.Match
 	if tied == 1 {
-		res.Decision, res.Reason = DecisionUnique, reasonFor(best)
+		res.Decision, res.Reason = DecisionUnique, reasonFor(best.Match)
+		if best.Match == MatchSubnetRoute && len(res.Candidates) > 1 {
+			res.Reason = ReasonLongestPrefix
+		}
 		res.Candidates[0].Status = StatusSelected
 		return res
 	}
@@ -279,32 +305,68 @@ func reasonFor(m MatchKind) Reason {
 		return ReasonExactDeviceAddress
 	case MatchDeviceDNSName:
 		return ReasonDeviceDNSName
+	case MatchSubnetRoute:
+		return ReasonSubnetRoute
+	case MatchQualifiedName:
+		return ReasonNetworkQualifiedName
 	default:
 		return ReasonDeviceHostname
 	}
 }
 
-func match(q Query, d domain.Device) (MatchKind, string, bool) {
+func match(q Query, n domain.Network, d domain.Device) (Candidate, bool) {
 	if q.Kind == KindAddress {
 		for _, a := range d.Addresses {
 			if a.Unmap() == q.Address {
-				return MatchDeviceAddress, a.String(), true
+				return Candidate{Match: MatchDeviceAddress, MatchedValue: a.String()}, true
 			}
 		}
-		return 0, "", false
+		var best netip.Prefix
+		for _, r := range d.Routes {
+			if r.Contains(q.Address) && r.Bits() > best.Bits() {
+				best = r
+			}
+		}
+		if best.IsValid() {
+			return Candidate{Match: MatchSubnetRoute, MatchedValue: best.String(), Prefix: best}, true
+		}
+		return Candidate{}, false
+	}
+	if q.Qualified() {
+		if q.Network != domain.NetworkLabel(n.DisplayName) && q.Network != strings.ToLower(string(n.ID)) {
+			return Candidate{}, false
+		}
+		for _, name := range bareNames(d) {
+			if name == q.Device {
+				return Candidate{Match: MatchQualifiedName, MatchedValue: QualifiedName(n, d)}, true
+			}
+		}
+		return Candidate{}, false
 	}
 	dns := strings.ToLower(strings.TrimSuffix(d.DNSName, "."))
 	if dns != "" && dns == q.Name {
-		return MatchDeviceDNSName, dns, true
+		return Candidate{Match: MatchDeviceDNSName, MatchedValue: dns}, true
 	}
 	if strings.Contains(q.Name, ".") {
-		return 0, "", false
+		return Candidate{}, false
 	}
 	if h := strings.ToLower(d.Hostname); h != "" && h == q.Name {
-		return MatchDeviceHostname, d.Hostname, true
+		return Candidate{Match: MatchDeviceHostname, MatchedValue: d.Hostname}, true
 	}
 	if short, _, _ := strings.Cut(dns, "."); short != "" && short == q.Name {
-		return MatchDeviceHostname, short, true
+		return Candidate{Match: MatchDeviceHostname, MatchedValue: short}, true
 	}
-	return 0, "", false
+	return Candidate{}, false
+}
+
+func QualifiedName(n domain.Network, d domain.Device) string {
+	names := bareNames(d)
+	if len(names) == 0 {
+		return ""
+	}
+	label := domain.NetworkLabel(n.DisplayName)
+	if label == "" {
+		label = strings.ToLower(string(n.ID))
+	}
+	return names[0] + "." + label + "." + QualifiedSuffix
 }

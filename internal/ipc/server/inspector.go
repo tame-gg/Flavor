@@ -18,6 +18,8 @@ var (
 		inspect.MatchDeviceAddress:  v1.MatchKind_MATCH_KIND_DEVICE_ADDRESS,
 		inspect.MatchDeviceDNSName:  v1.MatchKind_MATCH_KIND_DEVICE_DNS_NAME,
 		inspect.MatchDeviceHostname: v1.MatchKind_MATCH_KIND_DEVICE_HOSTNAME,
+		inspect.MatchSubnetRoute:    v1.MatchKind_MATCH_KIND_SUBNET_ROUTE,
+		inspect.MatchQualifiedName:  v1.MatchKind_MATCH_KIND_QUALIFIED_NAME,
 	}
 	decisions = map[inspect.Decision]v1.ResolutionDecision{
 		inspect.DecisionUnique:    v1.ResolutionDecision_RESOLUTION_DECISION_UNIQUE,
@@ -31,6 +33,9 @@ var (
 		inspect.ReasonMultipleMatches:       v1.DecisionReason_DECISION_REASON_MULTIPLE_MATCHES,
 		inspect.ReasonNoMatch:               v1.DecisionReason_DECISION_REASON_NO_MATCH,
 		inspect.ReasonDestinationPreference: v1.DecisionReason_DECISION_REASON_DESTINATION_PREFERENCE,
+		inspect.ReasonSubnetRoute:           v1.DecisionReason_DECISION_REASON_SUBNET_ROUTE,
+		inspect.ReasonLongestPrefix:         v1.DecisionReason_DECISION_REASON_LONGEST_PREFIX,
+		inspect.ReasonNetworkQualifiedName:  v1.DecisionReason_DECISION_REASON_NETWORK_QUALIFIED_NAME,
 	}
 	candidateStatuses = map[inspect.CandidateStatus]v1.CandidateStatus{
 		inspect.StatusSelected:  v1.CandidateStatus_CANDIDATE_STATUS_SELECTED,
@@ -57,11 +62,12 @@ func (h *handlers) InspectDestination(ctx context.Context, req *connect.Request[
 	}
 	for _, c := range res.Candidates {
 		out.Candidates = append(out.Candidates, &v1.ResolutionCandidate{
-			Network:      networkRef(c.Network, c.State),
-			Device:       device(c.Device),
-			Match:        matchKinds[c.Match],
-			MatchedValue: c.MatchedValue,
-			Status:       candidateStatuses[c.Status],
+			Network:       networkRef(c.Network, c.State),
+			Device:        device(c.Device),
+			Match:         matchKinds[c.Match],
+			MatchedValue:  c.MatchedValue,
+			Status:        candidateStatuses[c.Status],
+			QualifiedName: inspect.QualifiedName(c.Network, c.Device),
 		})
 	}
 	for _, n := range res.NotInspected {

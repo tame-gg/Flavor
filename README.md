@@ -62,8 +62,8 @@ The system Tailscale client joins one tailnet at a time. Switching between a wor
     <td width="50%" valign="top"><b>Remove vs delete</b><br>Removing a network keeps its identity on disk for later. Deleting the identity is a separate, explicit step. Lattice never deletes machines on the control server.</td>
   </tr>
   <tr>
-    <td width="50%" valign="top"><b>Connection Inspector</b><br>Type an address or name and see every network it exists on, which device matched, how it matched, and whether the answer is unique. The same engine powers <code>latticectl explain</code>.</td>
-    <td width="50%" valign="top"><b>Conflict Center</b><br>Every address, DNS name and device name that exists more than once, split into expected overlaps that network-specific names resolve and real ambiguities.</td>
+    <td width="50%" valign="top"><b>Connection Inspector</b><br>Type an address or name and see every network it exists on, which device or subnet route matched, how it matched, and whether the answer is unique. Longest-prefix routes and network-qualified names like <code>postgres.home.lattice.internal</code> are explained the same way. The same engine powers <code>latticectl explain</code>.</td>
+    <td width="50%" valign="top"><b>Conflict Center</b><br>Every address, DNS name, device name and subnet route that exists more than once, split into expected overlaps (network-specific names or a more specific route decide) and real ambiguities.</td>
   </tr>
   <tr>
     <td width="50%" valign="top"><b>Device Explorer</b><br>Search all networks at once by name, address, network, OS or tag, with qualifiers like <code>is:online</code> and <code>tag:db</code>. Each device opens a details panel with copy, inspect and SSH actions.</td>

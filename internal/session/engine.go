@@ -28,6 +28,7 @@ type EnginePeer struct {
 	LastSeen  time.Time
 	OS        string
 	Tags      []string
+	Routes    []netip.Prefix
 }
 
 type EngineStatus struct {

@@ -45,7 +45,8 @@ function matches(t: Token, d: Device, network: Network | undefined, networkName:
         (network !== undefined && providerName(network.provider).toLowerCase() === t.value) ||
         d.addresses.some((a) => a.toLowerCase().includes(t.value)) ||
         d.os.toLowerCase().includes(t.value) ||
-        d.tags.some((x) => x.toLowerCase().includes(t.value))
+        d.tags.some((x) => x.toLowerCase().includes(t.value)) ||
+        d.routes.some((r) => r.startsWith(t.value))
       );
   }
 }

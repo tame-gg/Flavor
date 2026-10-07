@@ -50,6 +50,13 @@ suite("conflict descriptions", () => {
     expect(describe(dns)).toMatch(/cannot pick one/);
   });
 
+  it("describes identical and nested subnet routes", () => {
+    const same = create(ConflictSchema, { ...dns, type: ConflictType.SUBNET_OVERLAP, value: "10.10.0.0/16" });
+    expect(describe(same)).toBe("2 networks advertise 10.10.0.0/16. Addresses inside it cannot be assigned to one network automatically.");
+    const nested = create(ConflictSchema, { ...expected, type: ConflictType.SUBNET_OVERLAP, value: "10.20.0.0/16" });
+    expect(describe(nested)).toMatch(/more specific route decides/);
+  });
+
   it("filters by severity and type and counts each", () => {
     const all = [expected, within, dns];
     expect(filterConflicts(all, "ambiguous", "all").map((c) => c.id)).toEqual(["address:100.64.0.7", "dns:db.example.com"]);

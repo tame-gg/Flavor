@@ -13,6 +13,8 @@ export const matchLabel: Record<MatchKind, string> = {
   [MatchKind.DEVICE_ADDRESS]: "Exact device address",
   [MatchKind.DEVICE_DNS_NAME]: "Full DNS name",
   [MatchKind.DEVICE_HOSTNAME]: "Device name",
+  [MatchKind.SUBNET_ROUTE]: "Subnet route",
+  [MatchKind.QUALIFIED_NAME]: "Lattice name",
 };
 
 export const statusLabel: Record<CandidateStatus, string> = {
@@ -22,8 +24,9 @@ export const statusLabel: Record<CandidateStatus, string> = {
   [CandidateStatus.OUTRANKED]: "Weaker match",
 };
 
-export function candidateLabel(r: InspectDestinationResponse, status: CandidateStatus): string {
+export function candidateLabel(r: InspectDestinationResponse, status: CandidateStatus, match?: MatchKind): string {
   if (status === CandidateStatus.OUTRANKED && r.reason === DecisionReason.DESTINATION_PREFERENCE) return "Not preferred";
+  if (status === CandidateStatus.OUTRANKED && match === MatchKind.SUBNET_ROUTE) return "Less specific route";
   return statusLabel[status];
 }
 
@@ -32,6 +35,8 @@ const basis: Record<MatchKind, string> = {
   [MatchKind.DEVICE_ADDRESS]: "an exact device address",
   [MatchKind.DEVICE_DNS_NAME]: "a full DNS name",
   [MatchKind.DEVICE_HOSTNAME]: "a device name",
+  [MatchKind.SUBNET_ROUTE]: "a subnet route",
+  [MatchKind.QUALIFIED_NAME]: "its Lattice name, which names the network explicitly",
 };
 
 const what = (r: InspectDestinationResponse) => (r.kind === DestinationKind.ADDRESS ? "address" : "name");
@@ -53,6 +58,17 @@ export function explain(r: InspectDestinationResponse): { title: string; detail:
             (others > 0 ? ` Without it, ${r.normalized} would match on ${others + 1} networks.` : ""),
         };
       }
+      if (r.reason === DecisionReason.SUBNET_ROUTE || r.reason === DecisionReason.LONGEST_PREFIX) {
+        const others = outranked.length;
+        return {
+          title: `${network}, via ${device}`,
+          detail:
+            `${device} routes ${selected?.matchedValue ?? "this subnet"} on ${network}.` +
+            (r.reason === DecisionReason.LONGEST_PREFIX
+              ? ` It is more specific than the other matching route${others === 1 ? "" : "s"}, so it wins.`
+              : ""),
+        };
+      }
       const by = basis[r.decidedBy];
       const others =
         outranked.length > 0
@@ -62,6 +78,12 @@ export function explain(r: InspectDestinationResponse): { title: string; detail:
     }
     case ResolutionDecision.AMBIGUOUS: {
       const count = new Set(tied.map((c) => c.network?.id)).size;
+      if (r.decidedBy === MatchKind.SUBNET_ROUTE) {
+        return {
+          title: `${r.normalized} is routed by ${count} networks`,
+          detail: `Each one advertises a route of the same length that covers this address, so Lattice will not pick one on its own.`,
+        };
+      }
       const where = count > 1 ? `${count} networks` : "one network, on more than one device";
       return {
         title: `${r.normalized} exists on ${where}`,

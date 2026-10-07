@@ -241,6 +241,17 @@ async fn inspector_reports_duplicate_addresses_and_unique_names() {
     assert!(ids.contains("address:100.64.0.2"), "{ids:?}");
     assert!(ids.contains("name:grafana"), "{ids:?}");
     assert!(!ids.contains("name:postgres"), "{ids:?}");
+    assert!(ids.contains("subnet:10.10.0.0/16"), "identical subnet routes on two networks: {ids:?}");
+
+    let routed = inspect("10.99.0.1").await.unwrap();
+    assert_eq!(routed.decision, ResolutionDecision::RESOLUTION_DECISION_UNIQUE);
+    assert_eq!(routed.reason, DecisionReason::DECISION_REASON_SUBNET_ROUTE);
+    assert_eq!(routed.candidates[0].matched_value, "10.0.0.0/8");
+    let tie = inspect("10.10.1.1").await.unwrap();
+    assert_eq!(tie.decision, ResolutionDecision::RESOLUTION_DECISION_AMBIGUOUS);
+    let qualified = inspect(&format!("postgres.{}.lattice.internal", a.label)).await.unwrap();
+    assert_eq!(qualified.reason, DecisionReason::DECISION_REASON_NETWORK_QUALIFIED_NAME);
+    assert_eq!(qualified.candidates[0].network.id, a.id);
     assert!(!ids.contains("address:100.64.0.1"), "this machine reported as a conflict: {ids:?}");
     let addr = conflicts.conflicts.iter().find(|c| c.id == "address:100.64.0.2").unwrap();
     assert_eq!(addr.severity, ConflictSeverity::CONFLICT_SEVERITY_EXPECTED);

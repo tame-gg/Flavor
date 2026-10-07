@@ -83,6 +83,7 @@ func networkConfig(n domain.Network) *v1.Network {
 		ControlUrl:   n.ControlURL,
 		AutoConnect:  n.AutoConnect,
 		NodeHostname: n.NodeHostname,
+		Label:        domain.NetworkLabel(n.DisplayName),
 		CreatedAt:    timestamp(n.CreatedAt),
 		UpdatedAt:    timestamp(n.UpdatedAt),
 	}
@@ -116,6 +117,9 @@ func device(d domain.Device) *v1.Device {
 		Local:    d.Local,
 		Os:       d.OS,
 		Tags:     append([]string(nil), d.Tags...),
+	}
+	for _, r := range d.Routes {
+		out.Routes = append(out.Routes, r.String())
 	}
 	for _, a := range d.Addresses {
 		out.Addresses = append(out.Addresses, a.String())

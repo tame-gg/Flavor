@@ -28,6 +28,7 @@ const (
 	ConflictType_CONFLICT_TYPE_ADDRESS_COLLISION  ConflictType = 1
 	ConflictType_CONFLICT_TYPE_DNS_NAME_COLLISION ConflictType = 2
 	ConflictType_CONFLICT_TYPE_HOSTNAME_COLLISION ConflictType = 3
+	ConflictType_CONFLICT_TYPE_SUBNET_OVERLAP     ConflictType = 4
 )
 
 // Enum value maps for ConflictType.
@@ -37,12 +38,14 @@ var (
 		1: "CONFLICT_TYPE_ADDRESS_COLLISION",
 		2: "CONFLICT_TYPE_DNS_NAME_COLLISION",
 		3: "CONFLICT_TYPE_HOSTNAME_COLLISION",
+		4: "CONFLICT_TYPE_SUBNET_OVERLAP",
 	}
 	ConflictType_value = map[string]int32{
 		"CONFLICT_TYPE_UNSPECIFIED":        0,
 		"CONFLICT_TYPE_ADDRESS_COLLISION":  1,
 		"CONFLICT_TYPE_DNS_NAME_COLLISION": 2,
 		"CONFLICT_TYPE_HOSTNAME_COLLISION": 3,
+		"CONFLICT_TYPE_SUBNET_OVERLAP":     4,
 	}
 )
 
@@ -176,6 +179,7 @@ type ConflictMember struct {
 	Network       *NetworkRef            `protobuf:"bytes,1,opt,name=network,proto3" json:"network,omitempty"`
 	Device        *Device                `protobuf:"bytes,2,opt,name=device,proto3" json:"device,omitempty"`
 	UniqueName    string                 `protobuf:"bytes,3,opt,name=unique_name,json=uniqueName,proto3" json:"unique_name,omitempty"`
+	Route         string                 `protobuf:"bytes,4,opt,name=route,proto3" json:"route,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -231,6 +235,13 @@ func (x *ConflictMember) GetUniqueName() string {
 	return ""
 }
 
+func (x *ConflictMember) GetRoute() string {
+	if x != nil {
+		return x.Route
+	}
+	return ""
+}
+
 type Conflict struct {
 	state                  protoimpl.MessageState `protogen:"open.v1"`
 	Id                     string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -241,6 +252,7 @@ type Conflict struct {
 	Members                []*ConflictMember      `protobuf:"bytes,6,rep,name=members,proto3" json:"members,omitempty"`
 	NetworkContextResolves bool                   `protobuf:"varint,7,opt,name=network_context_resolves,json=networkContextResolves,proto3" json:"network_context_resolves,omitempty"`
 	PreferredNetworkId     string                 `protobuf:"bytes,8,opt,name=preferred_network_id,json=preferredNetworkId,proto3" json:"preferred_network_id,omitempty"`
+	SampleAddress          string                 `protobuf:"bytes,9,opt,name=sample_address,json=sampleAddress,proto3" json:"sample_address,omitempty"`
 	unknownFields          protoimpl.UnknownFields
 	sizeCache              protoimpl.SizeCache
 }
@@ -327,6 +339,13 @@ func (x *Conflict) GetNetworkContextResolves() bool {
 func (x *Conflict) GetPreferredNetworkId() string {
 	if x != nil {
 		return x.PreferredNetworkId
+	}
+	return ""
+}
+
+func (x *Conflict) GetSampleAddress() string {
+	if x != nil {
+		return x.SampleAddress
 	}
 	return ""
 }
@@ -440,12 +459,13 @@ var File_lattice_v1_conflicts_proto protoreflect.FileDescriptor
 const file_lattice_v1_conflicts_proto_rawDesc = "" +
 	"\n" +
 	"\x1alattice/v1/conflicts.proto\x12\n" +
-	"lattice.v1\x1a\x17lattice/v1/device.proto\x1a\x1alattice/v1/inspector.proto\"\x8f\x01\n" +
+	"lattice.v1\x1a\x17lattice/v1/device.proto\x1a\x1alattice/v1/inspector.proto\"\xa5\x01\n" +
 	"\x0eConflictMember\x120\n" +
 	"\anetwork\x18\x01 \x01(\v2\x16.lattice.v1.NetworkRefR\anetwork\x12*\n" +
 	"\x06device\x18\x02 \x01(\v2\x12.lattice.v1.DeviceR\x06device\x12\x1f\n" +
 	"\vunique_name\x18\x03 \x01(\tR\n" +
-	"uniqueName\"\xeb\x02\n" +
+	"uniqueName\x12\x14\n" +
+	"\x05route\x18\x04 \x01(\tR\x05route\"\x92\x03\n" +
 	"\bConflict\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12,\n" +
 	"\x04type\x18\x02 \x01(\x0e2\x18.lattice.v1.ConflictTypeR\x04type\x128\n" +
@@ -454,18 +474,20 @@ const file_lattice_v1_conflicts_proto_rawDesc = "" +
 	"\x05value\x18\x05 \x01(\tR\x05value\x124\n" +
 	"\amembers\x18\x06 \x03(\v2\x1a.lattice.v1.ConflictMemberR\amembers\x128\n" +
 	"\x18network_context_resolves\x18\a \x01(\bR\x16networkContextResolves\x120\n" +
-	"\x14preferred_network_id\x18\b \x01(\tR\x12preferredNetworkId\"\x16\n" +
+	"\x14preferred_network_id\x18\b \x01(\tR\x12preferredNetworkId\x12%\n" +
+	"\x0esample_address\x18\t \x01(\tR\rsampleAddress\"\x16\n" +
 	"\x14ListConflictsRequest\"\xe3\x01\n" +
 	"\x15ListConflictsResponse\x12,\n" +
 	"\x12daemon_instance_id\x18\x01 \x01(\tR\x10daemonInstanceId\x12+\n" +
 	"\x11snapshot_sequence\x18\x02 \x01(\x04R\x10snapshotSequence\x122\n" +
 	"\tconflicts\x18\x03 \x03(\v2\x14.lattice.v1.ConflictR\tconflicts\x12;\n" +
-	"\rnot_inspected\x18\x04 \x03(\v2\x16.lattice.v1.NetworkRefR\fnotInspected*\x9e\x01\n" +
+	"\rnot_inspected\x18\x04 \x03(\v2\x16.lattice.v1.NetworkRefR\fnotInspected*\xc0\x01\n" +
 	"\fConflictType\x12\x1d\n" +
 	"\x19CONFLICT_TYPE_UNSPECIFIED\x10\x00\x12#\n" +
 	"\x1fCONFLICT_TYPE_ADDRESS_COLLISION\x10\x01\x12$\n" +
 	" CONFLICT_TYPE_DNS_NAME_COLLISION\x10\x02\x12$\n" +
-	" CONFLICT_TYPE_HOSTNAME_COLLISION\x10\x03*v\n" +
+	" CONFLICT_TYPE_HOSTNAME_COLLISION\x10\x03\x12 \n" +
+	"\x1cCONFLICT_TYPE_SUBNET_OVERLAP\x10\x04*v\n" +
 	"\x10ConflictSeverity\x12!\n" +
 	"\x1dCONFLICT_SEVERITY_UNSPECIFIED\x10\x00\x12\x1f\n" +
 	"\x1bCONFLICT_SEVERITY_AMBIGUOUS\x10\x01\x12\x1e\n" +

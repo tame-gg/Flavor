@@ -32,6 +32,7 @@ fn main() {
             commands::delete_network_identity,
             commands::run_diagnostics,
             commands::inspect_destination,
+            commands::describe_device,
             commands::list_conflicts,
             commands::create_workspace,
             commands::update_workspace,

@@ -490,6 +490,7 @@ type ResolutionCandidate struct {
 	MatchedValue  string                 `protobuf:"bytes,4,opt,name=matched_value,json=matchedValue,proto3" json:"matched_value,omitempty"`
 	Status        CandidateStatus        `protobuf:"varint,5,opt,name=status,proto3,enum=lattice.v1.CandidateStatus" json:"status,omitempty"`
 	QualifiedName string                 `protobuf:"bytes,6,opt,name=qualified_name,json=qualifiedName,proto3" json:"qualified_name,omitempty"`
+	StableName    string                 `protobuf:"bytes,7,opt,name=stable_name,json=stableName,proto3" json:"stable_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -562,6 +563,13 @@ func (x *ResolutionCandidate) GetStatus() CandidateStatus {
 func (x *ResolutionCandidate) GetQualifiedName() string {
 	if x != nil {
 		return x.QualifiedName
+	}
+	return ""
+}
+
+func (x *ResolutionCandidate) GetStableName() string {
+	if x != nil {
+		return x.StableName
 	}
 	return ""
 }
@@ -742,6 +750,110 @@ func (x *InspectDestinationResponse) GetPreference() *PreferenceUse {
 	return nil
 }
 
+type DescribeDeviceRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	NetworkId     string                 `protobuf:"bytes,1,opt,name=network_id,json=networkId,proto3" json:"network_id,omitempty"`
+	NodeId        string                 `protobuf:"bytes,2,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DescribeDeviceRequest) Reset() {
+	*x = DescribeDeviceRequest{}
+	mi := &file_lattice_v1_inspector_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DescribeDeviceRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DescribeDeviceRequest) ProtoMessage() {}
+
+func (x *DescribeDeviceRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_lattice_v1_inspector_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DescribeDeviceRequest.ProtoReflect.Descriptor instead.
+func (*DescribeDeviceRequest) Descriptor() ([]byte, []int) {
+	return file_lattice_v1_inspector_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *DescribeDeviceRequest) GetNetworkId() string {
+	if x != nil {
+		return x.NetworkId
+	}
+	return ""
+}
+
+func (x *DescribeDeviceRequest) GetNodeId() string {
+	if x != nil {
+		return x.NodeId
+	}
+	return ""
+}
+
+type DescribeDeviceResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	StableName    string                 `protobuf:"bytes,2,opt,name=stable_name,json=stableName,proto3" json:"stable_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DescribeDeviceResponse) Reset() {
+	*x = DescribeDeviceResponse{}
+	mi := &file_lattice_v1_inspector_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DescribeDeviceResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DescribeDeviceResponse) ProtoMessage() {}
+
+func (x *DescribeDeviceResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_lattice_v1_inspector_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DescribeDeviceResponse.ProtoReflect.Descriptor instead.
+func (*DescribeDeviceResponse) Descriptor() ([]byte, []int) {
+	return file_lattice_v1_inspector_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *DescribeDeviceResponse) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *DescribeDeviceResponse) GetStableName() string {
+	if x != nil {
+		return x.StableName
+	}
+	return ""
+}
+
 var File_lattice_v1_inspector_proto protoreflect.FileDescriptor
 
 const file_lattice_v1_inspector_proto_rawDesc = "" +
@@ -757,14 +869,16 @@ const file_lattice_v1_inspector_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\x124\n" +
 	"\bprovider\x18\x03 \x01(\x0e2\x18.lattice.v1.ProviderTypeR\bprovider\x128\n" +
-	"\x05state\x18\x04 \x01(\x0e2\".lattice.v1.NetworkConnectionStateR\x05state\"\xa1\x02\n" +
+	"\x05state\x18\x04 \x01(\x0e2\".lattice.v1.NetworkConnectionStateR\x05state\"\xc2\x02\n" +
 	"\x13ResolutionCandidate\x120\n" +
 	"\anetwork\x18\x01 \x01(\v2\x16.lattice.v1.NetworkRefR\anetwork\x12*\n" +
 	"\x06device\x18\x02 \x01(\v2\x12.lattice.v1.DeviceR\x06device\x12+\n" +
 	"\x05match\x18\x03 \x01(\x0e2\x15.lattice.v1.MatchKindR\x05match\x12#\n" +
 	"\rmatched_value\x18\x04 \x01(\tR\fmatchedValue\x123\n" +
 	"\x06status\x18\x05 \x01(\x0e2\x1b.lattice.v1.CandidateStatusR\x06status\x12%\n" +
-	"\x0equalified_name\x18\x06 \x01(\tR\rqualifiedName\"=\n" +
+	"\x0equalified_name\x18\x06 \x01(\tR\rqualifiedName\x12\x1f\n" +
+	"\vstable_name\x18\a \x01(\tR\n" +
+	"stableName\"=\n" +
 	"\x19InspectDestinationRequest\x12 \n" +
 	"\vdestination\x18\x01 \x01(\tR\vdestination\"\xd1\x04\n" +
 	"\x1aInspectDestinationResponse\x12,\n" +
@@ -787,7 +901,15 @@ const file_lattice_v1_inspector_proto_rawDesc = "" +
 	"\rnot_inspected\x18\v \x03(\v2\x16.lattice.v1.NetworkRefR\fnotInspected\x129\n" +
 	"\n" +
 	"preference\x18\f \x01(\v2\x19.lattice.v1.PreferenceUseR\n" +
-	"preference*l\n" +
+	"preference\"O\n" +
+	"\x15DescribeDeviceRequest\x12\x1d\n" +
+	"\n" +
+	"network_id\x18\x01 \x01(\tR\tnetworkId\x12\x17\n" +
+	"\anode_id\x18\x02 \x01(\tR\x06nodeId\"M\n" +
+	"\x16DescribeDeviceResponse\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1f\n" +
+	"\vstable_name\x18\x02 \x01(\tR\n" +
+	"stableName*l\n" +
 	"\x0fDestinationKind\x12 \n" +
 	"\x1cDESTINATION_KIND_UNSPECIFIED\x10\x00\x12\x1c\n" +
 	"\x18DESTINATION_KIND_ADDRESS\x10\x01\x12\x19\n" +
@@ -824,9 +946,10 @@ const file_lattice_v1_inspector_proto_rawDesc = "" +
 	"\x1cPREFERENCE_STATE_UNSPECIFIED\x10\x00\x12\x1c\n" +
 	"\x18PREFERENCE_STATE_APPLIED\x10\x01\x12*\n" +
 	"&PREFERENCE_STATE_NETWORK_NOT_CONNECTED\x10\x02\x12(\n" +
-	"$PREFERENCE_STATE_NO_MATCH_ON_NETWORK\x10\x032w\n" +
+	"$PREFERENCE_STATE_NO_MATCH_ON_NETWORK\x10\x032\xd0\x01\n" +
 	"\x10InspectorService\x12c\n" +
-	"\x12InspectDestination\x12%.lattice.v1.InspectDestinationRequest\x1a&.lattice.v1.InspectDestinationResponseB\xa8\x01\n" +
+	"\x12InspectDestination\x12%.lattice.v1.InspectDestinationRequest\x1a&.lattice.v1.InspectDestinationResponse\x12W\n" +
+	"\x0eDescribeDevice\x12!.lattice.v1.DescribeDeviceRequest\x1a\".lattice.v1.DescribeDeviceResponseB\xa8\x01\n" +
 	"\x0ecom.lattice.v1B\x0eInspectorProtoP\x01Z=git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1;latticev1\xa2\x02\x03LXX\xaa\x02\n" +
 	"Lattice.V1\xca\x02\n" +
 	"Lattice\\V1\xe2\x02\x16Lattice\\V1\\GPBMetadata\xea\x02\vLattice::V1b\x06proto3"
@@ -844,7 +967,7 @@ func file_lattice_v1_inspector_proto_rawDescGZIP() []byte {
 }
 
 var file_lattice_v1_inspector_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_lattice_v1_inspector_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_lattice_v1_inspector_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_lattice_v1_inspector_proto_goTypes = []any{
 	(DestinationKind)(0),               // 0: lattice.v1.DestinationKind
 	(MatchKind)(0),                     // 1: lattice.v1.MatchKind
@@ -857,17 +980,19 @@ var file_lattice_v1_inspector_proto_goTypes = []any{
 	(*ResolutionCandidate)(nil),        // 8: lattice.v1.ResolutionCandidate
 	(*InspectDestinationRequest)(nil),  // 9: lattice.v1.InspectDestinationRequest
 	(*InspectDestinationResponse)(nil), // 10: lattice.v1.InspectDestinationResponse
-	(ProviderType)(0),                  // 11: lattice.v1.ProviderType
-	(NetworkConnectionState)(0),        // 12: lattice.v1.NetworkConnectionState
-	(*Device)(nil),                     // 13: lattice.v1.Device
+	(*DescribeDeviceRequest)(nil),      // 11: lattice.v1.DescribeDeviceRequest
+	(*DescribeDeviceResponse)(nil),     // 12: lattice.v1.DescribeDeviceResponse
+	(ProviderType)(0),                  // 13: lattice.v1.ProviderType
+	(NetworkConnectionState)(0),        // 14: lattice.v1.NetworkConnectionState
+	(*Device)(nil),                     // 15: lattice.v1.Device
 }
 var file_lattice_v1_inspector_proto_depIdxs = []int32{
 	7,  // 0: lattice.v1.PreferenceUse.network:type_name -> lattice.v1.NetworkRef
 	5,  // 1: lattice.v1.PreferenceUse.state:type_name -> lattice.v1.PreferenceState
-	11, // 2: lattice.v1.NetworkRef.provider:type_name -> lattice.v1.ProviderType
-	12, // 3: lattice.v1.NetworkRef.state:type_name -> lattice.v1.NetworkConnectionState
+	13, // 2: lattice.v1.NetworkRef.provider:type_name -> lattice.v1.ProviderType
+	14, // 3: lattice.v1.NetworkRef.state:type_name -> lattice.v1.NetworkConnectionState
 	7,  // 4: lattice.v1.ResolutionCandidate.network:type_name -> lattice.v1.NetworkRef
-	13, // 5: lattice.v1.ResolutionCandidate.device:type_name -> lattice.v1.Device
+	15, // 5: lattice.v1.ResolutionCandidate.device:type_name -> lattice.v1.Device
 	1,  // 6: lattice.v1.ResolutionCandidate.match:type_name -> lattice.v1.MatchKind
 	4,  // 7: lattice.v1.ResolutionCandidate.status:type_name -> lattice.v1.CandidateStatus
 	0,  // 8: lattice.v1.InspectDestinationResponse.kind:type_name -> lattice.v1.DestinationKind
@@ -878,9 +1003,11 @@ var file_lattice_v1_inspector_proto_depIdxs = []int32{
 	7,  // 13: lattice.v1.InspectDestinationResponse.not_inspected:type_name -> lattice.v1.NetworkRef
 	6,  // 14: lattice.v1.InspectDestinationResponse.preference:type_name -> lattice.v1.PreferenceUse
 	9,  // 15: lattice.v1.InspectorService.InspectDestination:input_type -> lattice.v1.InspectDestinationRequest
-	10, // 16: lattice.v1.InspectorService.InspectDestination:output_type -> lattice.v1.InspectDestinationResponse
-	16, // [16:17] is the sub-list for method output_type
-	15, // [15:16] is the sub-list for method input_type
+	11, // 16: lattice.v1.InspectorService.DescribeDevice:input_type -> lattice.v1.DescribeDeviceRequest
+	10, // 17: lattice.v1.InspectorService.InspectDestination:output_type -> lattice.v1.InspectDestinationResponse
+	12, // 18: lattice.v1.InspectorService.DescribeDevice:output_type -> lattice.v1.DescribeDeviceResponse
+	17, // [17:19] is the sub-list for method output_type
+	15, // [15:17] is the sub-list for method input_type
 	15, // [15:15] is the sub-list for extension type_name
 	15, // [15:15] is the sub-list for extension extendee
 	0,  // [0:15] is the sub-list for field type_name
@@ -899,7 +1026,7 @@ func file_lattice_v1_inspector_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_lattice_v1_inspector_proto_rawDesc), len(file_lattice_v1_inspector_proto_rawDesc)),
 			NumEnums:      6,
-			NumMessages:   5,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

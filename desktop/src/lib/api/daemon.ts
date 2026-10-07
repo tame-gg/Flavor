@@ -5,7 +5,12 @@ import { GetStateSnapshotResponseSchema, type GetStateSnapshotResponse } from "@
 import { RunDiagnosticsResponseSchema, type RunDiagnosticsResponse } from "@gen/lattice/v1/diagnostics_pb";
 import { ListConflictsResponseSchema, type ListConflictsResponse } from "@gen/lattice/v1/conflicts_pb";
 import { DaemonEventSchema } from "@gen/lattice/v1/events_pb";
-import { InspectDestinationResponseSchema, type InspectDestinationResponse } from "@gen/lattice/v1/inspector_pb";
+import {
+  DescribeDeviceResponseSchema,
+  InspectDestinationResponseSchema,
+  type DescribeDeviceResponse,
+  type InspectDestinationResponse,
+} from "@gen/lattice/v1/inspector_pb";
 import { NetworkSchema, type Network } from "@gen/lattice/v1/network_pb";
 import {
   ActivateWorkspaceResponseSchema,
@@ -91,6 +96,10 @@ export async function activateWorkspace(workspaceId: string, disconnectOthers: b
 export const setDestinationPreference = (destination: string, networkId: string) =>
   invoke<JsonValue>("set_destination_preference", { destination, networkId });
 export const deleteDestinationPreference = (destination: string) => invoke<void>("delete_destination_preference", { destination });
+
+export async function describeDevice(networkId: string, nodeId: string): Promise<DescribeDeviceResponse> {
+  return fromJson(DescribeDeviceResponseSchema, await invoke<JsonValue>("describe_device", { networkId, nodeId }), options);
+}
 
 export const getSettings = () => invoke<LoadedSettings>("get_settings");
 export const setSettings = (settings: Settings) => invoke<LoadedSettings>("set_settings", { settings });

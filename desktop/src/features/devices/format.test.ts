@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lastSeen, latticeName, sshTarget } from "./format";
+import { lastSeen, sshTarget } from "./format";
 
 const now = new Date("2026-10-07T12:00:00Z");
 
@@ -11,13 +11,6 @@ describe("device formatting", () => {
     expect(lastSeen(new Date("2026-10-07T11:59:00Z"), now)).toBe("1 minute ago");
     expect(lastSeen(new Date("2026-10-07T09:00:00Z"), now)).toBe("3 hours ago");
     expect(lastSeen(new Date("2026-10-01T12:00:00Z"), now)).toBe("6 days ago");
-  });
-
-  it("builds the Lattice name from the device and the daemon's network label", () => {
-    expect(latticeName({ hostname: "Prod-API", dnsName: "" }, { id: "01ABC", label: "lunarlabs" })).toBe("prod-api.lunarlabs.lattice.internal");
-    expect(latticeName({ hostname: "db.example.com", dnsName: "db.home.ts.net" }, { id: "01ABC", label: "" })).toBe("db.01abc.lattice.internal");
-    expect(latticeName({ hostname: "", dnsName: "" }, { id: "x", label: "y" })).toBeNull();
-    expect(latticeName({ hostname: "a", dnsName: "" }, undefined)).toBeNull();
   });
 
   it("prefers the DNS name for SSH and falls back to the first address", () => {

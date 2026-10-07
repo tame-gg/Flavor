@@ -6,6 +6,7 @@ import (
 
 	"git.lunarlabs.dev/lattice/lattice/internal/domain"
 	"git.lunarlabs.dev/lattice/lattice/internal/inspect"
+	"git.lunarlabs.dev/lattice/lattice/internal/naming"
 	"git.lunarlabs.dev/lattice/lattice/internal/store"
 )
 
@@ -56,4 +57,33 @@ func (s *Service) liveNetworks(ctx context.Context) ([]inspect.Network, uint64, 
 		nets = append(nets, in)
 	}
 	return nets, seq, nil
+}
+
+const CodeDeviceNotFound Code = "DEVICE_NOT_FOUND"
+
+func (s *Service) DescribeDevice(ctx context.Context, rawNetwork, rawNode string) (name, stable string, err error) {
+	id, err := parseID(rawNetwork)
+	if err != nil {
+		return "", "", err
+	}
+	nets, _, err := s.liveNetworks(ctx)
+	if err != nil {
+		return "", "", err
+	}
+	all := make([]domain.Network, 0, len(nets))
+	for _, n := range nets {
+		all = append(all, n.Network)
+	}
+	netLabels := naming.NetworkLabels(all)
+	for _, n := range nets {
+		if n.Network.ID != id {
+			continue
+		}
+		devLabels := naming.DeviceLabels(n.Devices)
+		if l, ok := devLabels[domain.NodeID(rawNode)]; ok {
+			nl := netLabels[id]
+			return naming.Name(l.Published(), nl.Published()), naming.Name(l.Stable, nl.Stable), nil
+		}
+	}
+	return "", "", fail(CodeDeviceNotFound, "device not found on a connected network", false)
 }

@@ -67,7 +67,8 @@ func (h *handlers) InspectDestination(ctx context.Context, req *connect.Request[
 			Match:         matchKinds[c.Match],
 			MatchedValue:  c.MatchedValue,
 			Status:        candidateStatuses[c.Status],
-			QualifiedName: inspect.QualifiedName(c.Network, c.Device),
+			QualifiedName: c.Name,
+			StableName:    c.StableName,
 		})
 	}
 	for _, n := range res.NotInspected {
@@ -85,4 +86,12 @@ func (h *handlers) InspectDestination(ctx context.Context, req *connect.Request[
 
 func networkRef(n domain.Network, state domain.NetworkConnectionState) *v1.NetworkRef {
 	return &v1.NetworkRef{Id: string(n.ID), DisplayName: n.DisplayName, Provider: providerToProto(n.Provider), State: states[state]}
+}
+
+func (h *handlers) DescribeDevice(ctx context.Context, req *connect.Request[v1.DescribeDeviceRequest]) (*connect.Response[v1.DescribeDeviceResponse], error) {
+	name, stable, err := h.svc.DescribeDevice(ctx, req.Msg.NetworkId, req.Msg.NodeId)
+	if err != nil {
+		return nil, toConnect(err)
+	}
+	return connect.NewResponse(&v1.DescribeDeviceResponse{Name: name, StableName: stable}), nil
 }

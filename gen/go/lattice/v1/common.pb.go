@@ -163,6 +163,7 @@ const (
 	LatticeErrorCode_LATTICE_ERROR_CODE_INVALID_ARGUMENT           LatticeErrorCode = 14
 	LatticeErrorCode_LATTICE_ERROR_CODE_INTERNAL                   LatticeErrorCode = 15
 	LatticeErrorCode_LATTICE_ERROR_CODE_WORKSPACE_NOT_FOUND        LatticeErrorCode = 16
+	LatticeErrorCode_LATTICE_ERROR_CODE_DEVICE_NOT_FOUND           LatticeErrorCode = 17
 )
 
 // Enum value maps for LatticeErrorCode.
@@ -185,6 +186,7 @@ var (
 		14: "LATTICE_ERROR_CODE_INVALID_ARGUMENT",
 		15: "LATTICE_ERROR_CODE_INTERNAL",
 		16: "LATTICE_ERROR_CODE_WORKSPACE_NOT_FOUND",
+		17: "LATTICE_ERROR_CODE_DEVICE_NOT_FOUND",
 	}
 	LatticeErrorCode_value = map[string]int32{
 		"LATTICE_ERROR_CODE_UNSPECIFIED":                0,
@@ -204,6 +206,7 @@ var (
 		"LATTICE_ERROR_CODE_INVALID_ARGUMENT":           14,
 		"LATTICE_ERROR_CODE_INTERNAL":                   15,
 		"LATTICE_ERROR_CODE_WORKSPACE_NOT_FOUND":        16,
+		"LATTICE_ERROR_CODE_DEVICE_NOT_FOUND":           17,
 	}
 )
 
@@ -381,7 +384,7 @@ const file_lattice_v1_common_proto_rawDesc = "" +
 	"%NETWORK_CONNECTION_STATE_RECONNECTING\x10\b\x12%\n" +
 	"!NETWORK_CONNECTION_STATE_REMOVING\x10\t\x12\"\n" +
 	"\x1eNETWORK_CONNECTION_STATE_ERROR\x10\n" +
-	"*\xf9\x05\n" +
+	"*\xa2\x06\n" +
 	"\x10LatticeErrorCode\x12\"\n" +
 	"\x1eLATTICE_ERROR_CODE_UNSPECIFIED\x10\x00\x12(\n" +
 	"$LATTICE_ERROR_CODE_NETWORK_NOT_FOUND\x10\x01\x12*\n" +
@@ -400,7 +403,8 @@ const file_lattice_v1_common_proto_rawDesc = "" +
 	"'LATTICE_ERROR_CODE_DAEMON_SHUTTING_DOWN\x10\r\x12'\n" +
 	"#LATTICE_ERROR_CODE_INVALID_ARGUMENT\x10\x0e\x12\x1f\n" +
 	"\x1bLATTICE_ERROR_CODE_INTERNAL\x10\x0f\x12*\n" +
-	"&LATTICE_ERROR_CODE_WORKSPACE_NOT_FOUND\x10\x10*\xeb\x01\n" +
+	"&LATTICE_ERROR_CODE_WORKSPACE_NOT_FOUND\x10\x10\x12'\n" +
+	"#LATTICE_ERROR_CODE_DEVICE_NOT_FOUND\x10\x11*\xeb\x01\n" +
 	"\n" +
 	"Capability\x12\x1a\n" +
 	"\x16CAPABILITY_UNSPECIFIED\x10\x00\x12\x18\n" +

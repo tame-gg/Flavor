@@ -18,6 +18,7 @@
     "allow-delete-network-identity",
     "allow-run-diagnostics",
     "allow-inspect-destination",
+    "allow-describe-device",
     "allow-list-conflicts",
     "allow-create-workspace",
     "allow-update-workspace",

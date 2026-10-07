@@ -286,6 +286,15 @@ function CandidateRow({
             </dd>
           </>
         )}
+        {c.stableName && c.stableName !== c.qualifiedName && (
+          <>
+            <dt>Stable name</dt>
+            <dd className="row">
+              <span className="mono grow">{c.stableName}</span>
+              <CopyButton value={c.stableName} label="Copy" />
+            </dd>
+          </>
+        )}
       </dl>
       <div className="row">
         {address && <CopyButton value={address} label={c.match === MatchKind.SUBNET_ROUTE ? "Copy router address" : "Copy address"} />}

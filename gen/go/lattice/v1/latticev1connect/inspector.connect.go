@@ -36,11 +36,15 @@ const (
 	// InspectorServiceInspectDestinationProcedure is the fully-qualified name of the InspectorService's
 	// InspectDestination RPC.
 	InspectorServiceInspectDestinationProcedure = "/lattice.v1.InspectorService/InspectDestination"
+	// InspectorServiceDescribeDeviceProcedure is the fully-qualified name of the InspectorService's
+	// DescribeDevice RPC.
+	InspectorServiceDescribeDeviceProcedure = "/lattice.v1.InspectorService/DescribeDevice"
 )
 
 // InspectorServiceClient is a client for the lattice.v1.InspectorService service.
 type InspectorServiceClient interface {
 	InspectDestination(context.Context, *connect.Request[v1.InspectDestinationRequest]) (*connect.Response[v1.InspectDestinationResponse], error)
+	DescribeDevice(context.Context, *connect.Request[v1.DescribeDeviceRequest]) (*connect.Response[v1.DescribeDeviceResponse], error)
 }
 
 // NewInspectorServiceClient constructs a client for the lattice.v1.InspectorService service. By
@@ -60,12 +64,19 @@ func NewInspectorServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(inspectorServiceMethods.ByName("InspectDestination")),
 			connect.WithClientOptions(opts...),
 		),
+		describeDevice: connect.NewClient[v1.DescribeDeviceRequest, v1.DescribeDeviceResponse](
+			httpClient,
+			baseURL+InspectorServiceDescribeDeviceProcedure,
+			connect.WithSchema(inspectorServiceMethods.ByName("DescribeDevice")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // inspectorServiceClient implements InspectorServiceClient.
 type inspectorServiceClient struct {
 	inspectDestination *connect.Client[v1.InspectDestinationRequest, v1.InspectDestinationResponse]
+	describeDevice     *connect.Client[v1.DescribeDeviceRequest, v1.DescribeDeviceResponse]
 }
 
 // InspectDestination calls lattice.v1.InspectorService.InspectDestination.
@@ -73,9 +84,15 @@ func (c *inspectorServiceClient) InspectDestination(ctx context.Context, req *co
 	return c.inspectDestination.CallUnary(ctx, req)
 }
 
+// DescribeDevice calls lattice.v1.InspectorService.DescribeDevice.
+func (c *inspectorServiceClient) DescribeDevice(ctx context.Context, req *connect.Request[v1.DescribeDeviceRequest]) (*connect.Response[v1.DescribeDeviceResponse], error) {
+	return c.describeDevice.CallUnary(ctx, req)
+}
+
 // InspectorServiceHandler is an implementation of the lattice.v1.InspectorService service.
 type InspectorServiceHandler interface {
 	InspectDestination(context.Context, *connect.Request[v1.InspectDestinationRequest]) (*connect.Response[v1.InspectDestinationResponse], error)
+	DescribeDevice(context.Context, *connect.Request[v1.DescribeDeviceRequest]) (*connect.Response[v1.DescribeDeviceResponse], error)
 }
 
 // NewInspectorServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -91,10 +108,18 @@ func NewInspectorServiceHandler(svc InspectorServiceHandler, opts ...connect.Han
 		connect.WithSchema(inspectorServiceMethods.ByName("InspectDestination")),
 		connect.WithHandlerOptions(opts...),
 	)
+	inspectorServiceDescribeDeviceHandler := connect.NewUnaryHandler(
+		InspectorServiceDescribeDeviceProcedure,
+		svc.DescribeDevice,
+		connect.WithSchema(inspectorServiceMethods.ByName("DescribeDevice")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/lattice.v1.InspectorService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case InspectorServiceInspectDestinationProcedure:
 			inspectorServiceInspectDestinationHandler.ServeHTTP(w, r)
+		case InspectorServiceDescribeDeviceProcedure:
+			inspectorServiceDescribeDeviceHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -106,4 +131,8 @@ type UnimplementedInspectorServiceHandler struct{}
 
 func (UnimplementedInspectorServiceHandler) InspectDestination(context.Context, *connect.Request[v1.InspectDestinationRequest]) (*connect.Response[v1.InspectDestinationResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("lattice.v1.InspectorService.InspectDestination is not implemented"))
+}
+
+func (UnimplementedInspectorServiceHandler) DescribeDevice(context.Context, *connect.Request[v1.DescribeDeviceRequest]) (*connect.Response[v1.DescribeDeviceResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("lattice.v1.InspectorService.DescribeDevice is not implemented"))
 }

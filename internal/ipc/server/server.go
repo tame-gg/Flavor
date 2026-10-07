@@ -236,6 +236,7 @@ var connectCodes = map[service.Code]connect.Code{
 	service.CodeShuttingDown:      connect.CodeUnavailable,
 	service.CodeInternal:          connect.CodeInternal,
 	service.CodeWorkspaceNotFound: connect.CodeNotFound,
+	service.CodeDeviceNotFound:    connect.CodeNotFound,
 }
 
 func toConnect(err error) error {

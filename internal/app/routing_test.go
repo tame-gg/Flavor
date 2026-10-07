@@ -64,6 +64,20 @@ func TestSubnetRoutesAndQualifiedNamesOverIPC(t *testing.T) {
 	if q.Decision != v1.ResolutionDecision_RESOLUTION_DECISION_UNIQUE || q.Reason != v1.DecisionReason_DECISION_REASON_NETWORK_QUALIFIED_NAME || q.Candidates[0].Network.Id != wide.Id {
 		t.Fatalf("%+v", q)
 	}
+	desc, err := c.Inspector.DescribeDevice(ctx, connect.NewRequest(&v1.DescribeDeviceRequest{NetworkId: narrow.Id, NodeId: r.Candidates[0].Device.Id.NodeId}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if desc.Msg.Name != "edge.customer.lattice.internal" || desc.Msg.StableName != r.Candidates[0].StableName || desc.Msg.StableName == "" {
+		t.Fatalf("%+v", desc.Msg)
+	}
+	if _, err := c.Inspector.DescribeDevice(ctx, connect.NewRequest(&v1.DescribeDeviceRequest{NetworkId: narrow.Id, NodeId: "nope"})); latticeCode(err) != v1.LatticeErrorCode_LATTICE_ERROR_CODE_DEVICE_NOT_FOUND {
+		t.Fatalf("missing device: %v", err)
+	}
+	stable := inspect(r.Candidates[0].StableName)
+	if stable.Decision != v1.ResolutionDecision_RESOLUTION_DECISION_UNIQUE || stable.Candidates[0].Network.Id != narrow.Id {
+		t.Fatalf("stable name must resolve: %+v", stable)
+	}
 	if amb := inspect("edge"); amb.Decision != v1.ResolutionDecision_RESOLUTION_DECISION_AMBIGUOUS {
 		t.Fatalf("bare name on two networks: %+v", amb)
 	}

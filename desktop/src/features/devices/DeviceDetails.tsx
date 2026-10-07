@@ -1,10 +1,13 @@
+import { useEffect, useState } from "react";
 import { timestampDate } from "@bufbuild/protobuf/wkt";
+import type { DescribeDeviceResponse } from "@gen/lattice/v1/inspector_pb";
 import { Button } from "../../components/ui/Button";
 import { CopyButton } from "../../components/ui/CopyButton";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { useDaemon } from "../../app/sync/useDaemon";
+import { describeDevice } from "../../lib/api/daemon";
 import { providerName } from "../networks/format";
-import { lastSeen, latticeName, sshTarget } from "./format";
+import { lastSeen, sshTarget } from "./format";
 
 type Props = {
   deviceKey: string;
@@ -15,9 +18,22 @@ type Props = {
 };
 
 export function DeviceDetails({ deviceKey, onClose, onInspect, onOpenNetwork, canInspect }: Props) {
-  const { devices, networks } = useDaemon();
+  const { devices, networks, sequence } = useDaemon();
   const d = devices.get(deviceKey);
   const network = d?.id ? networks.get(d.id.networkId) : undefined;
+  const [names, setNames] = useState<DescribeDeviceResponse | null>(null);
+  const networkId = d?.id?.networkId;
+  const nodeId = d?.id?.nodeId;
+  useEffect(() => {
+    if (!networkId || !nodeId) return;
+    let cancelled = false;
+    describeDevice(networkId, nodeId)
+      .then((r) => !cancelled && setNames(r))
+      .catch(() => !cancelled && setNames(null));
+    return () => {
+      cancelled = true;
+    };
+  }, [networkId, nodeId, sequence]);
 
   if (!d || !d.id) {
     return (
@@ -38,7 +54,6 @@ export function DeviceDetails({ deviceKey, onClose, onInspect, onOpenNetwork, ca
   const seen = !d.online ? lastSeen(d.lastSeen ? timestampDate(d.lastSeen) : undefined) : null;
   const ssh = d.local ? null : sshTarget(d.dnsName, d.addresses);
   const destination = dns || d.addresses[0];
-  const qualified = latticeName(d, network);
 
   return (
     <aside className="card details stack" aria-label={`Details for ${name}`}>
@@ -132,10 +147,16 @@ export function DeviceDetails({ deviceKey, onClose, onInspect, onOpenNetwork, ca
           <dd className="mono">{d.id.networkId}</dd>
           <dt>Node ID</dt>
           <dd className="mono">{d.id.nodeId}</dd>
-          {qualified && (
+          {names?.name && (
             <>
               <dt>Lattice name</dt>
-              <dd className="mono">{qualified}</dd>
+              <dd className="mono">{names.name}</dd>
+            </>
+          )}
+          {names?.stableName && names.stableName !== names.name && (
+            <>
+              <dt>Stable name</dt>
+              <dd className="mono">{names.stableName}</dd>
             </>
           )}
         </dl>

@@ -7,6 +7,7 @@ import "lattice/v1/device.proto";
 
 service InspectorService {
   rpc InspectDestination(InspectDestinationRequest) returns (InspectDestinationResponse);
+  rpc DescribeDevice(DescribeDeviceRequest) returns (DescribeDeviceResponse);
 }
 
 enum DestinationKind {
@@ -78,6 +79,7 @@ message ResolutionCandidate {
   string matched_value = 4;
   CandidateStatus status = 5;
   string qualified_name = 6;
+  string stable_name = 7;
 }
 
 message InspectDestinationRequest {
@@ -97,4 +99,14 @@ message InspectDestinationResponse {
   repeated ResolutionCandidate candidates = 10;
   repeated NetworkRef not_inspected = 11;
   PreferenceUse preference = 12;
+}
+
+message DescribeDeviceRequest {
+  string network_id = 1;
+  string node_id = 2;
+}
+
+message DescribeDeviceResponse {
+  string name = 1;
+  string stable_name = 2;
 }

@@ -172,6 +172,16 @@ pub async fn inspect_destination(daemon: State<'_, Daemon>, destination: String)
 }
 
 #[tauri::command]
+pub async fn describe_device(daemon: State<'_, Daemon>, network_id: String, node_id: String) -> Result<DescribeDeviceResponse> {
+    Ok(daemon
+        .client()?
+        .inspector
+        .describe_device(DescribeDeviceRequest { network_id, node_id, ..Default::default() })
+        .await?
+        .into_owned())
+}
+
+#[tauri::command]
 pub async fn list_conflicts(daemon: State<'_, Daemon>) -> Result<ListConflictsResponse> {
     Ok(daemon.client()?.conflicts.list_conflicts(Default::default()).await?.into_owned())
 }

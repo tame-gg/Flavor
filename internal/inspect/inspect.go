@@ -9,11 +9,10 @@ import (
 	"strings"
 
 	"git.lunarlabs.dev/lattice/lattice/internal/domain"
+	"git.lunarlabs.dev/lattice/lattice/internal/naming"
 )
 
 var ErrInvalidDestination = errors.New("invalid destination")
-
-const QualifiedSuffix = "lattice.internal"
 
 type QueryKind int
 
@@ -117,6 +116,8 @@ type Candidate struct {
 	MatchedValue string
 	Prefix       netip.Prefix
 	Status       CandidateStatus
+	Name         string
+	StableName   string
 }
 
 type Result struct {
@@ -156,9 +157,9 @@ func ParseQuery(raw string) (Query, error) {
 		return q, ErrInvalidDestination
 	}
 	q.Kind, q.Name = KindName, name
-	if rest, ok := strings.CutSuffix(name, "."+QualifiedSuffix); ok {
-		device, network, ok := strings.Cut(rest, ".")
-		if !ok || strings.Contains(network, ".") {
+	if strings.HasSuffix(name, "."+naming.Suffix) {
+		device, network, ok := naming.Split(name)
+		if !ok {
 			return q, ErrInvalidDestination
 		}
 		q.Device, q.Network = device, network
@@ -230,22 +231,50 @@ func applyPreference(res *Result, networks []Network, pref domain.DestinationPre
 
 func resolveMatches(q Query, networks []Network) Result {
 	res := Result{Query: q}
+	all := make([]domain.Network, 0, len(networks))
+	for _, n := range networks {
+		all = append(all, n.Network)
+	}
+	netLabels := naming.NetworkLabels(all)
+	stableNet := ""
+	if q.Qualified() {
+		for _, l := range netLabels {
+			if l.Stable == q.Network {
+				stableNet = q.Network
+			}
+		}
+	}
 	seen := make(map[string]bool)
 	for _, n := range networks {
 		if !n.Live {
 			res.NotInspected = append(res.NotInspected, Network{Network: n.Network, State: n.State})
 			continue
 		}
-		for _, d := range n.Devices {
-			if d.ID.NetworkID != n.Network.ID || seen[d.ID.Key()] {
-				continue
+		devices := ownDevices(n, seen)
+		devLabels := naming.DeviceLabels(devices)
+		if q.Qualified() && !networkMatches(q, n.Network, netLabels[n.Network.ID], stableNet) {
+			continue
+		}
+		stableDev := ""
+		for _, l := range devLabels {
+			if q.Qualified() && l.Stable == q.Device {
+				stableDev = q.Device
 			}
-			c, ok := match(q, n.Network, d)
+		}
+		for _, d := range devices {
+			var c Candidate
+			var ok bool
+			if q.Qualified() {
+				c, ok = qualifiedMatch(q, d, devLabels[d.ID.NodeID], stableDev)
+			} else {
+				c, ok = match(q, d)
+			}
 			if !ok {
 				continue
 			}
-			seen[d.ID.Key()] = true
+			dl, nl := devLabels[d.ID.NodeID], netLabels[n.Network.ID]
 			c.Network, c.State, c.Device = n.Network, n.State, d
+			c.Name, c.StableName = naming.Name(dl.Published(), nl.Published()), naming.Name(dl.Stable, nl.Stable)
 			res.Candidates = append(res.Candidates, c)
 		}
 	}
@@ -314,7 +343,37 @@ func reasonFor(m MatchKind) Reason {
 	}
 }
 
-func match(q Query, n domain.Network, d domain.Device) (Candidate, bool) {
+func ownDevices(n Network, seen map[string]bool) []domain.Device {
+	var out []domain.Device
+	for _, d := range n.Devices {
+		if d.ID.NetworkID != n.Network.ID || seen[d.ID.Key()] {
+			continue
+		}
+		seen[d.ID.Key()] = true
+		out = append(out, d)
+	}
+	return out
+}
+
+func networkMatches(q Query, n domain.Network, l naming.Labels, stable string) bool {
+	if stable != "" {
+		return l.Stable == stable
+	}
+	return naming.FriendlyNetworkCandidate(n) == q.Network
+}
+
+func qualifiedMatch(q Query, d domain.Device, l naming.Labels, stable string) (Candidate, bool) {
+	if stable != "" {
+		if l.Stable != stable {
+			return Candidate{}, false
+		}
+	} else if naming.FriendlyDeviceCandidate(d) != q.Device {
+		return Candidate{}, false
+	}
+	return Candidate{Match: MatchQualifiedName, MatchedValue: q.Name}, true
+}
+
+func match(q Query, d domain.Device) (Candidate, bool) {
 	if q.Kind == KindAddress {
 		for _, a := range d.Addresses {
 			if a.Unmap() == q.Address {
@@ -332,17 +391,6 @@ func match(q Query, n domain.Network, d domain.Device) (Candidate, bool) {
 		}
 		return Candidate{}, false
 	}
-	if q.Qualified() {
-		if q.Network != domain.NetworkLabel(n.DisplayName) && q.Network != strings.ToLower(string(n.ID)) {
-			return Candidate{}, false
-		}
-		for _, name := range bareNames(d) {
-			if name == q.Device {
-				return Candidate{Match: MatchQualifiedName, MatchedValue: QualifiedName(n, d)}, true
-			}
-		}
-		return Candidate{}, false
-	}
 	dns := strings.ToLower(strings.TrimSuffix(d.DNSName, "."))
 	if dns != "" && dns == q.Name {
 		return Candidate{Match: MatchDeviceDNSName, MatchedValue: dns}, true
@@ -357,16 +405,4 @@ func match(q Query, n domain.Network, d domain.Device) (Candidate, bool) {
 		return Candidate{Match: MatchDeviceHostname, MatchedValue: short}, true
 	}
 	return Candidate{}, false
-}
-
-func QualifiedName(n domain.Network, d domain.Device) string {
-	names := bareNames(d)
-	if len(names) == 0 {
-		return ""
-	}
-	label := domain.NetworkLabel(n.DisplayName)
-	if label == "" {
-		label = strings.ToLower(string(n.ID))
-	}
-	return names[0] + "." + label + "." + QualifiedSuffix
 }

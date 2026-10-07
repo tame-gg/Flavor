@@ -39,20 +39,59 @@ func (h *handlers) Forward(ctx context.Context, req *connect.Request[v1.ForwardR
 		case service.ForwardStarted:
 			out.Event = &v1.ForwardResponse_Started{Started: &v1.ForwardStarted{ListenAddress: ev.Listen.String(), Route: h.forwardRoute(ev.Route)}}
 		case service.ForwardOpened, service.ForwardClosed:
-			c := &v1.ForwardConnection{Id: ev.ConnID, Client: ev.Client, Route: h.forwardRoute(ev.Route), BytesSent: ev.BytesSent, BytesReceived: ev.BytesReceived}
+			c := h.connection(ev)
 			if ev.Kind == service.ForwardOpened {
 				out.Event = &v1.ForwardResponse_Opened{Opened: c}
 			} else {
 				out.Event = &v1.ForwardResponse_Closed{Closed: c}
 			}
 		case service.ForwardRefused:
-			out.Event = &v1.ForwardResponse_Refused{Refused: &v1.ForwardRefused{Id: ev.ConnID, Client: ev.Client, Reason: errorDetail(ev.Err)}}
+			out.Event = &v1.ForwardResponse_Refused{Refused: refused(ev)}
 		}
 		mu.Lock()
 		defer mu.Unlock()
 		_ = stream.Send(out)
 	}
 	if err := h.svc.Forward(ctx, service.ForwardRequest{Destination: req.Msg.Destination, Listen: req.Msg.Listen, Network: req.Msg.Network}, emit); err != nil {
+		return toConnect(err)
+	}
+	return nil
+}
+
+func (h *handlers) connection(ev service.ForwardEvent) *v1.ForwardConnection {
+	return &v1.ForwardConnection{
+		Id:            ev.ConnID,
+		Client:        ev.Client,
+		Route:         h.forwardRoute(ev.Route),
+		BytesSent:     ev.BytesSent,
+		BytesReceived: ev.BytesReceived,
+		Destination:   ev.Destination,
+	}
+}
+
+func refused(ev service.ForwardEvent) *v1.ForwardRefused {
+	return &v1.ForwardRefused{Id: ev.ConnID, Client: ev.Client, Reason: errorDetail(ev.Err), Destination: ev.Destination}
+}
+
+func (h *handlers) Proxy(ctx context.Context, req *connect.Request[v1.ProxyRequest], stream *connect.ServerStream[v1.ProxyResponse]) error {
+	var mu sync.Mutex
+	emit := func(ev service.ForwardEvent) {
+		out := &v1.ProxyResponse{}
+		switch ev.Kind {
+		case service.ForwardStarted:
+			out.Event = &v1.ProxyResponse_Started{Started: &v1.ProxyStarted{ListenAddress: ev.Listen.String()}}
+		case service.ForwardOpened:
+			out.Event = &v1.ProxyResponse_Opened{Opened: h.connection(ev)}
+		case service.ForwardClosed:
+			out.Event = &v1.ProxyResponse_Closed{Closed: h.connection(ev)}
+		case service.ForwardRefused:
+			out.Event = &v1.ProxyResponse_Refused{Refused: refused(ev)}
+		}
+		mu.Lock()
+		defer mu.Unlock()
+		_ = stream.Send(out)
+	}
+	if err := h.svc.Proxy(ctx, service.ProxyRequest{Listen: req.Msg.Listen}, emit); err != nil {
 		return toConnect(err)
 	}
 	return nil

@@ -257,6 +257,7 @@ const (
 	Capability_CAPABILITY_WORKSPACES              Capability = 5
 	Capability_CAPABILITY_DESTINATION_PREFERENCES Capability = 6
 	Capability_CAPABILITY_FORWARDING              Capability = 7
+	Capability_CAPABILITY_SOCKS_PROXY             Capability = 8
 )
 
 // Enum value maps for Capability.
@@ -270,6 +271,7 @@ var (
 		5: "CAPABILITY_WORKSPACES",
 		6: "CAPABILITY_DESTINATION_PREFERENCES",
 		7: "CAPABILITY_FORWARDING",
+		8: "CAPABILITY_SOCKS_PROXY",
 	}
 	Capability_value = map[string]int32{
 		"CAPABILITY_UNSPECIFIED":             0,
@@ -280,6 +282,7 @@ var (
 		"CAPABILITY_WORKSPACES":              5,
 		"CAPABILITY_DESTINATION_PREFERENCES": 6,
 		"CAPABILITY_FORWARDING":              7,
+		"CAPABILITY_SOCKS_PROXY":             8,
 	}
 )
 
@@ -419,7 +422,7 @@ const file_lattice_v1_common_proto_rawDesc = "" +
 	"#LATTICE_ERROR_CODE_DEVICE_NOT_FOUND\x10\x11\x12,\n" +
 	"(LATTICE_ERROR_CODE_DESTINATION_AMBIGUOUS\x10\x12\x12,\n" +
 	"(LATTICE_ERROR_CODE_DESTINATION_NOT_FOUND\x10\x13\x12.\n" +
-	"*LATTICE_ERROR_CODE_DESTINATION_UNREACHABLE\x10\x14*\x86\x02\n" +
+	"*LATTICE_ERROR_CODE_DESTINATION_UNREACHABLE\x10\x14*\xa2\x02\n" +
 	"\n" +
 	"Capability\x12\x1a\n" +
 	"\x16CAPABILITY_UNSPECIFIED\x10\x00\x12\x18\n" +
@@ -429,7 +432,8 @@ const file_lattice_v1_common_proto_rawDesc = "" +
 	"\x1aCAPABILITY_CONFLICT_CENTER\x10\x04\x12\x19\n" +
 	"\x15CAPABILITY_WORKSPACES\x10\x05\x12&\n" +
 	"\"CAPABILITY_DESTINATION_PREFERENCES\x10\x06\x12\x19\n" +
-	"\x15CAPABILITY_FORWARDING\x10\aB\xa5\x01\n" +
+	"\x15CAPABILITY_FORWARDING\x10\a\x12\x1a\n" +
+	"\x16CAPABILITY_SOCKS_PROXY\x10\bB\xa5\x01\n" +
 	"\x0ecom.lattice.v1B\vCommonProtoP\x01Z=git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1;latticev1\xa2\x02\x03LXX\xaa\x02\n" +
 	"Lattice.V1\xca\x02\n" +
 	"Lattice\\V1\xe2\x02\x16Lattice\\V1\\GPBMetadata\xea\x02\vLattice::V1b\x06proto3"

@@ -6,6 +6,7 @@ require (
 	connectrpc.com/connect v1.21.0
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/zalando/go-keyring v0.2.6
+	golang.org/x/net v0.40.0
 	google.golang.org/protobuf v1.36.12
 	modernc.org/sqlite v1.34.5
 	tailscale.com v1.90.9
@@ -51,7 +52,6 @@ require (
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba // indirect
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/exp v0.0.0-20250210185358-939b2ce775ac // indirect
-	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect

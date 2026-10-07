@@ -7,6 +7,24 @@ import "lattice/v1/inspector.proto";
 
 service ForwardService {
   rpc Forward(ForwardRequest) returns (stream ForwardResponse);
+  rpc Proxy(ProxyRequest) returns (stream ProxyResponse);
+}
+
+message ProxyRequest {
+  string listen = 1;
+}
+
+message ProxyStarted {
+  string listen_address = 1;
+}
+
+message ProxyResponse {
+  oneof event {
+    ProxyStarted started = 1;
+    ForwardConnection opened = 2;
+    ForwardConnection closed = 3;
+    ForwardRefused refused = 4;
+  }
 }
 
 message ForwardRequest {
@@ -32,12 +50,14 @@ message ForwardConnection {
   ForwardRoute route = 3;
   uint64 bytes_sent = 4;
   uint64 bytes_received = 5;
+  string destination = 6;
 }
 
 message ForwardRefused {
   uint64 id = 1;
   string client = 2;
   LatticeErrorDetail reason = 3;
+  string destination = 4;
 }
 
 message ForwardResponse {

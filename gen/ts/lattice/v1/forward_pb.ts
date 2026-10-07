@@ -14,7 +14,82 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file lattice/v1/forward.proto.
  */
 export const file_lattice_v1_forward: GenFile = /*@__PURE__*/
-  fileDesc("ChhsYXR0aWNlL3YxL2ZvcndhcmQucHJvdG8SCmxhdHRpY2UudjEiRgoORm9yd2FyZFJlcXVlc3QSEwoLZGVzdGluYXRpb24YASABKAkSDgoGbGlzdGVuGAIgASgJEg8KB25ldHdvcmsYAyABKAkigQEKDEZvcndhcmRSb3V0ZRI4CghkZWNpc2lvbhgBIAEoCzImLmxhdHRpY2UudjEuSW5zcGVjdERlc3RpbmF0aW9uUmVzcG9uc2USJwoHbmV0d29yaxgCIAEoCzIWLmxhdHRpY2UudjEuTmV0d29ya1JlZhIOCgZ0YXJnZXQYAyABKAkiUQoORm9yd2FyZFN0YXJ0ZWQSFgoObGlzdGVuX2FkZHJlc3MYASABKAkSJwoFcm91dGUYAiABKAsyGC5sYXR0aWNlLnYxLkZvcndhcmRSb3V0ZSKEAQoRRm9yd2FyZENvbm5lY3Rpb24SCgoCaWQYASABKAQSDgoGY2xpZW50GAIgASgJEicKBXJvdXRlGAMgASgLMhgubGF0dGljZS52MS5Gb3J3YXJkUm91dGUSEgoKYnl0ZXNfc2VudBgEIAEoBBIWCg5ieXRlc19yZWNlaXZlZBgFIAEoBCJcCg5Gb3J3YXJkUmVmdXNlZBIKCgJpZBgBIAEoBBIOCgZjbGllbnQYAiABKAkSLgoGcmVhc29uGAMgASgLMh4ubGF0dGljZS52MS5MYXR0aWNlRXJyb3JEZXRhaWwi2gEKD0ZvcndhcmRSZXNwb25zZRItCgdzdGFydGVkGAEgASgLMhoubGF0dGljZS52MS5Gb3J3YXJkU3RhcnRlZEgAEi8KBm9wZW5lZBgCIAEoCzIdLmxhdHRpY2UudjEuRm9yd2FyZENvbm5lY3Rpb25IABIvCgZjbG9zZWQYAyABKAsyHS5sYXR0aWNlLnYxLkZvcndhcmRDb25uZWN0aW9uSAASLQoHcmVmdXNlZBgEIAEoCzIaLmxhdHRpY2UudjEuRm9yd2FyZFJlZnVzZWRIAEIHCgVldmVudDJWCg5Gb3J3YXJkU2VydmljZRJECgdGb3J3YXJkEhoubGF0dGljZS52MS5Gb3J3YXJkUmVxdWVzdBobLmxhdHRpY2UudjEuRm9yd2FyZFJlc3BvbnNlMAFCpgEKDmNvbS5sYXR0aWNlLnYxQgxGb3J3YXJkUHJvdG9QAVo9Z2l0Lmx1bmFybGFicy5kZXYvbGF0dGljZS9sYXR0aWNlL2dlbi9nby9sYXR0aWNlL3YxO2xhdHRpY2V2MaICA0xYWKoCCkxhdHRpY2UuVjHKAgpMYXR0aWNlXFYx4gIWTGF0dGljZVxWMVxHUEJNZXRhZGF0YeoCC0xhdHRpY2U6OlYxYgZwcm90bzM", [file_lattice_v1_common, file_lattice_v1_inspector]);
+  fileDesc("ChhsYXR0aWNlL3YxL2ZvcndhcmQucHJvdG8SCmxhdHRpY2UudjEiHgoMUHJveHlSZXF1ZXN0Eg4KBmxpc3RlbhgBIAEoCSImCgxQcm94eVN0YXJ0ZWQSFgoObGlzdGVuX2FkZHJlc3MYASABKAki1gEKDVByb3h5UmVzcG9uc2USKwoHc3RhcnRlZBgBIAEoCzIYLmxhdHRpY2UudjEuUHJveHlTdGFydGVkSAASLwoGb3BlbmVkGAIgASgLMh0ubGF0dGljZS52MS5Gb3J3YXJkQ29ubmVjdGlvbkgAEi8KBmNsb3NlZBgDIAEoCzIdLmxhdHRpY2UudjEuRm9yd2FyZENvbm5lY3Rpb25IABItCgdyZWZ1c2VkGAQgASgLMhoubGF0dGljZS52MS5Gb3J3YXJkUmVmdXNlZEgAQgcKBWV2ZW50IkYKDkZvcndhcmRSZXF1ZXN0EhMKC2Rlc3RpbmF0aW9uGAEgASgJEg4KBmxpc3RlbhgCIAEoCRIPCgduZXR3b3JrGAMgASgJIoEBCgxGb3J3YXJkUm91dGUSOAoIZGVjaXNpb24YASABKAsyJi5sYXR0aWNlLnYxLkluc3BlY3REZXN0aW5hdGlvblJlc3BvbnNlEicKB25ldHdvcmsYAiABKAsyFi5sYXR0aWNlLnYxLk5ldHdvcmtSZWYSDgoGdGFyZ2V0GAMgASgJIlEKDkZvcndhcmRTdGFydGVkEhYKDmxpc3Rlbl9hZGRyZXNzGAEgASgJEicKBXJvdXRlGAIgASgLMhgubGF0dGljZS52MS5Gb3J3YXJkUm91dGUimQEKEUZvcndhcmRDb25uZWN0aW9uEgoKAmlkGAEgASgEEg4KBmNsaWVudBgCIAEoCRInCgVyb3V0ZRgDIAEoCzIYLmxhdHRpY2UudjEuRm9yd2FyZFJvdXRlEhIKCmJ5dGVzX3NlbnQYBCABKAQSFgoOYnl0ZXNfcmVjZWl2ZWQYBSABKAQSEwoLZGVzdGluYXRpb24YBiABKAkicQoORm9yd2FyZFJlZnVzZWQSCgoCaWQYASABKAQSDgoGY2xpZW50GAIgASgJEi4KBnJlYXNvbhgDIAEoCzIeLmxhdHRpY2UudjEuTGF0dGljZUVycm9yRGV0YWlsEhMKC2Rlc3RpbmF0aW9uGAQgASgJItoBCg9Gb3J3YXJkUmVzcG9uc2USLQoHc3RhcnRlZBgBIAEoCzIaLmxhdHRpY2UudjEuRm9yd2FyZFN0YXJ0ZWRIABIvCgZvcGVuZWQYAiABKAsyHS5sYXR0aWNlLnYxLkZvcndhcmRDb25uZWN0aW9uSAASLwoGY2xvc2VkGAMgASgLMh0ubGF0dGljZS52MS5Gb3J3YXJkQ29ubmVjdGlvbkgAEi0KB3JlZnVzZWQYBCABKAsyGi5sYXR0aWNlLnYxLkZvcndhcmRSZWZ1c2VkSABCBwoFZXZlbnQylgEKDkZvcndhcmRTZXJ2aWNlEkQKB0ZvcndhcmQSGi5sYXR0aWNlLnYxLkZvcndhcmRSZXF1ZXN0GhsubGF0dGljZS52MS5Gb3J3YXJkUmVzcG9uc2UwARI+CgVQcm94eRIYLmxhdHRpY2UudjEuUHJveHlSZXF1ZXN0GhkubGF0dGljZS52MS5Qcm94eVJlc3BvbnNlMAFCpgEKDmNvbS5sYXR0aWNlLnYxQgxGb3J3YXJkUHJvdG9QAVo9Z2l0Lmx1bmFybGFicy5kZXYvbGF0dGljZS9sYXR0aWNlL2dlbi9nby9sYXR0aWNlL3YxO2xhdHRpY2V2MaICA0xYWKoCCkxhdHRpY2UuVjHKAgpMYXR0aWNlXFYx4gIWTGF0dGljZVxWMVxHUEJNZXRhZGF0YeoCC0xhdHRpY2U6OlYxYgZwcm90bzM", [file_lattice_v1_common, file_lattice_v1_inspector]);
+
+/**
+ * @generated from message lattice.v1.ProxyRequest
+ */
+export type ProxyRequest = Message<"lattice.v1.ProxyRequest"> & {
+  /**
+   * @generated from field: string listen = 1;
+   */
+  listen: string;
+};
+
+/**
+ * Describes the message lattice.v1.ProxyRequest.
+ * Use `create(ProxyRequestSchema)` to create a new message.
+ */
+export const ProxyRequestSchema: GenMessage<ProxyRequest> = /*@__PURE__*/
+  messageDesc(file_lattice_v1_forward, 0);
+
+/**
+ * @generated from message lattice.v1.ProxyStarted
+ */
+export type ProxyStarted = Message<"lattice.v1.ProxyStarted"> & {
+  /**
+   * @generated from field: string listen_address = 1;
+   */
+  listenAddress: string;
+};
+
+/**
+ * Describes the message lattice.v1.ProxyStarted.
+ * Use `create(ProxyStartedSchema)` to create a new message.
+ */
+export const ProxyStartedSchema: GenMessage<ProxyStarted> = /*@__PURE__*/
+  messageDesc(file_lattice_v1_forward, 1);
+
+/**
+ * @generated from message lattice.v1.ProxyResponse
+ */
+export type ProxyResponse = Message<"lattice.v1.ProxyResponse"> & {
+  /**
+   * @generated from oneof lattice.v1.ProxyResponse.event
+   */
+  event: {
+    /**
+     * @generated from field: lattice.v1.ProxyStarted started = 1;
+     */
+    value: ProxyStarted;
+    case: "started";
+  } | {
+    /**
+     * @generated from field: lattice.v1.ForwardConnection opened = 2;
+     */
+    value: ForwardConnection;
+    case: "opened";
+  } | {
+    /**
+     * @generated from field: lattice.v1.ForwardConnection closed = 3;
+     */
+    value: ForwardConnection;
+    case: "closed";
+  } | {
+    /**
+     * @generated from field: lattice.v1.ForwardRefused refused = 4;
+     */
+    value: ForwardRefused;
+    case: "refused";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message lattice.v1.ProxyResponse.
+ * Use `create(ProxyResponseSchema)` to create a new message.
+ */
+export const ProxyResponseSchema: GenMessage<ProxyResponse> = /*@__PURE__*/
+  messageDesc(file_lattice_v1_forward, 2);
 
 /**
  * @generated from message lattice.v1.ForwardRequest
@@ -41,7 +116,7 @@ export type ForwardRequest = Message<"lattice.v1.ForwardRequest"> & {
  * Use `create(ForwardRequestSchema)` to create a new message.
  */
 export const ForwardRequestSchema: GenMessage<ForwardRequest> = /*@__PURE__*/
-  messageDesc(file_lattice_v1_forward, 0);
+  messageDesc(file_lattice_v1_forward, 3);
 
 /**
  * @generated from message lattice.v1.ForwardRoute
@@ -68,7 +143,7 @@ export type ForwardRoute = Message<"lattice.v1.ForwardRoute"> & {
  * Use `create(ForwardRouteSchema)` to create a new message.
  */
 export const ForwardRouteSchema: GenMessage<ForwardRoute> = /*@__PURE__*/
-  messageDesc(file_lattice_v1_forward, 1);
+  messageDesc(file_lattice_v1_forward, 4);
 
 /**
  * @generated from message lattice.v1.ForwardStarted
@@ -90,7 +165,7 @@ export type ForwardStarted = Message<"lattice.v1.ForwardStarted"> & {
  * Use `create(ForwardStartedSchema)` to create a new message.
  */
 export const ForwardStartedSchema: GenMessage<ForwardStarted> = /*@__PURE__*/
-  messageDesc(file_lattice_v1_forward, 2);
+  messageDesc(file_lattice_v1_forward, 5);
 
 /**
  * @generated from message lattice.v1.ForwardConnection
@@ -120,6 +195,11 @@ export type ForwardConnection = Message<"lattice.v1.ForwardConnection"> & {
    * @generated from field: uint64 bytes_received = 5;
    */
   bytesReceived: bigint;
+
+  /**
+   * @generated from field: string destination = 6;
+   */
+  destination: string;
 };
 
 /**
@@ -127,7 +207,7 @@ export type ForwardConnection = Message<"lattice.v1.ForwardConnection"> & {
  * Use `create(ForwardConnectionSchema)` to create a new message.
  */
 export const ForwardConnectionSchema: GenMessage<ForwardConnection> = /*@__PURE__*/
-  messageDesc(file_lattice_v1_forward, 3);
+  messageDesc(file_lattice_v1_forward, 6);
 
 /**
  * @generated from message lattice.v1.ForwardRefused
@@ -147,6 +227,11 @@ export type ForwardRefused = Message<"lattice.v1.ForwardRefused"> & {
    * @generated from field: lattice.v1.LatticeErrorDetail reason = 3;
    */
   reason?: LatticeErrorDetail | undefined;
+
+  /**
+   * @generated from field: string destination = 4;
+   */
+  destination: string;
 };
 
 /**
@@ -154,7 +239,7 @@ export type ForwardRefused = Message<"lattice.v1.ForwardRefused"> & {
  * Use `create(ForwardRefusedSchema)` to create a new message.
  */
 export const ForwardRefusedSchema: GenMessage<ForwardRefused> = /*@__PURE__*/
-  messageDesc(file_lattice_v1_forward, 4);
+  messageDesc(file_lattice_v1_forward, 7);
 
 /**
  * @generated from message lattice.v1.ForwardResponse
@@ -195,7 +280,7 @@ export type ForwardResponse = Message<"lattice.v1.ForwardResponse"> & {
  * Use `create(ForwardResponseSchema)` to create a new message.
  */
 export const ForwardResponseSchema: GenMessage<ForwardResponse> = /*@__PURE__*/
-  messageDesc(file_lattice_v1_forward, 5);
+  messageDesc(file_lattice_v1_forward, 8);
 
 /**
  * @generated from service lattice.v1.ForwardService
@@ -208,6 +293,14 @@ export const ForwardService: GenService<{
     methodKind: "server_streaming";
     input: typeof ForwardRequestSchema;
     output: typeof ForwardResponseSchema;
+  },
+  /**
+   * @generated from rpc lattice.v1.ForwardService.Proxy
+   */
+  proxy: {
+    methodKind: "server_streaming";
+    input: typeof ProxyRequestSchema;
+    output: typeof ProxyResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_lattice_v1_forward, 0);

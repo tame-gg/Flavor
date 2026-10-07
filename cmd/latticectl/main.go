@@ -38,6 +38,7 @@ commands:
   explain <destination>                which network an address or name belongs to, and why
   forward [--network N] [--listen ADDR] <destination:port>
                                        listen on loopback and forward through the chosen network
+  socks [--listen ADDR]                local SOCKS5 proxy for Lattice destinations (default 127.0.0.1:1080)
   conflicts                            addresses and names that exist more than once
   workspace list
   workspace create --name NAME [--description TEXT] [network-id...]
@@ -266,6 +267,8 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSO
 		return printConflicts(out, res.Msg)
 	case "forward":
 		return runForward(ctx, c, args, out)
+	case "socks", "proxy":
+		return runSocks(ctx, c, args, out)
 	case "workspace", "workspaces":
 		return runWorkspace(ctx, c, args, asJSON, out)
 	case "preference", "preferences", "prefer":
@@ -602,7 +605,7 @@ func matchText(c *v1.ResolutionCandidate) string {
 	return kind
 }
 
-var longRunning = map[string]bool{"forward": true}
+var longRunning = map[string]bool{"forward": true, "socks": true, "proxy": true}
 
 func splitFlags(args []string) (positional []string, flags []string) {
 	for i := 0; i < len(args); i++ {
@@ -657,6 +660,41 @@ func runForward(ctx context.Context, c *client.Client, args []string, out io.Wri
 		case ev.GetRefused() != nil:
 			o := ev.GetRefused()
 			fmt.Fprintf(out, "refused #%d  %s: %s\n", o.Id, o.Client, o.GetReason().GetSafeMessage())
+		}
+	}
+	if err := stream.Err(); err != nil && ctx.Err() == nil {
+		return err
+	}
+	return nil
+}
+
+func runSocks(ctx context.Context, c *client.Client, args []string, out io.Writer) error {
+	fs := flag.NewFlagSet("socks", flag.ContinueOnError)
+	listen := fs.String("listen", "127.0.0.1:1080", "loopback address to listen on")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	stream, err := c.Forwards.Proxy(ctx, connect.NewRequest(&v1.ProxyRequest{Listen: *listen}))
+	if err != nil {
+		return err
+	}
+	for stream.Receive() {
+		ev := stream.Msg()
+		switch {
+		case ev.GetStarted() != nil:
+			addr := ev.GetStarted().ListenAddress
+			fmt.Fprintf(out, "SOCKS5 proxy on %s (this user only)\n\n", addr)
+			fmt.Fprintf(out, "Only devices and routes on your Lattice networks are reachable; ambiguous addresses are refused.\n")
+			fmt.Fprintf(out, "Let Lattice resolve names: use socks5h / remote DNS, for example\n\n  curl --proxy socks5h://%s http://grafana.home.lattice.internal:3000/\n\nCtrl+C to stop.\n\n", addr)
+		case ev.GetOpened() != nil:
+			o := ev.GetOpened()
+			fmt.Fprintf(out, "opened  #%d  %s -> %s %s\n", o.Id, o.Destination, o.GetRoute().GetNetwork().GetDisplayName(), o.GetRoute().Target)
+		case ev.GetClosed() != nil:
+			o := ev.GetClosed()
+			fmt.Fprintf(out, "closed  #%d  sent %d B, received %d B\n", o.Id, o.BytesSent, o.BytesReceived)
+		case ev.GetRefused() != nil:
+			o := ev.GetRefused()
+			fmt.Fprintf(out, "refused #%d  %s: %s\n", o.Id, o.Destination, o.GetReason().GetSafeMessage())
 		}
 	}
 	if err := stream.Err(); err != nil && ctx.Err() == nil {

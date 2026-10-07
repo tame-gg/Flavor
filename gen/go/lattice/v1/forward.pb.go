@@ -21,6 +21,208 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type ProxyRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Listen        string                 `protobuf:"bytes,1,opt,name=listen,proto3" json:"listen,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ProxyRequest) Reset() {
+	*x = ProxyRequest{}
+	mi := &file_lattice_v1_forward_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProxyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProxyRequest) ProtoMessage() {}
+
+func (x *ProxyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_lattice_v1_forward_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProxyRequest.ProtoReflect.Descriptor instead.
+func (*ProxyRequest) Descriptor() ([]byte, []int) {
+	return file_lattice_v1_forward_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *ProxyRequest) GetListen() string {
+	if x != nil {
+		return x.Listen
+	}
+	return ""
+}
+
+type ProxyStarted struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ListenAddress string                 `protobuf:"bytes,1,opt,name=listen_address,json=listenAddress,proto3" json:"listen_address,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ProxyStarted) Reset() {
+	*x = ProxyStarted{}
+	mi := &file_lattice_v1_forward_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProxyStarted) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProxyStarted) ProtoMessage() {}
+
+func (x *ProxyStarted) ProtoReflect() protoreflect.Message {
+	mi := &file_lattice_v1_forward_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProxyStarted.ProtoReflect.Descriptor instead.
+func (*ProxyStarted) Descriptor() ([]byte, []int) {
+	return file_lattice_v1_forward_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *ProxyStarted) GetListenAddress() string {
+	if x != nil {
+		return x.ListenAddress
+	}
+	return ""
+}
+
+type ProxyResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Event:
+	//
+	//	*ProxyResponse_Started
+	//	*ProxyResponse_Opened
+	//	*ProxyResponse_Closed
+	//	*ProxyResponse_Refused
+	Event         isProxyResponse_Event `protobuf_oneof:"event"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ProxyResponse) Reset() {
+	*x = ProxyResponse{}
+	mi := &file_lattice_v1_forward_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProxyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProxyResponse) ProtoMessage() {}
+
+func (x *ProxyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_lattice_v1_forward_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProxyResponse.ProtoReflect.Descriptor instead.
+func (*ProxyResponse) Descriptor() ([]byte, []int) {
+	return file_lattice_v1_forward_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ProxyResponse) GetEvent() isProxyResponse_Event {
+	if x != nil {
+		return x.Event
+	}
+	return nil
+}
+
+func (x *ProxyResponse) GetStarted() *ProxyStarted {
+	if x != nil {
+		if x, ok := x.Event.(*ProxyResponse_Started); ok {
+			return x.Started
+		}
+	}
+	return nil
+}
+
+func (x *ProxyResponse) GetOpened() *ForwardConnection {
+	if x != nil {
+		if x, ok := x.Event.(*ProxyResponse_Opened); ok {
+			return x.Opened
+		}
+	}
+	return nil
+}
+
+func (x *ProxyResponse) GetClosed() *ForwardConnection {
+	if x != nil {
+		if x, ok := x.Event.(*ProxyResponse_Closed); ok {
+			return x.Closed
+		}
+	}
+	return nil
+}
+
+func (x *ProxyResponse) GetRefused() *ForwardRefused {
+	if x != nil {
+		if x, ok := x.Event.(*ProxyResponse_Refused); ok {
+			return x.Refused
+		}
+	}
+	return nil
+}
+
+type isProxyResponse_Event interface {
+	isProxyResponse_Event()
+}
+
+type ProxyResponse_Started struct {
+	Started *ProxyStarted `protobuf:"bytes,1,opt,name=started,proto3,oneof"`
+}
+
+type ProxyResponse_Opened struct {
+	Opened *ForwardConnection `protobuf:"bytes,2,opt,name=opened,proto3,oneof"`
+}
+
+type ProxyResponse_Closed struct {
+	Closed *ForwardConnection `protobuf:"bytes,3,opt,name=closed,proto3,oneof"`
+}
+
+type ProxyResponse_Refused struct {
+	Refused *ForwardRefused `protobuf:"bytes,4,opt,name=refused,proto3,oneof"`
+}
+
+func (*ProxyResponse_Started) isProxyResponse_Event() {}
+
+func (*ProxyResponse_Opened) isProxyResponse_Event() {}
+
+func (*ProxyResponse_Closed) isProxyResponse_Event() {}
+
+func (*ProxyResponse_Refused) isProxyResponse_Event() {}
+
 type ForwardRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Destination   string                 `protobuf:"bytes,1,opt,name=destination,proto3" json:"destination,omitempty"`
@@ -32,7 +234,7 @@ type ForwardRequest struct {
 
 func (x *ForwardRequest) Reset() {
 	*x = ForwardRequest{}
-	mi := &file_lattice_v1_forward_proto_msgTypes[0]
+	mi := &file_lattice_v1_forward_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -44,7 +246,7 @@ func (x *ForwardRequest) String() string {
 func (*ForwardRequest) ProtoMessage() {}
 
 func (x *ForwardRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_lattice_v1_forward_proto_msgTypes[0]
+	mi := &file_lattice_v1_forward_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -57,7 +259,7 @@ func (x *ForwardRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ForwardRequest.ProtoReflect.Descriptor instead.
 func (*ForwardRequest) Descriptor() ([]byte, []int) {
-	return file_lattice_v1_forward_proto_rawDescGZIP(), []int{0}
+	return file_lattice_v1_forward_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ForwardRequest) GetDestination() string {
@@ -92,7 +294,7 @@ type ForwardRoute struct {
 
 func (x *ForwardRoute) Reset() {
 	*x = ForwardRoute{}
-	mi := &file_lattice_v1_forward_proto_msgTypes[1]
+	mi := &file_lattice_v1_forward_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -104,7 +306,7 @@ func (x *ForwardRoute) String() string {
 func (*ForwardRoute) ProtoMessage() {}
 
 func (x *ForwardRoute) ProtoReflect() protoreflect.Message {
-	mi := &file_lattice_v1_forward_proto_msgTypes[1]
+	mi := &file_lattice_v1_forward_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -117,7 +319,7 @@ func (x *ForwardRoute) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ForwardRoute.ProtoReflect.Descriptor instead.
 func (*ForwardRoute) Descriptor() ([]byte, []int) {
-	return file_lattice_v1_forward_proto_rawDescGZIP(), []int{1}
+	return file_lattice_v1_forward_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ForwardRoute) GetDecision() *InspectDestinationResponse {
@@ -151,7 +353,7 @@ type ForwardStarted struct {
 
 func (x *ForwardStarted) Reset() {
 	*x = ForwardStarted{}
-	mi := &file_lattice_v1_forward_proto_msgTypes[2]
+	mi := &file_lattice_v1_forward_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -163,7 +365,7 @@ func (x *ForwardStarted) String() string {
 func (*ForwardStarted) ProtoMessage() {}
 
 func (x *ForwardStarted) ProtoReflect() protoreflect.Message {
-	mi := &file_lattice_v1_forward_proto_msgTypes[2]
+	mi := &file_lattice_v1_forward_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -176,7 +378,7 @@ func (x *ForwardStarted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ForwardStarted.ProtoReflect.Descriptor instead.
 func (*ForwardStarted) Descriptor() ([]byte, []int) {
-	return file_lattice_v1_forward_proto_rawDescGZIP(), []int{2}
+	return file_lattice_v1_forward_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ForwardStarted) GetListenAddress() string {
@@ -200,13 +402,14 @@ type ForwardConnection struct {
 	Route         *ForwardRoute          `protobuf:"bytes,3,opt,name=route,proto3" json:"route,omitempty"`
 	BytesSent     uint64                 `protobuf:"varint,4,opt,name=bytes_sent,json=bytesSent,proto3" json:"bytes_sent,omitempty"`
 	BytesReceived uint64                 `protobuf:"varint,5,opt,name=bytes_received,json=bytesReceived,proto3" json:"bytes_received,omitempty"`
+	Destination   string                 `protobuf:"bytes,6,opt,name=destination,proto3" json:"destination,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ForwardConnection) Reset() {
 	*x = ForwardConnection{}
-	mi := &file_lattice_v1_forward_proto_msgTypes[3]
+	mi := &file_lattice_v1_forward_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -218,7 +421,7 @@ func (x *ForwardConnection) String() string {
 func (*ForwardConnection) ProtoMessage() {}
 
 func (x *ForwardConnection) ProtoReflect() protoreflect.Message {
-	mi := &file_lattice_v1_forward_proto_msgTypes[3]
+	mi := &file_lattice_v1_forward_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -231,7 +434,7 @@ func (x *ForwardConnection) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ForwardConnection.ProtoReflect.Descriptor instead.
 func (*ForwardConnection) Descriptor() ([]byte, []int) {
-	return file_lattice_v1_forward_proto_rawDescGZIP(), []int{3}
+	return file_lattice_v1_forward_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ForwardConnection) GetId() uint64 {
@@ -269,18 +472,26 @@ func (x *ForwardConnection) GetBytesReceived() uint64 {
 	return 0
 }
 
+func (x *ForwardConnection) GetDestination() string {
+	if x != nil {
+		return x.Destination
+	}
+	return ""
+}
+
 type ForwardRefused struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Client        string                 `protobuf:"bytes,2,opt,name=client,proto3" json:"client,omitempty"`
 	Reason        *LatticeErrorDetail    `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
+	Destination   string                 `protobuf:"bytes,4,opt,name=destination,proto3" json:"destination,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ForwardRefused) Reset() {
 	*x = ForwardRefused{}
-	mi := &file_lattice_v1_forward_proto_msgTypes[4]
+	mi := &file_lattice_v1_forward_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -292,7 +503,7 @@ func (x *ForwardRefused) String() string {
 func (*ForwardRefused) ProtoMessage() {}
 
 func (x *ForwardRefused) ProtoReflect() protoreflect.Message {
-	mi := &file_lattice_v1_forward_proto_msgTypes[4]
+	mi := &file_lattice_v1_forward_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -305,7 +516,7 @@ func (x *ForwardRefused) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ForwardRefused.ProtoReflect.Descriptor instead.
 func (*ForwardRefused) Descriptor() ([]byte, []int) {
-	return file_lattice_v1_forward_proto_rawDescGZIP(), []int{4}
+	return file_lattice_v1_forward_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *ForwardRefused) GetId() uint64 {
@@ -329,6 +540,13 @@ func (x *ForwardRefused) GetReason() *LatticeErrorDetail {
 	return nil
 }
 
+func (x *ForwardRefused) GetDestination() string {
+	if x != nil {
+		return x.Destination
+	}
+	return ""
+}
+
 type ForwardResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Types that are valid to be assigned to Event:
@@ -344,7 +562,7 @@ type ForwardResponse struct {
 
 func (x *ForwardResponse) Reset() {
 	*x = ForwardResponse{}
-	mi := &file_lattice_v1_forward_proto_msgTypes[5]
+	mi := &file_lattice_v1_forward_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -356,7 +574,7 @@ func (x *ForwardResponse) String() string {
 func (*ForwardResponse) ProtoMessage() {}
 
 func (x *ForwardResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_lattice_v1_forward_proto_msgTypes[5]
+	mi := &file_lattice_v1_forward_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -369,7 +587,7 @@ func (x *ForwardResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ForwardResponse.ProtoReflect.Descriptor instead.
 func (*ForwardResponse) Descriptor() ([]byte, []int) {
-	return file_lattice_v1_forward_proto_rawDescGZIP(), []int{5}
+	return file_lattice_v1_forward_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ForwardResponse) GetEvent() isForwardResponse_Event {
@@ -448,7 +666,17 @@ var File_lattice_v1_forward_proto protoreflect.FileDescriptor
 const file_lattice_v1_forward_proto_rawDesc = "" +
 	"\n" +
 	"\x18lattice/v1/forward.proto\x12\n" +
-	"lattice.v1\x1a\x17lattice/v1/common.proto\x1a\x1alattice/v1/inspector.proto\"d\n" +
+	"lattice.v1\x1a\x17lattice/v1/common.proto\x1a\x1alattice/v1/inspector.proto\"&\n" +
+	"\fProxyRequest\x12\x16\n" +
+	"\x06listen\x18\x01 \x01(\tR\x06listen\"5\n" +
+	"\fProxyStarted\x12%\n" +
+	"\x0elisten_address\x18\x01 \x01(\tR\rlistenAddress\"\xf8\x01\n" +
+	"\rProxyResponse\x124\n" +
+	"\astarted\x18\x01 \x01(\v2\x18.lattice.v1.ProxyStartedH\x00R\astarted\x127\n" +
+	"\x06opened\x18\x02 \x01(\v2\x1d.lattice.v1.ForwardConnectionH\x00R\x06opened\x127\n" +
+	"\x06closed\x18\x03 \x01(\v2\x1d.lattice.v1.ForwardConnectionH\x00R\x06closed\x126\n" +
+	"\arefused\x18\x04 \x01(\v2\x1a.lattice.v1.ForwardRefusedH\x00R\arefusedB\a\n" +
+	"\x05event\"d\n" +
 	"\x0eForwardRequest\x12 \n" +
 	"\vdestination\x18\x01 \x01(\tR\vdestination\x12\x16\n" +
 	"\x06listen\x18\x02 \x01(\tR\x06listen\x12\x18\n" +
@@ -459,26 +687,29 @@ const file_lattice_v1_forward_proto_rawDesc = "" +
 	"\x06target\x18\x03 \x01(\tR\x06target\"g\n" +
 	"\x0eForwardStarted\x12%\n" +
 	"\x0elisten_address\x18\x01 \x01(\tR\rlistenAddress\x12.\n" +
-	"\x05route\x18\x02 \x01(\v2\x18.lattice.v1.ForwardRouteR\x05route\"\xb1\x01\n" +
+	"\x05route\x18\x02 \x01(\v2\x18.lattice.v1.ForwardRouteR\x05route\"\xd3\x01\n" +
 	"\x11ForwardConnection\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x16\n" +
 	"\x06client\x18\x02 \x01(\tR\x06client\x12.\n" +
 	"\x05route\x18\x03 \x01(\v2\x18.lattice.v1.ForwardRouteR\x05route\x12\x1d\n" +
 	"\n" +
 	"bytes_sent\x18\x04 \x01(\x04R\tbytesSent\x12%\n" +
-	"\x0ebytes_received\x18\x05 \x01(\x04R\rbytesReceived\"p\n" +
+	"\x0ebytes_received\x18\x05 \x01(\x04R\rbytesReceived\x12 \n" +
+	"\vdestination\x18\x06 \x01(\tR\vdestination\"\x92\x01\n" +
 	"\x0eForwardRefused\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x16\n" +
 	"\x06client\x18\x02 \x01(\tR\x06client\x126\n" +
-	"\x06reason\x18\x03 \x01(\v2\x1e.lattice.v1.LatticeErrorDetailR\x06reason\"\xfc\x01\n" +
+	"\x06reason\x18\x03 \x01(\v2\x1e.lattice.v1.LatticeErrorDetailR\x06reason\x12 \n" +
+	"\vdestination\x18\x04 \x01(\tR\vdestination\"\xfc\x01\n" +
 	"\x0fForwardResponse\x126\n" +
 	"\astarted\x18\x01 \x01(\v2\x1a.lattice.v1.ForwardStartedH\x00R\astarted\x127\n" +
 	"\x06opened\x18\x02 \x01(\v2\x1d.lattice.v1.ForwardConnectionH\x00R\x06opened\x127\n" +
 	"\x06closed\x18\x03 \x01(\v2\x1d.lattice.v1.ForwardConnectionH\x00R\x06closed\x126\n" +
 	"\arefused\x18\x04 \x01(\v2\x1a.lattice.v1.ForwardRefusedH\x00R\arefusedB\a\n" +
-	"\x05event2V\n" +
+	"\x05event2\x96\x01\n" +
 	"\x0eForwardService\x12D\n" +
-	"\aForward\x12\x1a.lattice.v1.ForwardRequest\x1a\x1b.lattice.v1.ForwardResponse0\x01B\xa6\x01\n" +
+	"\aForward\x12\x1a.lattice.v1.ForwardRequest\x1a\x1b.lattice.v1.ForwardResponse0\x01\x12>\n" +
+	"\x05Proxy\x12\x18.lattice.v1.ProxyRequest\x1a\x19.lattice.v1.ProxyResponse0\x01B\xa6\x01\n" +
 	"\x0ecom.lattice.v1B\fForwardProtoP\x01Z=git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1;latticev1\xa2\x02\x03LXX\xaa\x02\n" +
 	"Lattice.V1\xca\x02\n" +
 	"Lattice\\V1\xe2\x02\x16Lattice\\V1\\GPBMetadata\xea\x02\vLattice::V1b\x06proto3"
@@ -495,35 +726,44 @@ func file_lattice_v1_forward_proto_rawDescGZIP() []byte {
 	return file_lattice_v1_forward_proto_rawDescData
 }
 
-var file_lattice_v1_forward_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_lattice_v1_forward_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_lattice_v1_forward_proto_goTypes = []any{
-	(*ForwardRequest)(nil),             // 0: lattice.v1.ForwardRequest
-	(*ForwardRoute)(nil),               // 1: lattice.v1.ForwardRoute
-	(*ForwardStarted)(nil),             // 2: lattice.v1.ForwardStarted
-	(*ForwardConnection)(nil),          // 3: lattice.v1.ForwardConnection
-	(*ForwardRefused)(nil),             // 4: lattice.v1.ForwardRefused
-	(*ForwardResponse)(nil),            // 5: lattice.v1.ForwardResponse
-	(*InspectDestinationResponse)(nil), // 6: lattice.v1.InspectDestinationResponse
-	(*NetworkRef)(nil),                 // 7: lattice.v1.NetworkRef
-	(*LatticeErrorDetail)(nil),         // 8: lattice.v1.LatticeErrorDetail
+	(*ProxyRequest)(nil),               // 0: lattice.v1.ProxyRequest
+	(*ProxyStarted)(nil),               // 1: lattice.v1.ProxyStarted
+	(*ProxyResponse)(nil),              // 2: lattice.v1.ProxyResponse
+	(*ForwardRequest)(nil),             // 3: lattice.v1.ForwardRequest
+	(*ForwardRoute)(nil),               // 4: lattice.v1.ForwardRoute
+	(*ForwardStarted)(nil),             // 5: lattice.v1.ForwardStarted
+	(*ForwardConnection)(nil),          // 6: lattice.v1.ForwardConnection
+	(*ForwardRefused)(nil),             // 7: lattice.v1.ForwardRefused
+	(*ForwardResponse)(nil),            // 8: lattice.v1.ForwardResponse
+	(*InspectDestinationResponse)(nil), // 9: lattice.v1.InspectDestinationResponse
+	(*NetworkRef)(nil),                 // 10: lattice.v1.NetworkRef
+	(*LatticeErrorDetail)(nil),         // 11: lattice.v1.LatticeErrorDetail
 }
 var file_lattice_v1_forward_proto_depIdxs = []int32{
-	6,  // 0: lattice.v1.ForwardRoute.decision:type_name -> lattice.v1.InspectDestinationResponse
-	7,  // 1: lattice.v1.ForwardRoute.network:type_name -> lattice.v1.NetworkRef
-	1,  // 2: lattice.v1.ForwardStarted.route:type_name -> lattice.v1.ForwardRoute
-	1,  // 3: lattice.v1.ForwardConnection.route:type_name -> lattice.v1.ForwardRoute
-	8,  // 4: lattice.v1.ForwardRefused.reason:type_name -> lattice.v1.LatticeErrorDetail
-	2,  // 5: lattice.v1.ForwardResponse.started:type_name -> lattice.v1.ForwardStarted
-	3,  // 6: lattice.v1.ForwardResponse.opened:type_name -> lattice.v1.ForwardConnection
-	3,  // 7: lattice.v1.ForwardResponse.closed:type_name -> lattice.v1.ForwardConnection
-	4,  // 8: lattice.v1.ForwardResponse.refused:type_name -> lattice.v1.ForwardRefused
-	0,  // 9: lattice.v1.ForwardService.Forward:input_type -> lattice.v1.ForwardRequest
-	5,  // 10: lattice.v1.ForwardService.Forward:output_type -> lattice.v1.ForwardResponse
-	10, // [10:11] is the sub-list for method output_type
-	9,  // [9:10] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	1,  // 0: lattice.v1.ProxyResponse.started:type_name -> lattice.v1.ProxyStarted
+	6,  // 1: lattice.v1.ProxyResponse.opened:type_name -> lattice.v1.ForwardConnection
+	6,  // 2: lattice.v1.ProxyResponse.closed:type_name -> lattice.v1.ForwardConnection
+	7,  // 3: lattice.v1.ProxyResponse.refused:type_name -> lattice.v1.ForwardRefused
+	9,  // 4: lattice.v1.ForwardRoute.decision:type_name -> lattice.v1.InspectDestinationResponse
+	10, // 5: lattice.v1.ForwardRoute.network:type_name -> lattice.v1.NetworkRef
+	4,  // 6: lattice.v1.ForwardStarted.route:type_name -> lattice.v1.ForwardRoute
+	4,  // 7: lattice.v1.ForwardConnection.route:type_name -> lattice.v1.ForwardRoute
+	11, // 8: lattice.v1.ForwardRefused.reason:type_name -> lattice.v1.LatticeErrorDetail
+	5,  // 9: lattice.v1.ForwardResponse.started:type_name -> lattice.v1.ForwardStarted
+	6,  // 10: lattice.v1.ForwardResponse.opened:type_name -> lattice.v1.ForwardConnection
+	6,  // 11: lattice.v1.ForwardResponse.closed:type_name -> lattice.v1.ForwardConnection
+	7,  // 12: lattice.v1.ForwardResponse.refused:type_name -> lattice.v1.ForwardRefused
+	3,  // 13: lattice.v1.ForwardService.Forward:input_type -> lattice.v1.ForwardRequest
+	0,  // 14: lattice.v1.ForwardService.Proxy:input_type -> lattice.v1.ProxyRequest
+	8,  // 15: lattice.v1.ForwardService.Forward:output_type -> lattice.v1.ForwardResponse
+	2,  // 16: lattice.v1.ForwardService.Proxy:output_type -> lattice.v1.ProxyResponse
+	15, // [15:17] is the sub-list for method output_type
+	13, // [13:15] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_lattice_v1_forward_proto_init() }
@@ -533,7 +773,13 @@ func file_lattice_v1_forward_proto_init() {
 	}
 	file_lattice_v1_common_proto_init()
 	file_lattice_v1_inspector_proto_init()
-	file_lattice_v1_forward_proto_msgTypes[5].OneofWrappers = []any{
+	file_lattice_v1_forward_proto_msgTypes[2].OneofWrappers = []any{
+		(*ProxyResponse_Started)(nil),
+		(*ProxyResponse_Opened)(nil),
+		(*ProxyResponse_Closed)(nil),
+		(*ProxyResponse_Refused)(nil),
+	}
+	file_lattice_v1_forward_proto_msgTypes[8].OneofWrappers = []any{
 		(*ForwardResponse_Started)(nil),
 		(*ForwardResponse_Opened)(nil),
 		(*ForwardResponse_Closed)(nil),
@@ -545,7 +791,7 @@ func file_lattice_v1_forward_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_lattice_v1_forward_proto_rawDesc), len(file_lattice_v1_forward_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -35,11 +35,14 @@ const (
 const (
 	// ForwardServiceForwardProcedure is the fully-qualified name of the ForwardService's Forward RPC.
 	ForwardServiceForwardProcedure = "/lattice.v1.ForwardService/Forward"
+	// ForwardServiceProxyProcedure is the fully-qualified name of the ForwardService's Proxy RPC.
+	ForwardServiceProxyProcedure = "/lattice.v1.ForwardService/Proxy"
 )
 
 // ForwardServiceClient is a client for the lattice.v1.ForwardService service.
 type ForwardServiceClient interface {
 	Forward(context.Context, *connect.Request[v1.ForwardRequest]) (*connect.ServerStreamForClient[v1.ForwardResponse], error)
+	Proxy(context.Context, *connect.Request[v1.ProxyRequest]) (*connect.ServerStreamForClient[v1.ProxyResponse], error)
 }
 
 // NewForwardServiceClient constructs a client for the lattice.v1.ForwardService service. By
@@ -59,12 +62,19 @@ func NewForwardServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(forwardServiceMethods.ByName("Forward")),
 			connect.WithClientOptions(opts...),
 		),
+		proxy: connect.NewClient[v1.ProxyRequest, v1.ProxyResponse](
+			httpClient,
+			baseURL+ForwardServiceProxyProcedure,
+			connect.WithSchema(forwardServiceMethods.ByName("Proxy")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // forwardServiceClient implements ForwardServiceClient.
 type forwardServiceClient struct {
 	forward *connect.Client[v1.ForwardRequest, v1.ForwardResponse]
+	proxy   *connect.Client[v1.ProxyRequest, v1.ProxyResponse]
 }
 
 // Forward calls lattice.v1.ForwardService.Forward.
@@ -72,9 +82,15 @@ func (c *forwardServiceClient) Forward(ctx context.Context, req *connect.Request
 	return c.forward.CallServerStream(ctx, req)
 }
 
+// Proxy calls lattice.v1.ForwardService.Proxy.
+func (c *forwardServiceClient) Proxy(ctx context.Context, req *connect.Request[v1.ProxyRequest]) (*connect.ServerStreamForClient[v1.ProxyResponse], error) {
+	return c.proxy.CallServerStream(ctx, req)
+}
+
 // ForwardServiceHandler is an implementation of the lattice.v1.ForwardService service.
 type ForwardServiceHandler interface {
 	Forward(context.Context, *connect.Request[v1.ForwardRequest], *connect.ServerStream[v1.ForwardResponse]) error
+	Proxy(context.Context, *connect.Request[v1.ProxyRequest], *connect.ServerStream[v1.ProxyResponse]) error
 }
 
 // NewForwardServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -90,10 +106,18 @@ func NewForwardServiceHandler(svc ForwardServiceHandler, opts ...connect.Handler
 		connect.WithSchema(forwardServiceMethods.ByName("Forward")),
 		connect.WithHandlerOptions(opts...),
 	)
+	forwardServiceProxyHandler := connect.NewServerStreamHandler(
+		ForwardServiceProxyProcedure,
+		svc.Proxy,
+		connect.WithSchema(forwardServiceMethods.ByName("Proxy")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/lattice.v1.ForwardService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ForwardServiceForwardProcedure:
 			forwardServiceForwardHandler.ServeHTTP(w, r)
+		case ForwardServiceProxyProcedure:
+			forwardServiceProxyHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -105,4 +129,8 @@ type UnimplementedForwardServiceHandler struct{}
 
 func (UnimplementedForwardServiceHandler) Forward(context.Context, *connect.Request[v1.ForwardRequest], *connect.ServerStream[v1.ForwardResponse]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("lattice.v1.ForwardService.Forward is not implemented"))
+}
+
+func (UnimplementedForwardServiceHandler) Proxy(context.Context, *connect.Request[v1.ProxyRequest], *connect.ServerStream[v1.ProxyResponse]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("lattice.v1.ForwardService.Proxy is not implemented"))
 }

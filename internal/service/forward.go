@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"net/netip"
+	"os"
 	"sync"
 	"sync/atomic"
 )
@@ -27,6 +28,7 @@ type ForwardEvent struct {
 	Kind          ForwardEventKind
 	Listen        netip.AddrPort
 	Route         Route
+	Destination   string
 	ConnID        uint64
 	Client        string
 	BytesSent     uint64
@@ -71,10 +73,24 @@ func (s *Service) Forward(ctx context.Context, req ForwardRequest, emit func(For
 		return err
 	}
 	if !s.forwardSlot.TryAcquire() {
-		return fail(CodeBusy, "too many active forwards", true)
+		return fail(CodeBusy, "too many active forwards and proxies", true)
 	}
 	defer s.forwardSlot.Release()
+	return s.serveLoopback(ctx, listen,
+		func(bound netip.AddrPort) { emit(ForwardEvent{Kind: ForwardStarted, Listen: bound, Route: route}) },
+		func(ctx context.Context, c net.Conn, id uint64) { s.serveForward(ctx, req, c, id, emit) },
+		func(id uint64, client string, err error) {
+			emit(ForwardEvent{Kind: ForwardRefused, ConnID: id, Client: client, Err: err})
+		})
+}
 
+func (s *Service) serveLoopback(
+	ctx context.Context,
+	listen netip.AddrPort,
+	started func(netip.AddrPort),
+	handle func(context.Context, net.Conn, uint64),
+	refuse func(id uint64, client string, err error),
+) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	stop := s.trackForward(cancel)
@@ -86,7 +102,7 @@ func (s *Service) Forward(ctx context.Context, req ForwardRequest, emit func(For
 		return fail(CodeInvalidArgument, "could not listen on "+listen.String(), false)
 	}
 	bound, _ := netip.ParseAddrPort(l.Addr().String())
-	emit(ForwardEvent{Kind: ForwardStarted, Listen: bound, Route: route})
+	started(bound)
 
 	var wg sync.WaitGroup
 	var ids atomic.Uint64
@@ -96,25 +112,31 @@ func (s *Service) Forward(ctx context.Context, req ForwardRequest, emit func(For
 		_ = l.Close()
 		conns.closeAll()
 	}()
+	self := os.Getuid()
 	for {
 		c, err := l.Accept()
 		if err != nil {
 			break
 		}
 		id := ids.Add(1)
+		client := c.RemoteAddr().String()
+		if uid, ok := loopbackOwner(c); !ok || uid != self {
+			_ = c.Close()
+			refuse(id, client, fail(CodeInvalidArgument, "connection from another local user refused", false))
+			continue
+		}
 		if !conns.add(c) {
 			_ = c.Close()
-			if ctx.Err() != nil {
-				continue
+			if ctx.Err() == nil {
+				refuse(id, client, fail(CodeBusy, "too many concurrent connections", true))
 			}
-			emit(ForwardEvent{Kind: ForwardRefused, ConnID: id, Client: c.RemoteAddr().String(), Err: fail(CodeBusy, "too many connections on this forward", true)})
 			continue
 		}
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			defer conns.remove(c)
-			s.serveForward(ctx, req, c, id, emit)
+			handle(ctx, c, id)
 		}()
 	}
 	cancel()

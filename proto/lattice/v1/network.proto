@@ -1,0 +1,115 @@
+syntax = "proto3";
+
+package lattice.v1;
+
+import "google/protobuf/timestamp.proto";
+import "lattice/v1/common.proto";
+
+service NetworkService {
+  rpc ListNetworks(ListNetworksRequest) returns (ListNetworksResponse);
+  rpc GetNetwork(GetNetworkRequest) returns (GetNetworkResponse);
+  rpc AddNetwork(AddNetworkRequest) returns (AddNetworkResponse);
+  rpc UpdateNetwork(UpdateNetworkRequest) returns (UpdateNetworkResponse);
+  rpc RemoveNetwork(RemoveNetworkRequest) returns (RemoveNetworkResponse);
+  rpc DeleteNetworkIdentity(DeleteNetworkIdentityRequest) returns (DeleteNetworkIdentityResponse);
+  rpc ConnectNetwork(ConnectNetworkRequest) returns (ConnectNetworkResponse);
+  rpc DisconnectNetwork(DisconnectNetworkRequest) returns (DisconnectNetworkResponse);
+  rpc EnrollNetwork(EnrollNetworkRequest) returns (EnrollNetworkResponse);
+}
+
+message Network {
+  string id = 1;
+  string display_name = 2;
+  ProviderType provider = 3;
+  string control_url = 4;
+  bool auto_connect = 5;
+  string node_hostname = 6;
+  NetworkConnectionState state = 7;
+  AuthenticationPrompt authentication = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+message AuthenticationPrompt {
+  string flow_id = 1;
+  string kind = 2;
+  string auth_url = 3;
+  ProviderType provider = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+message EnrollmentCredential {
+  oneof credential {
+    string pre_auth_key = 1;
+  }
+}
+
+message ListNetworksRequest {}
+
+message ListNetworksResponse {
+  string daemon_instance_id = 1;
+  uint64 snapshot_sequence = 2;
+  repeated Network networks = 3;
+}
+
+message GetNetworkRequest {
+  string network_id = 1;
+}
+
+message GetNetworkResponse {
+  string daemon_instance_id = 1;
+  uint64 snapshot_sequence = 2;
+  Network network = 3;
+}
+
+message AddNetworkRequest {
+  string display_name = 1;
+  ProviderType provider = 2;
+  string control_url = 3;
+  bool auto_connect = 4;
+}
+
+message AddNetworkResponse {
+  Network network = 1;
+}
+
+message UpdateNetworkRequest {
+  string network_id = 1;
+  optional string display_name = 2;
+  optional bool auto_connect = 3;
+}
+
+message UpdateNetworkResponse {
+  Network network = 1;
+}
+
+message RemoveNetworkRequest {
+  string network_id = 1;
+}
+
+message RemoveNetworkResponse {}
+
+message DeleteNetworkIdentityRequest {
+  string network_id = 1;
+}
+
+message DeleteNetworkIdentityResponse {}
+
+message ConnectNetworkRequest {
+  string network_id = 1;
+}
+
+message ConnectNetworkResponse {}
+
+message DisconnectNetworkRequest {
+  string network_id = 1;
+}
+
+message DisconnectNetworkResponse {}
+
+message EnrollNetworkRequest {
+  string network_id = 1;
+  EnrollmentCredential enrollment = 2;
+}
+
+message EnrollNetworkResponse {}

@@ -1,0 +1,12 @@
+.agent/
+target/
+node_modules/
+dist/
+desktop/dist/
+desktop/src-tauri/target/
+*.db
+*.db-wal
+*.db-shm
+.DS_Store
+.env
+.env.*

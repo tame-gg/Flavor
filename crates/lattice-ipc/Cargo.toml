@@ -1,0 +1,8 @@
+[package]
+name = "lattice-ipc"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+lattice-proto = { path = "../lattice-proto" }

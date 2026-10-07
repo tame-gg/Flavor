@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package lattice.v1;
+
+import "google/protobuf/timestamp.proto";
+import "lattice/v1/common.proto";
+import "lattice/v1/network.proto";
+import "lattice/v1/device.proto";
+
+service DaemonService {
+  rpc GetDaemonInfo(GetDaemonInfoRequest) returns (GetDaemonInfoResponse);
+  rpc GetStateSnapshot(GetStateSnapshotRequest) returns (GetStateSnapshotResponse);
+}
+
+message GetDaemonInfoRequest {}
+
+message GetDaemonInfoResponse {
+  string daemon_version = 1;
+  uint32 protocol_major = 2;
+  uint32 protocol_minor = 3;
+  string daemon_instance_id = 4;
+  string build_commit = 5;
+  repeated Capability capabilities = 6;
+}
+
+message GetStateSnapshotRequest {}
+
+message GetStateSnapshotResponse {
+  string daemon_instance_id = 1;
+  uint64 snapshot_sequence = 2;
+  GetDaemonInfoResponse daemon = 3;
+  repeated Network networks = 4;
+  repeated Device devices = 5;
+  google.protobuf.Timestamp captured_at = 6;
+}

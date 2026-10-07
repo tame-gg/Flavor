@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package lattice.v1;
+
+import "google/protobuf/timestamp.proto";
+import "lattice/v1/common.proto";
+import "lattice/v1/device.proto";
+import "lattice/v1/network.proto";
+
+service EventService {
+  rpc WatchEvents(WatchEventsRequest) returns (stream DaemonEvent);
+}
+
+message WatchEventsRequest {
+  string daemon_instance_id = 1;
+  uint64 after_sequence = 2;
+}
+
+message DaemonEvent {
+  string daemon_instance_id = 1;
+  uint64 sequence_id = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  oneof payload {
+    NetworkAdded network_added = 10;
+    NetworkUpdated network_updated = 11;
+    NetworkRemoved network_removed = 12;
+    NetworkStateChanged network_state_changed = 13;
+    AuthenticationRequired authentication_required = 14;
+    AuthenticationCompleted authentication_completed = 15;
+    ApprovalRequired approval_required = 16;
+    PeerAdded peer_added = 17;
+    PeerUpdated peer_updated = 18;
+    PeerRemoved peer_removed = 19;
+    DaemonWarning daemon_warning = 20;
+  }
+}
+
+message NetworkAdded {
+  Network network = 1;
+}
+
+message NetworkUpdated {
+  Network network = 1;
+}
+
+message NetworkRemoved {
+  string network_id = 1;
+}
+
+message NetworkStateChanged {
+  string network_id = 1;
+  NetworkConnectionState state = 2;
+  string safe_message = 3;
+}
+
+message AuthenticationRequired {
+  string network_id = 1;
+  ProviderType provider = 2;
+  string auth_url = 3;
+  string flow_id = 4;
+}
+
+message AuthenticationCompleted {
+  string network_id = 1;
+}
+
+message ApprovalRequired {
+  string network_id = 1;
+  ProviderType provider = 2;
+  string safe_message = 3;
+}
+
+message PeerAdded {
+  Device device = 1;
+}
+
+message PeerUpdated {
+  Device device = 1;
+}
+
+message PeerRemoved {
+  DeviceIdentity id = 1;
+}
+
+message DaemonWarning {
+  string code = 1;
+  string safe_message = 2;
+}

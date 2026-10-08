@@ -4,5 +4,5 @@ contact_links:
     url: https://github.com/tame-gg/Flavor/security/advisories/new
     about: Please report security problems privately, not in a public issue.
   - name: Documentation
-    url: https://github.com/tame-gg/Flavor/tree/main/doc
+    url: https://github.com/tame-gg/Flavor/wiki
     about: Installation, getting started, troubleshooting and the flavorctl reference.

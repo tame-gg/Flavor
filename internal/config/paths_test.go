@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/config"
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/config"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
 )
 
 func TestResolveXDGDefaults(t *testing.T) {
@@ -24,19 +24,19 @@ func TestResolveXDGDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if p.Data != filepath.Join(home, ".local", "share", "lattice") {
+	if p.Data != filepath.Join(home, ".local", "share", "flavor") {
 		t.Fatalf("data=%s", p.Data)
 	}
-	if p.Config != filepath.Join(home, ".config", "lattice") {
+	if p.Config != filepath.Join(home, ".config", "flavor") {
 		t.Fatalf("config=%s", p.Config)
 	}
-	if p.Runtime != filepath.Join(runtime, "lattice") {
+	if p.Runtime != filepath.Join(runtime, "flavor") {
 		t.Fatalf("runtime=%s", p.Runtime)
 	}
-	if p.Database != filepath.Join(p.Data, "database", "lattice.db") {
+	if p.Database != filepath.Join(p.Data, "database", "flavor.db") {
 		t.Fatalf("db=%s", p.Database)
 	}
-	if p.Socket != filepath.Join(p.Runtime, "latticed.sock") {
+	if p.Socket != filepath.Join(p.Runtime, "flavord.sock") {
 		t.Fatalf("sock=%s", p.Socket)
 	}
 }
@@ -55,7 +55,7 @@ func TestRuntimeDirOverride(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if p.Runtime != filepath.Join(override, "lattice") {
+	if p.Runtime != filepath.Join(override, "flavor") {
 		t.Fatalf("runtime=%s", p.Runtime)
 	}
 }
@@ -137,7 +137,7 @@ func TestNetworkDirStableAcrossRename(t *testing.T) {
 	}
 }
 
-func TestEnsureLatticeDirsPermissions(t *testing.T) {
+func TestEnsureFlavorDirsPermissions(t *testing.T) {
 	home := t.TempDir()
 	runtime := filepath.Join(t.TempDir(), "run")
 	if err := os.MkdirAll(runtime, 0o700); err != nil {
@@ -147,7 +147,7 @@ func TestEnsureLatticeDirsPermissions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := p.EnsureLatticeDirs(); err != nil {
+	if err := p.EnsureFlavorDirs(); err != nil {
 		t.Fatal(err)
 	}
 	for _, dir := range []string{p.Data, p.Config, p.Runtime, p.NetworksRoot, filepath.Dir(p.Database)} {

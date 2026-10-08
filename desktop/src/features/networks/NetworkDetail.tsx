@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { NetworkConnectionState as S, ProviderType } from "@gen/lattice/v1/common_pb";
-import type { Network } from "@gen/lattice/v1/network_pb";
+import { NetworkConnectionState as S, ProviderType } from "@gen/flavor/v1/common_pb";
+import type { Network } from "@gen/flavor/v1/network_pb";
 import { Banner } from "../../components/ui/Banner";
 import { Button } from "../../components/ui/Button";
 import { Field } from "../../components/ui/Field";
@@ -15,7 +15,7 @@ const active = new Set([S.CONNECTING, S.AUTHENTICATING, S.AWAITING_APPROVAL, S.C
 
 const progress: Partial<Record<S, string>> = {
   [S.CONNECTING]: "Starting the network session and contacting the control server.",
-  [S.RECONNECTING]: "Connection to the control server was lost. Lattice is reconnecting.",
+  [S.RECONNECTING]: "Connection to the control server was lost. Flavor is reconnecting.",
   [S.DEGRADED]: "Connected, but the control server reports a problem with this device.",
   [S.ERROR]: "The network session stopped because of an error. Connect to try again.",
 };
@@ -45,7 +45,7 @@ export function NetworkDetail({ network: n, deviceCount, notice, onShowDevices, 
           variant={isActive ? "secondary" : "primary"}
           loading={toggle.pending}
           disabled={!canMutate || n.state === S.REMOVING}
-          title={canMutate ? undefined : "Waiting for the Lattice daemon"}
+          title={canMutate ? undefined : "Waiting for the Flavor daemon"}
           onClick={() => void toggle.run()}
         >
           {isActive ? "Disconnect" : "Connect"}
@@ -55,7 +55,7 @@ export function NetworkDetail({ network: n, deviceCount, notice, onShowDevices, 
         </Button>
       </div>
 
-      {status === "unavailable" && <Banner tone="warn">Showing last known state. The Lattice daemon is not reachable.</Banner>}
+      {status === "unavailable" && <Banner tone="warn">Showing last known state. The Flavor daemon is not reachable.</Banner>}
       {notice && <Banner tone="warn">{notice}</Banner>}
       {toggle.error && <Banner tone="danger">{toggle.error}</Banner>}
       {progress[n.state] && <p className="muted">{progress[n.state]}</p>}
@@ -65,7 +65,7 @@ export function NetworkDetail({ network: n, deviceCount, notice, onShowDevices, 
         <div className="card stack-sm">
           <h3>Waiting for approval</h3>
           <p className="muted">
-            An administrator must approve this device in the {providerName(n.provider)} admin console. Lattice connects
+            An administrator must approve this device in the {providerName(n.provider)} admin console. Flavor connects
             automatically once it is approved.
           </p>
         </div>
@@ -117,7 +117,7 @@ function SignInPanel({ network, flowId, url }: { network: Network; flowId: strin
       {destination ? (
         <>
           <p className="muted">
-            Opens your browser at <strong className="mono">{destination}</strong>. Finish signing in there and Lattice
+            Opens your browser at <strong className="mono">{destination}</strong>. Finish signing in there and Flavor
             continues automatically.
           </p>
           <div className="row">
@@ -127,7 +127,7 @@ function SignInPanel({ network, flowId, url }: { network: Network; flowId: strin
           </div>
         </>
       ) : (
-        <p className="error-text">The control server sent a sign-in link that is not a web address, so Lattice will not open it.</p>
+        <p className="error-text">The control server sent a sign-in link that is not a web address, so Flavor will not open it.</p>
       )}
       {open.error && <p className="error-text" role="alert">{open.error}</p>}
     </div>
@@ -201,7 +201,7 @@ function Preferences({ network: n }: { network: Network }) {
           disabled={!canMutate || auto.pending}
           onChange={(e) => void auto.run(e.target.checked)}
         />
-        Connect automatically when Lattice starts
+        Connect automatically when Flavor starts
       </label>
       {auto.error && <p className="error-text" role="alert">{auto.error}</p>}
     </div>

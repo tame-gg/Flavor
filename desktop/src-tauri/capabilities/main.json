@@ -1,6 +1,6 @@
 {
   "identifier": "main",
-  "description": "Lattice application commands and daemon event listening only",
+  "description": "Flavor application commands and daemon event listening only",
   "windows": [
     "main"
   ],

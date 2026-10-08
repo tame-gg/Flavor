@@ -6,6 +6,6 @@ export PATH="$(go env GOPATH)/bin:${PATH:-}"
 cd "$ROOT/proto"
 buf dep update
 buf generate
-buf build --exclude-source-info -o "$ROOT/crates/lattice-proto/lattice.binpb"
+buf build --exclude-source-info -o "$ROOT/crates/flavor-proto/flavor.binpb"
 cd "$ROOT"
 go mod tidy

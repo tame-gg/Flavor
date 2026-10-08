@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	netdv1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/netd/v1"
-	"git.lunarlabs.dev/lattice/lattice/internal/synthetic/layout"
+	netdv1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/netd/v1"
+	"git.lunarlabs.dev/flavor/flavor/internal/synthetic/layout"
 	"golang.org/x/time/rate"
 	"google.golang.org/protobuf/proto"
 )

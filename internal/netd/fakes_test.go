@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	netdv1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/netd/v1"
+	netdv1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/netd/v1"
 	"google.golang.org/protobuf/proto"
 )
 

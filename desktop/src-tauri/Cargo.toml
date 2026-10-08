@@ -1,5 +1,5 @@
 [package]
-name = "lattice-desktop"
+name = "flavor-desktop"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,7 +8,7 @@ license.workspace = true
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-lattice-ipc = { path = "../../crates/lattice-ipc" }
+flavor-ipc = { path = "../../crates/flavor-ipc" }
 tauri = { version = "2", features = ["tray-icon", "image-png"] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }

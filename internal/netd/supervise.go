@@ -59,7 +59,7 @@ func (s Supervisor) Run(ctx context.Context) {
 		} else if msg := err.Error(); msg != reported {
 			reported = msg
 			s.Log.Warn("synthetic networking unavailable", "err", msg)
-			s.Warn(WarnUnavailable, "Transparent Lattice names and addresses are unavailable: "+msg)
+			s.Warn(WarnUnavailable, "Transparent Flavor names and addresses are unavailable: "+msg)
 		}
 		select {
 		case <-ctx.Done():
@@ -73,7 +73,7 @@ func (s Supervisor) Run(ctx context.Context) {
 func (s Supervisor) once(ctx context.Context) error {
 	c, err := s.dial(ctx, s.Socket)
 	if err != nil {
-		return fmt.Errorf("lattice-netd is not reachable: %w", err)
+		return fmt.Errorf("flavor-netd is not reachable: %w", err)
 	}
 	defer c.Close()
 	created, tun, err := c.Create(s.V6, s.V4, s.MTU)
@@ -88,8 +88,8 @@ func (s Supervisor) once(ctx context.Context) error {
 	defer stop()
 	s.Log.Info("synthetic interface active", "link", created.InterfaceName)
 	if _, err := c.ConfigureDNS(nil); err != nil {
-		s.Log.Warn("system dns not configured for lattice names", "err", err.Error())
-		s.Warn(WarnDNSUnavailable, "Lattice names will not resolve system-wide: "+err.Error())
+		s.Log.Warn("system dns not configured for flavor names", "err", err.Error())
+		s.Warn(WarnDNSUnavailable, "Flavor names will not resolve system-wide: "+err.Error())
 	}
 	probe := time.NewTicker(s.Probe)
 	defer probe.Stop()
@@ -102,7 +102,7 @@ func (s Supervisor) once(ctx context.Context) error {
 			return nil
 		case <-probe.C:
 			if _, err := c.Status(); err != nil {
-				s.Log.Info("lost the connection to lattice-netd", "err", err.Error())
+				s.Log.Info("lost the connection to flavor-netd", "err", err.Error())
 				return nil
 			}
 		}

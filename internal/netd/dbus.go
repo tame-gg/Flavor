@@ -9,7 +9,7 @@ import (
 	"github.com/godbus/dbus/v5"
 )
 
-const ManageAction = "dev.lunarlabs.lattice.netd.manage-interface"
+const ManageAction = "dev.lunarlabs.flavor.netd.manage-interface"
 
 type polkitSubject struct {
 	Kind    string

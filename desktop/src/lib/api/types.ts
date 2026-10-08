@@ -1,5 +1,5 @@
 import type { JsonValue } from "@bufbuild/protobuf";
-import type { DaemonEvent } from "@gen/lattice/v1/events_pb";
+import type { DaemonEvent } from "@gen/flavor/v1/events_pb";
 
 export type UiError = {
   kind: "daemon" | "unavailable" | "transport" | "invalid";

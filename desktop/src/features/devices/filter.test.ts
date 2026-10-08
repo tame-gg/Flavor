@@ -1,7 +1,7 @@
 import { create } from "@bufbuild/protobuf";
-import { ProviderType } from "@gen/lattice/v1/common_pb";
-import { DeviceSchema, type Device } from "@gen/lattice/v1/device_pb";
-import { NetworkSchema } from "@gen/lattice/v1/network_pb";
+import { ProviderType } from "@gen/flavor/v1/common_pb";
+import { DeviceSchema, type Device } from "@gen/flavor/v1/device_pb";
+import { NetworkSchema } from "@gen/flavor/v1/network_pb";
 import { describe, expect, it } from "vitest";
 import { deviceKey } from "../../app/sync/controller";
 import { deviceRows, parseSearch } from "./filter";

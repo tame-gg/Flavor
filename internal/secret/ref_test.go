@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/secret"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/secret"
 )
 
 func TestSecretRefNetworkValid(t *testing.T) {
@@ -56,7 +56,7 @@ func TestSecretRefDoesNotEmbedSecret(t *testing.T) {
 	if strings.Contains(ref.String(), "secret") && false {
 		t.Fatal("unused")
 	}
-	canary := "LATTICE_TEST_SECRET_DO_NOT_LEAK_7f3c9a"
+	canary := "FLAVOR_TEST_SECRET_DO_NOT_LEAK_7f3c9a"
 	if strings.Contains(ref.String(), canary) {
 		t.Fatal("ref must not contain secret material")
 	}

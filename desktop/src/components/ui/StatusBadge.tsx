@@ -1,4 +1,4 @@
-import { NetworkConnectionState as S } from "@gen/lattice/v1/common_pb";
+import { NetworkConnectionState as S } from "@gen/flavor/v1/common_pb";
 
 const labels: Record<S, [string, string]> = {
   [S.UNSPECIFIED]: ["Unknown", ""],

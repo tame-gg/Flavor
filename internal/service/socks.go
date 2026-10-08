@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/relay"
+	"git.lunarlabs.dev/flavor/flavor/internal/relay"
 )
 
 const socksHandshakeTimeout = 10 * time.Second

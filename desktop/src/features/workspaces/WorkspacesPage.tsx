@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { Network } from "@gen/lattice/v1/network_pb";
-import { ActivationOutcome, type ActivateWorkspaceResponse, type Workspace } from "@gen/lattice/v1/workspaces_pb";
+import type { Network } from "@gen/flavor/v1/network_pb";
+import { ActivationOutcome, type ActivateWorkspaceResponse, type Workspace } from "@gen/flavor/v1/workspaces_pb";
 import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
 import { Field } from "../../components/ui/Field";
@@ -266,7 +266,7 @@ function ActivateDialog({ workspace, onClose }: { workspace: Workspace | null; o
               </label>
             )}
             <p className="hint">
-              Activation connects and disconnects networks only. Lattice does not change how traffic is routed between them.
+              Activation connects and disconnects networks only. Flavor does not change how traffic is routed between them.
             </p>
           </>
         )

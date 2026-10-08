@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Capability, NetworkConnectionState } from "@gen/lattice/v1/common_pb";
+import { Capability, NetworkConnectionState } from "@gen/flavor/v1/common_pb";
 import logo from "../logo.svg";
 import { Banner } from "../components/ui/Banner";
 import { Button } from "../components/ui/Button";
@@ -64,19 +64,19 @@ export function App() {
   if (status === "incompatible") {
     return (
       <Gate title="Update required">
-        This version of the desktop app cannot talk to the running Lattice daemon (protocol {info?.protocolMajor}). Install
-        matching versions of Lattice and latticed.
+        This version of the desktop app cannot talk to the running Flavor daemon (protocol {info?.protocolMajor}). Install
+        matching versions of Flavor and flavord.
       </Gate>
     );
   }
   if (!info) {
     return status === "unavailable" ? (
-      <Gate title="The Lattice daemon is not running" action={<Button onClick={() => void controller.resync()}>Try again</Button>}>
-        Start it with <code className="mono">systemctl --user start latticed</code>, or run <code className="mono">latticed</code>{" "}
-        in a terminal. Lattice keeps retrying in the background.
+      <Gate title="The Flavor daemon is not running" action={<Button onClick={() => void controller.resync()}>Try again</Button>}>
+        Start it with <code className="mono">systemctl --user start flavord</code>, or run <code className="mono">flavord</code>{" "}
+        in a terminal. Flavor keeps retrying in the background.
       </Gate>
     ) : (
-      <Gate title="Connecting to the Lattice daemon" busy />
+      <Gate title="Connecting to the Flavor daemon" busy />
     );
   }
   if (networks.size === 0 && !welcomeDone) {
@@ -111,7 +111,7 @@ export function App() {
       <aside className="sidebar">
         <div className="brand">
           <img src={logo} alt="" />
-          Lattice
+          Flavor
         </div>
         <nav className="stack-sm" aria-label="Sections">
           {visiblePages(info.capabilities).map(([id, label]) => (
@@ -132,7 +132,7 @@ export function App() {
         <p className="small muted">{summary}</p>
       </aside>
       <div className="topline" aria-live="polite">
-        {status === "unavailable" && <Banner tone="warn">The Lattice daemon is not reachable. Showing last known state while Lattice retries.</Banner>}
+        {status === "unavailable" && <Banner tone="warn">The Flavor daemon is not reachable. Showing last known state while Flavor retries.</Banner>}
         {status === "resyncing" && <Banner>Refreshing from the daemon…</Banner>}
       </div>
       <main className="main">

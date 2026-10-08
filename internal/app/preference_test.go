@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"connectrpc.com/connect"
-	v1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1"
-	"git.lunarlabs.dev/lattice/lattice/internal/app"
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/provider"
-	"git.lunarlabs.dev/lattice/lattice/internal/session/sessiontest"
+	v1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1"
+	"git.lunarlabs.dev/flavor/flavor/internal/app"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/provider"
+	"git.lunarlabs.dev/flavor/flavor/internal/session/sessiontest"
 )
 
 func TestDestinationPreferencesEndToEnd(t *testing.T) {
@@ -48,10 +48,10 @@ func TestDestinationPreferencesEndToEnd(t *testing.T) {
 	if r := inspect(); r.Decision != v1.ResolutionDecision_RESOLUTION_DECISION_AMBIGUOUS || r.Preference != nil {
 		t.Fatalf("%+v", r)
 	}
-	if err := set("100.64.0.9", "01NOSUCHNETWORK000000000000"); latticeCode(err) != v1.LatticeErrorCode_LATTICE_ERROR_CODE_NETWORK_NOT_FOUND {
+	if err := set("100.64.0.9", "01NOSUCHNETWORK000000000000"); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_NETWORK_NOT_FOUND {
 		t.Fatalf("invalid network: %v", err)
 	}
-	if err := set("10.0.0.0/8", a.Id); latticeCode(err) != v1.LatticeErrorCode_LATTICE_ERROR_CODE_INVALID_ARGUMENT {
+	if err := set("10.0.0.0/8", a.Id); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_ARGUMENT {
 		t.Fatalf("invalid destination: %v", err)
 	}
 	if err := set("100.64.0.9:443", a.Id); err != nil {

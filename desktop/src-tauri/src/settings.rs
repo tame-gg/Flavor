@@ -80,7 +80,7 @@ pub fn default_path() -> Option<PathBuf> {
         .map(PathBuf::from)
         .filter(|p| p.is_absolute())
         .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")))?;
-    base.is_absolute().then(|| base.join("lattice").join("config.toml"))
+    base.is_absolute().then(|| base.join("flavor").join("config.toml"))
 }
 
 pub fn load(path: &Path) -> Loaded {
@@ -109,7 +109,7 @@ pub fn load(path: &Path) -> Loaded {
         None | Some("tray") => CloseBehavior::Tray,
         Some("quit_gui") => CloseBehavior::QuitGui,
         Some(_) => {
-            warning = Some("Unknown close behavior in settings file; keeping Lattice in the tray.".to_string());
+            warning = Some("Unknown close behavior in settings file; keeping Flavor in the tray.".to_string());
             CloseBehavior::Tray
         }
     };
@@ -186,7 +186,7 @@ mod tests {
     #[test]
     fn round_trip_is_private_and_matches_schema() {
         let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("lattice/config.toml");
+        let path = dir.path().join("flavor/config.toml");
         let s = Settings { theme: Theme::Dark, close_behavior: CloseBehavior::QuitGui };
         save(&path, s).unwrap();
         assert_eq!(load(&path).settings, s);

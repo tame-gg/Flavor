@@ -8,7 +8,7 @@ use tauri::{Manager, WindowEvent};
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .manage(commands::Daemon::new(lattice_ipc::default_socket_path()))
+        .manage(commands::Daemon::new(flavor_ipc::default_socket_path()))
         .manage(events::Watcher::default())
         .manage(settings::Store::open(settings::default_path()))
         .setup(|app| Ok(tray::install(app)?))
@@ -49,5 +49,5 @@ fn main() {
             tray::set_tray_summary,
         ])
         .run(tauri::generate_context!())
-        .expect("run lattice desktop");
+        .expect("run flavor desktop");
 }

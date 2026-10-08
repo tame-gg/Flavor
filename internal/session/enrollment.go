@@ -1,6 +1,6 @@
 package session
 
-import "git.lunarlabs.dev/lattice/lattice/internal/secret"
+import "git.lunarlabs.dev/flavor/flavor/internal/secret"
 
 type EnrollmentMethod string
 

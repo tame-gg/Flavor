@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Network } from "@gen/lattice/v1/network_pb";
+import type { Network } from "@gen/flavor/v1/network_pb";
 import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
 import { Field } from "../../components/ui/Field";
@@ -111,7 +111,7 @@ export function AddNetworkDialog({ open, onClose, onAdded }: Props) {
       />
       <label className="check">
         <input type="checkbox" checked={autoConnect} onChange={(e) => setAutoConnect(e.target.checked)} />
-        Connect automatically when Lattice starts
+        Connect automatically when Flavor starts
       </label>
       {!preAuthKey && (
         <label className="check">

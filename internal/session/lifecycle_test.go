@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/events"
-	"git.lunarlabs.dev/lattice/lattice/internal/logging"
-	"git.lunarlabs.dev/lattice/lattice/internal/provider"
-	"git.lunarlabs.dev/lattice/lattice/internal/session"
-	"git.lunarlabs.dev/lattice/lattice/internal/session/sessiontest"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/events"
+	"git.lunarlabs.dev/flavor/flavor/internal/logging"
+	"git.lunarlabs.dev/flavor/flavor/internal/provider"
+	"git.lunarlabs.dev/flavor/flavor/internal/session"
+	"git.lunarlabs.dev/flavor/flavor/internal/session/sessiontest"
 )
 
 func testCfg(t *testing.T) provider.ResolvedSessionConfig {
@@ -396,7 +396,7 @@ func TestInteractiveLoginSingleFlow(t *testing.T) {
 }
 
 func TestSessionLogsOnlyAuthHost(t *testing.T) {
-	const token = "LATTICE_CANARY_TOKEN_91c2"
+	const token = "FLAVOR_CANARY_TOKEN_91c2"
 	var buf bytes.Buffer
 	log := logging.New(&buf, slog.LevelDebug)
 	eng := sessiontest.NewEngine()

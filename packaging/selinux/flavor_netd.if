@@ -1,0 +1,9 @@
+interface(`flavor_netd_stream_connect',`
+	gen_require(`
+		type flavor_netd_t, flavor_netd_var_run_t;
+	')
+
+	files_search_pids($1)
+	stream_connect_pattern($1, flavor_netd_var_run_t, flavor_netd_var_run_t, flavor_netd_t)
+	allow $1 flavor_netd_t:fd use;
+')

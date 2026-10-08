@@ -6,8 +6,8 @@ import (
 	"sync"
 	"testing"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/secret"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/secret"
 )
 
 type fakeKeyring struct {
@@ -64,7 +64,7 @@ func (f *fakeKeyring) Delete(service, user string) error {
 func TestSecretServiceViaFake(t *testing.T) {
 	ctx := context.Background()
 	fk := newFakeKeyring()
-	store := secret.NewSecretServiceForTest("dev.lunarlabs.lattice", fk)
+	store := secret.NewSecretServiceForTest("dev.lunarlabs.flavor", fk)
 	st := store.Status(ctx)
 	if st.Backend != secret.BackendSecretService || st.State != secret.StateAvailable {
 		t.Fatalf("status=%+v", st)
@@ -103,7 +103,7 @@ func TestSecretServiceMapsUnavailable(t *testing.T) {
 	fk := newFakeKeyring()
 	fk.getErr = errors.New("dbus: connection refused")
 	fk.setErr = errors.New("dbus: connection refused")
-	store := secret.NewSecretServiceForTest("dev.lunarlabs.lattice", fk)
+	store := secret.NewSecretServiceForTest("dev.lunarlabs.flavor", fk)
 	st := store.Status(ctx)
 	if st.State != secret.StateUnavailable {
 		t.Fatalf("status=%+v", st)
@@ -118,7 +118,7 @@ func TestSecretServiceUnlockTextIsUnavailableNotLocked(t *testing.T) {
 	ctx := context.Background()
 	fk := newFakeKeyring()
 	fk.getErr = errors.New("failed to unlock correct collection")
-	store := secret.NewSecretServiceForTest("dev.lunarlabs.lattice", fk)
+	store := secret.NewSecretServiceForTest("dev.lunarlabs.flavor", fk)
 	st := store.Status(ctx)
 	if st.State != secret.StateUnavailable {
 		t.Fatalf("status=%+v want unavailable", st)
@@ -129,7 +129,7 @@ func TestSecretServiceMapsExplicitLocked(t *testing.T) {
 	ctx := context.Background()
 	fk := newFakeKeyring()
 	fk.getErr = secret.ErrLocked
-	store := secret.NewSecretServiceForTest("dev.lunarlabs.lattice", fk)
+	store := secret.NewSecretServiceForTest("dev.lunarlabs.flavor", fk)
 	st := store.Status(ctx)
 	if st.State != secret.StateLocked {
 		t.Fatalf("status=%+v", st)
@@ -152,7 +152,7 @@ func TestNoPlaintextFallbackFiles(t *testing.T) {
 	ctx := context.Background()
 	store := secret.NewMemoryStore()
 	ref, _ := secret.NetworkRef(domain.NewNetworkID(), "provider-token")
-	canary := "LATTICE_TEST_SECRET_DO_NOT_LEAK_7f3c9a"
+	canary := "FLAVOR_TEST_SECRET_DO_NOT_LEAK_7f3c9a"
 	if err := store.Set(ctx, ref, secret.New(canary)); err != nil {
 		t.Fatal(err)
 	}

@@ -7,12 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/secret"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/secret"
 )
 
 func TestCanarySecretNeverAppearsInFormatsOrLogs(t *testing.T) {
-	canary := "LATTICE_TEST_SECRET_DO_NOT_LEAK_7f3c9a"
+	canary := "FLAVOR_TEST_SECRET_DO_NOT_LEAK_7f3c9a"
 	ctx := context.Background()
 	store := secret.NewMemoryStore()
 	ref, err := secret.NetworkRef(domain.NewNetworkID(), "provider-token")

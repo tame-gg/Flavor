@@ -21,7 +21,7 @@ jobs:
       - name: proto dirty check
         run: |
           ./scripts/generate-proto.sh
-          git diff --exit-code gen/ proto/buf.lock crates/lattice-proto/lattice.binpb
+          git diff --exit-code gen/ proto/buf.lock crates/flavor-proto/flavor.binpb
       - name: test
         run: |
           ./scripts/go.sh vet ./...
@@ -61,6 +61,6 @@ jobs:
       - run: npm ci
       - name: no daemon rpc client in the webview
         run: |
-          ! grep -rnE "@connectrpc|connect-web|createClient|latticed\.sock" src
+          ! grep -rnE "@connectrpc|connect-web|createClient|flavord\.sock" src
       - run: npm run build
       - run: npm test

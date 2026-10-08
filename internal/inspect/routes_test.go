@@ -5,8 +5,8 @@ import (
 	"net/netip"
 	"testing"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/inspect"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/inspect"
 )
 
 func router(net domain.NetworkID, node, host string, routes ...string) domain.Device {
@@ -63,21 +63,21 @@ func TestExactPeerAddressBeatsSubnetRoute(t *testing.T) {
 }
 
 func TestNetworkQualifiedNames(t *testing.T) {
-	r := resolve(t, "prod-api.lunarlabs.lattice.internal", lunar, home)
+	r := resolve(t, "prod-api.lunarlabs.flavor.internal", lunar, home)
 	if r.Decision != inspect.DecisionUnique || r.Reason != inspect.ReasonNetworkQualifiedName || r.Candidates[0].Network.ID != "A" {
 		t.Fatalf("%+v", r)
 	}
-	if r := resolve(t, "postgres.home.lattice.internal:5432", lunar, home); r.Candidates[0].Network.ID != "B" || r.Query.Port != 5432 {
+	if r := resolve(t, "postgres.home.flavor.internal:5432", lunar, home); r.Candidates[0].Network.ID != "B" || r.Query.Port != 5432 {
 		t.Fatalf("qualified name picks exactly one network even when the bare name collides: %+v", r)
 	}
-	if r := resolve(t, "prod-api.home.lattice.internal", lunar, home); r.Decision != inspect.DecisionNoMatch {
+	if r := resolve(t, "prod-api.home.flavor.internal", lunar, home); r.Decision != inspect.DecisionNoMatch {
 		t.Fatalf("device on another network must not match: %+v", r)
 	}
 	twin := live("C", "Home", dev("C", "1", "postgres", "", "100.64.7.7"))
-	if r := resolve(t, "postgres.home.lattice.internal", home, twin); r.Decision != inspect.DecisionAmbiguous {
+	if r := resolve(t, "postgres.home.flavor.internal", home, twin); r.Decision != inspect.DecisionAmbiguous {
 		t.Fatalf("two networks with the same friendly label: %+v", r)
 	}
-	for _, bad := range []string{"x.lattice.internal", "a.b.c.lattice.internal", "-x.home.lattice.internal"} {
+	for _, bad := range []string{"x.flavor.internal", "a.b.c.flavor.internal", "-x.home.flavor.internal"} {
 		if _, err := inspect.ParseQuery(bad); !errors.Is(err, inspect.ErrInvalidDestination) {
 			t.Fatalf("%q accepted", bad)
 		}
@@ -89,34 +89,34 @@ func TestStableQualifiedNamesSurviveRenamesAndCollisions(t *testing.T) {
 	a := live(idA, "Home", dev(idA, "7", "postgres", "", "100.64.0.7"), dev(idA, "8", "Postgres", "", "100.64.0.8"))
 	b := live(idB, "home", dev(idB, "7", "postgres", "", "100.64.0.7"))
 
-	r := resolve(t, "id-7.01aaaaaaaaaaaaaaaaaaaaaaaa.lattice.internal", a, b)
+	r := resolve(t, "id-7.01aaaaaaaaaaaaaaaaaaaaaaaa.flavor.internal", a, b)
 	if r.Decision != inspect.DecisionUnique || r.Candidates[0].Device.ID.NodeID != "7" || r.Candidates[0].Network.ID != idA {
 		t.Fatalf("stable name: %+v", r)
 	}
-	if r.Candidates[0].StableName != "id-7.01aaaaaaaaaaaaaaaaaaaaaaaa.lattice.internal" {
+	if r.Candidates[0].StableName != "id-7.01aaaaaaaaaaaaaaaaaaaaaaaa.flavor.internal" {
 		t.Fatal(r.Candidates[0].StableName)
 	}
 	if r.Candidates[0].Name != r.Candidates[0].StableName {
 		t.Fatal("with colliding friendly labels on both levels, the published name is the stable one")
 	}
-	if r := resolve(t, "postgres.01aaaaaaaaaaaaaaaaaaaaaaaa.lattice.internal", a, b); r.Decision != inspect.DecisionAmbiguous || len(r.Candidates) != 2 {
+	if r := resolve(t, "postgres.01aaaaaaaaaaaaaaaaaaaaaaaa.flavor.internal", a, b); r.Decision != inspect.DecisionAmbiguous || len(r.Candidates) != 2 {
 		t.Fatalf("colliding device labels inside one network: %+v", r)
 	}
-	if r := resolve(t, "postgres.01bbbbbbbbbbbbbbbbbbbbbbbb.lattice.internal", a, b); r.Decision != inspect.DecisionUnique || r.Candidates[0].Network.ID != idB {
+	if r := resolve(t, "postgres.01bbbbbbbbbbbbbbbbbbbbbbbb.flavor.internal", a, b); r.Decision != inspect.DecisionUnique || r.Candidates[0].Network.ID != idB {
 		t.Fatalf("%+v", r)
 	}
 
 	renamed := a
 	renamed.Network.DisplayName = "Personal"
-	if r := resolve(t, "id-7.01aaaaaaaaaaaaaaaaaaaaaaaa.lattice.internal", renamed, b); r.Decision != inspect.DecisionUnique {
+	if r := resolve(t, "id-7.01aaaaaaaaaaaaaaaaaaaaaaaa.flavor.internal", renamed, b); r.Decision != inspect.DecisionUnique {
 		t.Fatal("stable name must survive a rename")
 	}
-	if r := resolve(t, "id-8.personal.lattice.internal", renamed, b); r.Decision != inspect.DecisionUnique || r.Candidates[0].Name != "id-8.personal.lattice.internal" {
+	if r := resolve(t, "id-8.personal.flavor.internal", renamed, b); r.Decision != inspect.DecisionUnique || r.Candidates[0].Name != "id-8.personal.flavor.internal" {
 		t.Fatalf("friendly network label after rename: %+v", r)
 	}
 
 	squatter := live("01CCCCCCCCCCCCCCCCCCCCCCCC", "01aaaaaaaaaaaaaaaaaaaaaaaa", dev("01CCCCCCCCCCCCCCCCCCCCCCCC", "7", "postgres", "", "100.64.9.9"))
-	if r := resolve(t, "id-7.01aaaaaaaaaaaaaaaaaaaaaaaa.lattice.internal", a, squatter); r.Decision != inspect.DecisionUnique || r.Candidates[0].Network.ID != idA {
+	if r := resolve(t, "id-7.01aaaaaaaaaaaaaaaaaaaaaaaa.flavor.internal", a, squatter); r.Decision != inspect.DecisionUnique || r.Candidates[0].Network.ID != idA {
 		t.Fatalf("a stable label must always win over a friendly label that spells it: %+v", r)
 	}
 }
@@ -175,7 +175,7 @@ func TestExplicitNetworkContext(t *testing.T) {
 
 func TestSharedFriendlyLabelIsAmbiguousEvenWhenOnlyOneIsConnected(t *testing.T) {
 	off := inspect.Network{Network: domain.Network{ID: "C", DisplayName: "home"}, State: domain.StateDisconnected}
-	r := resolve(t, "postgres.home.lattice.internal", home, off)
+	r := resolve(t, "postgres.home.flavor.internal", home, off)
 	if r.Decision != inspect.DecisionAmbiguous || r.Reason != inspect.ReasonAmbiguousNetworkLabel || len(r.Candidates) != 1 {
 		t.Fatalf("an answer that flips when the other network connects must not be given: %+v", r)
 	}

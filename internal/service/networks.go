@@ -6,12 +6,12 @@ import (
 	"strings"
 	"unicode"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/events"
-	"git.lunarlabs.dev/lattice/lattice/internal/provider"
-	"git.lunarlabs.dev/lattice/lattice/internal/secret"
-	"git.lunarlabs.dev/lattice/lattice/internal/session"
-	"git.lunarlabs.dev/lattice/lattice/internal/store"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/events"
+	"git.lunarlabs.dev/flavor/flavor/internal/provider"
+	"git.lunarlabs.dev/flavor/flavor/internal/secret"
+	"git.lunarlabs.dev/flavor/flavor/internal/session"
+	"git.lunarlabs.dev/flavor/flavor/internal/store"
 )
 
 type NetworkView struct {

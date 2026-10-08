@@ -8,14 +8,14 @@ import (
 	"net/netip"
 	"os"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/dataplane"
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/netd"
-	"git.lunarlabs.dev/lattice/lattice/internal/service"
-	"git.lunarlabs.dev/lattice/lattice/internal/session"
-	"git.lunarlabs.dev/lattice/lattice/internal/store"
-	"git.lunarlabs.dev/lattice/lattice/internal/syndns"
-	"git.lunarlabs.dev/lattice/lattice/internal/synthetic"
+	"git.lunarlabs.dev/flavor/flavor/internal/dataplane"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/netd"
+	"git.lunarlabs.dev/flavor/flavor/internal/service"
+	"git.lunarlabs.dev/flavor/flavor/internal/session"
+	"git.lunarlabs.dev/flavor/flavor/internal/store"
+	"git.lunarlabs.dev/flavor/flavor/internal/syndns"
+	"git.lunarlabs.dev/flavor/flavor/internal/synthetic"
 )
 
 func startSynthetic(ctx context.Context, opts Options, db *store.DB, svc *service.Service, sessions *session.Manager, log *slog.Logger) (func(), error) {

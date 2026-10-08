@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"connectrpc.com/connect"
-	v1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1"
-	"git.lunarlabs.dev/lattice/lattice/internal/app"
-	"git.lunarlabs.dev/lattice/lattice/internal/provider"
-	"git.lunarlabs.dev/lattice/lattice/internal/session/sessiontest"
+	v1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1"
+	"git.lunarlabs.dev/flavor/flavor/internal/app"
+	"git.lunarlabs.dev/flavor/flavor/internal/provider"
+	"git.lunarlabs.dev/flavor/flavor/internal/session/sessiontest"
 )
 
 func selfEngines() *sessiontest.Sequence {
@@ -38,11 +38,11 @@ func TestWorkspacesEndToEnd(t *testing.T) {
 	defer stopWatch()
 
 	_, err := c.Workspaces.CreateWorkspace(ctx, connect.NewRequest(&v1.CreateWorkspaceRequest{Name: "Ghost", NetworkIds: []string{"01NOSUCHNETWORK000000000000"}}))
-	if latticeCode(err) != v1.LatticeErrorCode_LATTICE_ERROR_CODE_NETWORK_NOT_FOUND {
+	if flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_NETWORK_NOT_FOUND {
 		t.Fatalf("unknown network: %v", err)
 	}
 	_, err = c.Workspaces.CreateWorkspace(ctx, connect.NewRequest(&v1.CreateWorkspaceRequest{Name: "  "}))
-	if latticeCode(err) != v1.LatticeErrorCode_LATTICE_ERROR_CODE_INVALID_ARGUMENT {
+	if flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_ARGUMENT {
 		t.Fatalf("blank name: %v", err)
 	}
 	created, err := c.Workspaces.CreateWorkspace(ctx, connect.NewRequest(&v1.CreateWorkspaceRequest{
@@ -145,7 +145,7 @@ func TestWorkspacesEndToEnd(t *testing.T) {
 		t.Fatalf("%+v", snap)
 	}
 	_, err = c.Workspaces.ActivateWorkspace(ctx, connect.NewRequest(&v1.ActivateWorkspaceRequest{WorkspaceId: ws.Id}))
-	if latticeCode(err) != v1.LatticeErrorCode_LATTICE_ERROR_CODE_WORKSPACE_NOT_FOUND || connect.CodeOf(err) != connect.CodeNotFound {
+	if flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_WORKSPACE_NOT_FOUND || connect.CodeOf(err) != connect.CodeNotFound {
 		t.Fatalf("missing workspace: %v", err)
 	}
 }

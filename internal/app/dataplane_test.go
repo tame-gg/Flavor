@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	v1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1"
-	"git.lunarlabs.dev/lattice/lattice/internal/app"
-	"git.lunarlabs.dev/lattice/lattice/internal/dataplane/dataplanetest"
-	"git.lunarlabs.dev/lattice/lattice/internal/netd"
-	"git.lunarlabs.dev/lattice/lattice/internal/synthetic"
-	"git.lunarlabs.dev/lattice/lattice/internal/synthetic/layout"
+	v1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1"
+	"git.lunarlabs.dev/flavor/flavor/internal/app"
+	"git.lunarlabs.dev/flavor/flavor/internal/dataplane/dataplanetest"
+	"git.lunarlabs.dev/flavor/flavor/internal/netd"
+	"git.lunarlabs.dev/flavor/flavor/internal/synthetic"
+	"git.lunarlabs.dev/flavor/flavor/internal/synthetic/layout"
 	"golang.org/x/net/dns/dnsmessage"
 )
 
@@ -43,8 +43,8 @@ func TestSyntheticDataPlaneEndToEnd(t *testing.T) {
 		})
 	}
 
-	v6 := ask(t, server, "postgres.home.lattice.internal", dnsmessage.TypeAAAA, false).addrs
-	v4 := ask(t, server, "postgres.home.lattice.internal", dnsmessage.TypeA, false).addrs
+	v6 := ask(t, server, "postgres.home.flavor.internal", dnsmessage.TypeAAAA, false).addrs
+	v4 := ask(t, server, "postgres.home.flavor.internal", dnsmessage.TypeA, false).addrs
 	if len(v6) != 1 || len(v4) != 1 {
 		t.Fatalf("%v %v", v6, v4)
 	}
@@ -70,17 +70,17 @@ func TestSyntheticDataPlaneEndToEnd(t *testing.T) {
 		return askOn(t, conn, framed, name, qtype, false)
 	}
 	r6, r4 := layout.ResolverAddress(ula), layout.ResolverV4(pool)
-	if got := resolve(r6, false, "postgres.home.lattice.internal", dnsmessage.TypeAAAA); len(got.addrs) != 1 || got.addrs[0] != v6[0] {
+	if got := resolve(r6, false, "postgres.home.flavor.internal", dnsmessage.TypeAAAA); len(got.addrs) != 1 || got.addrs[0] != v6[0] {
 		t.Fatalf("netstack resolver over udp: %+v", got)
 	}
-	if got := resolve(r4, true, "postgres.home.lattice.internal", dnsmessage.TypeA); len(got.addrs) != 1 || got.addrs[0] != v4[0] {
+	if got := resolve(r4, true, "postgres.home.flavor.internal", dnsmessage.TypeA); len(got.addrs) != 1 || got.addrs[0] != v4[0] {
 		t.Fatalf("netstack resolver over tcp: %+v", got)
 	}
 	if got := resolve(r6, true, "postgres", dnsmessage.TypeAAAA); got.rcode != dnsmessage.RCodeServerFailure {
 		t.Fatalf("ambiguous names must fail inside the netstack too: %+v", got)
 	}
-	lunar6 := resolve(r4, false, "postgres.lunarlabs.lattice.internal", dnsmessage.TypeAAAA).addrs
-	lunar4 := resolve(r6, false, "postgres.lunarlabs.lattice.internal", dnsmessage.TypeA).addrs
+	lunar6 := resolve(r4, false, "postgres.lunarlabs.flavor.internal", dnsmessage.TypeAAAA).addrs
+	lunar4 := resolve(r6, false, "postgres.lunarlabs.flavor.internal", dnsmessage.TypeA).addrs
 	if len(lunar6) != 1 || len(lunar4) != 1 {
 		t.Fatalf("%v %v", lunar6, lunar4)
 	}

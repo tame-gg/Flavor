@@ -12,7 +12,7 @@ import (
 
 func TestNewerSchemaIsRefusedAndLeftUntouched(t *testing.T) {
 	ctx := context.Background()
-	path := filepath.Join(t.TempDir(), "lattice.db")
+	path := filepath.Join(t.TempDir(), "flavor.db")
 	db, err := Open(ctx, path)
 	if err != nil {
 		t.Fatal(err)

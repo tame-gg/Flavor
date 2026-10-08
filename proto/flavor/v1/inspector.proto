@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package flavor.v1;
+
+import "flavor/v1/common.proto";
+import "flavor/v1/device.proto";
+
+service InspectorService {
+  rpc InspectDestination(InspectDestinationRequest) returns (InspectDestinationResponse);
+  rpc DescribeDevice(DescribeDeviceRequest) returns (DescribeDeviceResponse);
+}
+
+enum DestinationKind {
+  DESTINATION_KIND_UNSPECIFIED = 0;
+  DESTINATION_KIND_ADDRESS = 1;
+  DESTINATION_KIND_NAME = 2;
+}
+
+enum MatchKind {
+  MATCH_KIND_UNSPECIFIED = 0;
+  MATCH_KIND_DEVICE_ADDRESS = 1;
+  MATCH_KIND_DEVICE_DNS_NAME = 2;
+  MATCH_KIND_DEVICE_HOSTNAME = 3;
+  MATCH_KIND_SUBNET_ROUTE = 4;
+  MATCH_KIND_QUALIFIED_NAME = 5;
+}
+
+enum ResolutionDecision {
+  RESOLUTION_DECISION_UNSPECIFIED = 0;
+  RESOLUTION_DECISION_UNIQUE = 1;
+  RESOLUTION_DECISION_AMBIGUOUS = 2;
+  RESOLUTION_DECISION_NO_MATCH = 3;
+}
+
+enum DecisionReason {
+  DECISION_REASON_UNSPECIFIED = 0;
+  DECISION_REASON_EXACT_DEVICE_ADDRESS = 1;
+  DECISION_REASON_DEVICE_DNS_NAME = 2;
+  DECISION_REASON_DEVICE_HOSTNAME = 3;
+  DECISION_REASON_MULTIPLE_MATCHES = 4;
+  DECISION_REASON_NO_MATCH = 5;
+  DECISION_REASON_DESTINATION_PREFERENCE = 6;
+  DECISION_REASON_SUBNET_ROUTE = 7;
+  DECISION_REASON_LONGEST_PREFIX = 8;
+  DECISION_REASON_NETWORK_QUALIFIED_NAME = 9;
+  DECISION_REASON_EXPLICIT_NETWORK = 10;
+  DECISION_REASON_AMBIGUOUS_NETWORK_LABEL = 11;
+}
+
+enum CandidateStatus {
+  CANDIDATE_STATUS_UNSPECIFIED = 0;
+  CANDIDATE_STATUS_SELECTED = 1;
+  CANDIDATE_STATUS_TIED = 2;
+  CANDIDATE_STATUS_OUTRANKED = 3;
+}
+
+enum PreferenceState {
+  PREFERENCE_STATE_UNSPECIFIED = 0;
+  PREFERENCE_STATE_APPLIED = 1;
+  PREFERENCE_STATE_NETWORK_NOT_CONNECTED = 2;
+  PREFERENCE_STATE_NO_MATCH_ON_NETWORK = 3;
+}
+
+message PreferenceUse {
+  string destination = 1;
+  NetworkRef network = 2;
+  PreferenceState state = 3;
+}
+
+message NetworkRef {
+  string id = 1;
+  string display_name = 2;
+  ProviderType provider = 3;
+  NetworkConnectionState state = 4;
+}
+
+message ResolutionCandidate {
+  NetworkRef network = 1;
+  Device device = 2;
+  MatchKind match = 3;
+  string matched_value = 4;
+  CandidateStatus status = 5;
+  string qualified_name = 6;
+  string stable_name = 7;
+}
+
+message InspectDestinationRequest {
+  string destination = 1;
+}
+
+message InspectDestinationResponse {
+  string daemon_instance_id = 1;
+  uint64 snapshot_sequence = 2;
+  string query = 3;
+  DestinationKind kind = 4;
+  string normalized = 5;
+  uint32 port = 6;
+  ResolutionDecision decision = 7;
+  DecisionReason reason = 8;
+  MatchKind decided_by = 9;
+  repeated ResolutionCandidate candidates = 10;
+  repeated NetworkRef not_inspected = 11;
+  PreferenceUse preference = 12;
+}
+
+message DescribeDeviceRequest {
+  string network_id = 1;
+  string node_id = 2;
+}
+
+message DescribeDeviceResponse {
+  string name = 1;
+  string stable_name = 2;
+}

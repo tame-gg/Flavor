@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/events"
+	"git.lunarlabs.dev/flavor/flavor/internal/events"
 )
 
 const ambiguityWarningInterval = time.Minute
@@ -26,5 +26,5 @@ func (s *Service) WarnAmbiguousName(name string, candidates, networks int) {
 	}
 	s.warned[name] = now
 	s.mu.Unlock()
-	s.Warn("dns_ambiguous", fmt.Sprintf("DNS lookup for %s was refused: it matches %d candidates on %d networks. Use a Lattice name or set a preference.", name, candidates, networks))
+	s.Warn("dns_ambiguous", fmt.Sprintf("DNS lookup for %s was refused: it matches %d candidates on %d networks. Use a Flavor name or set a preference.", name, candidates, networks))
 }

@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	v1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1"
-	"git.lunarlabs.dev/lattice/lattice/internal/app"
-	"git.lunarlabs.dev/lattice/lattice/internal/syndns"
-	"git.lunarlabs.dev/lattice/lattice/internal/synthetic"
+	v1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1"
+	"git.lunarlabs.dev/flavor/flavor/internal/app"
+	"git.lunarlabs.dev/flavor/flavor/internal/syndns"
+	"git.lunarlabs.dev/flavor/flavor/internal/synthetic"
 	"golang.org/x/net/dns/dnsmessage"
 )
 
@@ -124,8 +124,8 @@ func TestExperimentalSyntheticDNS(t *testing.T) {
 	col, stopWatch := watch(t, c, base.DaemonInstanceId, base.SnapshotSequence)
 	defer stopWatch()
 
-	home := ask(t, server, "postgres.home.lattice.internal", dnsmessage.TypeAAAA, false)
-	lunar := ask(t, server, "postgres.lunarlabs.lattice.internal", dnsmessage.TypeAAAA, false)
+	home := ask(t, server, "postgres.home.flavor.internal", dnsmessage.TypeAAAA, false)
+	lunar := ask(t, server, "postgres.lunarlabs.flavor.internal", dnsmessage.TypeAAAA, false)
 	if home.rcode != dnsmessage.RCodeSuccess || len(home.addrs) != 1 || home.ttl != syndns.TTL {
 		t.Fatalf("%+v", home)
 	}
@@ -136,7 +136,7 @@ func TestExperimentalSyntheticDNS(t *testing.T) {
 		t.Fatalf("not a ULA: %v", home.addrs[0])
 	}
 
-	insp, err := c.Inspector.InspectDestination(ctx, connect.NewRequest(&v1.InspectDestinationRequest{Destination: "postgres.home.lattice.internal"}))
+	insp, err := c.Inspector.InspectDestination(ctx, connect.NewRequest(&v1.InspectDestinationRequest{Destination: "postgres.home.flavor.internal"}))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -145,8 +145,8 @@ func TestExperimentalSyntheticDNS(t *testing.T) {
 		t.Fatalf("stable and friendly names must answer the same: %v vs %v", stable.addrs, home.addrs)
 	}
 
-	v4 := ask(t, server, "postgres.home.lattice.internal", dnsmessage.TypeA, false)
-	lunar4 := ask(t, server, "postgres.lunarlabs.lattice.internal", dnsmessage.TypeA, false)
+	v4 := ask(t, server, "postgres.home.flavor.internal", dnsmessage.TypeA, false)
+	lunar4 := ask(t, server, "postgres.lunarlabs.flavor.internal", dnsmessage.TypeA, false)
 	if v4.rcode != dnsmessage.RCodeSuccess || len(v4.addrs) != 1 || !synthetic.CompatibilityRange.Contains(v4.addrs[0]) {
 		t.Fatalf("A answers come from the IPv4 compatibility pool: %+v", v4)
 	}
@@ -158,7 +158,7 @@ func TestExperimentalSyntheticDNS(t *testing.T) {
 	if amb.rcode != dnsmessage.RCodeServerFailure || len(amb.addrs) != 0 {
 		t.Fatalf("ambiguous name must fail, not pick: %+v", amb)
 	}
-	if amb.ede != "Ambiguous Lattice destination: 2 network candidates" {
+	if amb.ede != "Ambiguous Flavor destination: 2 network candidates" {
 		t.Fatalf("extended error %q", amb.ede)
 	}
 	if plain := ask(t, server, "postgres", dnsmessage.TypeAAAA, false); plain.ede != "" || plain.rcode != dnsmessage.RCodeServerFailure {
@@ -180,16 +180,16 @@ func TestExperimentalSyntheticDNS(t *testing.T) {
 		t.Fatalf("preference must resolve the ambiguity immediately: %+v", pref)
 	}
 
-	missing := ask(t, server, "nothing.home.lattice.internal", dnsmessage.TypeAAAA, false)
+	missing := ask(t, server, "nothing.home.flavor.internal", dnsmessage.TypeAAAA, false)
 	if missing.rcode != dnsmessage.RCodeNameError || missing.soa == nil || missing.soa.MinTTL != syndns.TTL {
 		t.Fatalf("absent name under the zone is NXDOMAIN with a short negative TTL: %+v", missing)
 	}
 	if out := ask(t, server, "example.com", dnsmessage.TypeAAAA, false); out.rcode != dnsmessage.RCodeRefused {
-		t.Fatalf("names outside Lattice are refused: %+v", out)
+		t.Fatalf("names outside Flavor are refused: %+v", out)
 	}
 
 	addHeadscale(t, c, "home", "https://home2.example.com", false)
-	if dup := ask(t, server, "postgres.home.lattice.internal", dnsmessage.TypeAAAA, false); dup.rcode != dnsmessage.RCodeServerFailure {
+	if dup := ask(t, server, "postgres.home.flavor.internal", dnsmessage.TypeAAAA, false); dup.rcode != dnsmessage.RCodeServerFailure {
 		t.Fatalf("duplicate friendly network labels must not publish an answer: %+v", dup)
 	}
 	if again := ask(t, server, insp.Msg.Candidates[0].StableName, dnsmessage.TypeAAAA, false); len(again.addrs) != 1 || again.addrs[0] != home.addrs[0] {

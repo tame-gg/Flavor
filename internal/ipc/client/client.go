@@ -5,22 +5,22 @@ import (
 	"net"
 	"net/http"
 
-	"git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1/latticev1connect"
+	"git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1/flavorv1connect"
 )
 
-const BaseURL = "http://latticed"
+const BaseURL = "http://flavord"
 
 type Client struct {
-	Daemon      latticev1connect.DaemonServiceClient
-	Networks    latticev1connect.NetworkServiceClient
-	Devices     latticev1connect.DeviceServiceClient
-	Diagnostics latticev1connect.DiagnosticsServiceClient
-	Events      latticev1connect.EventServiceClient
-	Inspector   latticev1connect.InspectorServiceClient
-	Conflicts   latticev1connect.ConflictServiceClient
-	Workspaces  latticev1connect.WorkspaceServiceClient
-	Preferences latticev1connect.PreferenceServiceClient
-	Forwards    latticev1connect.ForwardServiceClient
+	Daemon      flavorv1connect.DaemonServiceClient
+	Networks    flavorv1connect.NetworkServiceClient
+	Devices     flavorv1connect.DeviceServiceClient
+	Diagnostics flavorv1connect.DiagnosticsServiceClient
+	Events      flavorv1connect.EventServiceClient
+	Inspector   flavorv1connect.InspectorServiceClient
+	Conflicts   flavorv1connect.ConflictServiceClient
+	Workspaces  flavorv1connect.WorkspaceServiceClient
+	Preferences flavorv1connect.PreferenceServiceClient
+	Forwards    flavorv1connect.ForwardServiceClient
 }
 
 func HTTPClient(socket string) *http.Client {
@@ -38,15 +38,15 @@ func HTTPClient(socket string) *http.Client {
 func New(socket string) *Client {
 	h := HTTPClient(socket)
 	return &Client{
-		Daemon:      latticev1connect.NewDaemonServiceClient(h, BaseURL),
-		Networks:    latticev1connect.NewNetworkServiceClient(h, BaseURL),
-		Devices:     latticev1connect.NewDeviceServiceClient(h, BaseURL),
-		Diagnostics: latticev1connect.NewDiagnosticsServiceClient(h, BaseURL),
-		Events:      latticev1connect.NewEventServiceClient(h, BaseURL),
-		Inspector:   latticev1connect.NewInspectorServiceClient(h, BaseURL),
-		Conflicts:   latticev1connect.NewConflictServiceClient(h, BaseURL),
-		Workspaces:  latticev1connect.NewWorkspaceServiceClient(h, BaseURL),
-		Preferences: latticev1connect.NewPreferenceServiceClient(h, BaseURL),
-		Forwards:    latticev1connect.NewForwardServiceClient(h, BaseURL),
+		Daemon:      flavorv1connect.NewDaemonServiceClient(h, BaseURL),
+		Networks:    flavorv1connect.NewNetworkServiceClient(h, BaseURL),
+		Devices:     flavorv1connect.NewDeviceServiceClient(h, BaseURL),
+		Diagnostics: flavorv1connect.NewDiagnosticsServiceClient(h, BaseURL),
+		Events:      flavorv1connect.NewEventServiceClient(h, BaseURL),
+		Inspector:   flavorv1connect.NewInspectorServiceClient(h, BaseURL),
+		Conflicts:   flavorv1connect.NewConflictServiceClient(h, BaseURL),
+		Workspaces:  flavorv1connect.NewWorkspaceServiceClient(h, BaseURL),
+		Preferences: flavorv1connect.NewPreferenceServiceClient(h, BaseURL),
+		Forwards:    flavorv1connect.NewForwardServiceClient(h, BaseURL),
 	}
 }

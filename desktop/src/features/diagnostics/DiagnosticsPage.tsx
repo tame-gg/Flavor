@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { RunDiagnosticsResponse } from "@gen/lattice/v1/diagnostics_pb";
+import type { RunDiagnosticsResponse } from "@gen/flavor/v1/diagnostics_pb";
 import { Banner } from "../../components/ui/Banner";
 import { Button } from "../../components/ui/Button";
 import { runDiagnostics } from "../../lib/api/daemon";

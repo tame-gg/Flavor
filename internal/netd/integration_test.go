@@ -13,13 +13,13 @@ import (
 	"testing"
 	"time"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/dataplane"
-	"git.lunarlabs.dev/lattice/lattice/internal/dataplane/dataplanetest"
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/inspect"
-	"git.lunarlabs.dev/lattice/lattice/internal/store"
-	"git.lunarlabs.dev/lattice/lattice/internal/syndns"
-	"git.lunarlabs.dev/lattice/lattice/internal/synthetic"
+	"git.lunarlabs.dev/flavor/flavor/internal/dataplane"
+	"git.lunarlabs.dev/flavor/flavor/internal/dataplane/dataplanetest"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/inspect"
+	"git.lunarlabs.dev/flavor/flavor/internal/store"
+	"git.lunarlabs.dev/flavor/flavor/internal/syndns"
+	"git.lunarlabs.dev/flavor/flavor/internal/synthetic"
 	"golang.org/x/net/dns/dnsmessage"
 )
 
@@ -31,7 +31,7 @@ func (nothing) Inspect(context.Context, string) (inspect.Result, uint64, error) 
 
 func TestHelperDescriptorDrivesTheDataPlane(t *testing.T) {
 	ctx := context.Background()
-	db, err := store.Open(ctx, filepath.Join(t.TempDir(), "lattice.db"))
+	db, err := store.Open(ctx, filepath.Join(t.TempDir(), "flavor.db"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func TestHelperDescriptorDrivesTheDataPlane(t *testing.T) {
 		}
 		b := dnsmessage.NewBuilder(nil, dnsmessage.Header{ID: 9})
 		_ = b.StartQuestions()
-		_ = b.Question(dnsmessage.Question{Name: dnsmessage.MustNewName("x.home.lattice.internal."), Type: dnsmessage.TypeAAAA, Class: dnsmessage.ClassINET})
+		_ = b.Question(dnsmessage.Question{Name: dnsmessage.MustNewName("x.home.flavor.internal."), Type: dnsmessage.TypeAAAA, Class: dnsmessage.ClassINET})
 		q, _ := b.Finish()
 		_ = u.SetDeadline(time.Now().Add(5 * time.Second))
 		_, _ = u.Write(q)

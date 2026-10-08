@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
 )
 
 type DirResolver interface {

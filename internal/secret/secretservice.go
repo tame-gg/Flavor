@@ -70,7 +70,7 @@ func (s *secretServiceStore) Status(ctx context.Context) Status {
 	if err := ctx.Err(); err != nil {
 		return Status{Backend: BackendSecretService, State: StateUnavailable, Detail: err.Error()}
 	}
-	probeRef := "lattice/status-probe"
+	probeRef := "flavor/status-probe"
 	_, err := s.api.Get(s.service, probeRef)
 	if err == nil {
 		return Status{Backend: BackendSecretService, State: StateAvailable}

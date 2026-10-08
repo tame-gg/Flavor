@@ -7,10 +7,10 @@ import (
 	"net/netip"
 	"strings"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/inspect"
-	"git.lunarlabs.dev/lattice/lattice/internal/naming"
-	"git.lunarlabs.dev/lattice/lattice/internal/synthetic"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/inspect"
+	"git.lunarlabs.dev/flavor/flavor/internal/naming"
+	"git.lunarlabs.dev/flavor/flavor/internal/synthetic"
 	"golang.org/x/net/dns/dnsmessage"
 )
 
@@ -142,7 +142,7 @@ func (e *Engine) decide(ctx context.Context, q dnsmessage.Question) outcome {
 		if e.Ambiguous != nil {
 			e.Ambiguous(name, candidates, networks)
 		}
-		return outcome{rcode: dnsmessage.RCodeServerFailure, ede: fmt.Sprintf("Ambiguous Lattice destination: %d network candidates", networks)}
+		return outcome{rcode: dnsmessage.RCodeServerFailure, ede: fmt.Sprintf("Ambiguous Flavor destination: %d network candidates", networks)}
 	}
 	var sel inspect.Candidate
 	for _, c := range res.Candidates {

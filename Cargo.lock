@@ -1107,6 +1107,47 @@ dependencies = [
 ]
 
 [[package]]
+name = "flavor-desktop"
+version = "0.1.0-beta.1"
+dependencies = [
+ "buffa",
+ "flavor-ipc",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-opener",
+ "tempfile",
+ "toml 1.1.6+spec-1.1.0",
+]
+
+[[package]]
+name = "flavor-ipc"
+version = "0.1.0-beta.1"
+dependencies = [
+ "base64 0.22.1",
+ "buffa",
+ "connectrpc",
+ "flavor-proto",
+ "http",
+ "serde_json",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
+name = "flavor-proto"
+version = "0.1.0-beta.1"
+dependencies = [
+ "buffa",
+ "buffa-types",
+ "connectrpc",
+ "connectrpc-build",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2082,47 +2123,6 @@ checksum = "0fbe853b403ae61a04233030ae8a79d94975281ed9770a1f9e246732b534b28d"
 dependencies = [
  "bitflags 2.13.2",
  "serde",
-]
-
-[[package]]
-name = "lattice-desktop"
-version = "0.1.0-beta.1"
-dependencies = [
- "buffa",
- "lattice-ipc",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-opener",
- "tempfile",
- "toml 1.1.6+spec-1.1.0",
-]
-
-[[package]]
-name = "lattice-ipc"
-version = "0.1.0-beta.1"
-dependencies = [
- "base64 0.22.1",
- "buffa",
- "connectrpc",
- "http",
- "lattice-proto",
- "serde_json",
- "tempfile",
- "tokio",
-]
-
-[[package]]
-name = "lattice-proto"
-version = "0.1.0-beta.1"
-dependencies = [
- "buffa",
- "buffa-types",
- "connectrpc",
- "connectrpc-build",
- "serde",
- "serde_json",
 ]
 
 [[package]]

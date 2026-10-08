@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package flavor.v1;
+
+service DiagnosticsService {
+  rpc RunDiagnostics(RunDiagnosticsRequest) returns (RunDiagnosticsResponse);
+}
+
+message RunDiagnosticsRequest {}
+
+message DiagnosticCheck {
+  string name = 1;
+  string status = 2;
+  string safe_detail = 3;
+}
+
+message RunDiagnosticsResponse {
+  repeated DiagnosticCheck checks = 1;
+  string secret_store_backend = 2;
+  string secret_store_state = 3;
+}

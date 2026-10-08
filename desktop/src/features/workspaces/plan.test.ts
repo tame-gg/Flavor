@@ -1,7 +1,7 @@
 import { create } from "@bufbuild/protobuf";
-import { NetworkConnectionState as S } from "@gen/lattice/v1/common_pb";
-import { NetworkSchema } from "@gen/lattice/v1/network_pb";
-import { WorkspaceSchema } from "@gen/lattice/v1/workspaces_pb";
+import { NetworkConnectionState as S } from "@gen/flavor/v1/common_pb";
+import { NetworkSchema } from "@gen/flavor/v1/network_pb";
+import { WorkspaceSchema } from "@gen/flavor/v1/workspaces_pb";
 import { describe, expect, it } from "vitest";
 import { activationPlan, memberSummary } from "./plan";
 

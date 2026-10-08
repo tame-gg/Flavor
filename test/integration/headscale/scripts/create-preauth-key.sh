@@ -2,7 +2,7 @@
 set -euo pipefail
 
 INSTANCE="${1:-a}"
-USER_NAME="${2:-lattice}"
+USER_NAME="${2:-flavor}"
 COMPOSE_FILE="$(cd "$(dirname "$0")/.." && pwd)/compose.yml"
 SERVICE="headscale-${INSTANCE}"
 

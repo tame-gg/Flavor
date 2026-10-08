@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	v1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1"
-	"git.lunarlabs.dev/lattice/lattice/internal/app"
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/ipc/client"
-	"git.lunarlabs.dev/lattice/lattice/internal/provider"
-	"git.lunarlabs.dev/lattice/lattice/internal/session/sessiontest"
+	v1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1"
+	"git.lunarlabs.dev/flavor/flavor/internal/app"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/ipc/client"
+	"git.lunarlabs.dev/flavor/flavor/internal/provider"
+	"git.lunarlabs.dev/flavor/flavor/internal/session/sessiontest"
 )
 
 func identifyingEngines() *sessiontest.Sequence {
@@ -97,7 +97,7 @@ func TestForwardThroughTheChosenNetwork(t *testing.T) {
 		})
 	}
 
-	f, err := startForward(t, c, &v1.ForwardRequest{Destination: "postgres.home.lattice.internal:5432"})
+	f, err := startForward(t, c, &v1.ForwardRequest{Destination: "postgres.home.flavor.internal:5432"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -135,7 +135,7 @@ func TestForwardThroughTheChosenNetwork(t *testing.T) {
 	})
 
 	_, err = startForward(t, c, &v1.ForwardRequest{Destination: "100.64.0.9:5432"})
-	if latticeCode(err) != v1.LatticeErrorCode_LATTICE_ERROR_CODE_DESTINATION_AMBIGUOUS {
+	if flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_DESTINATION_AMBIGUOUS {
 		t.Fatalf("ambiguous raw address must not be forwarded: %v", err)
 	}
 
@@ -167,14 +167,14 @@ func TestForwardThroughTheChosenNetwork(t *testing.T) {
 	}
 
 	for _, listen := range []string{"0.0.0.0:0", "192.168.1.10:8080", "[::]:0"} {
-		if _, err := startForward(t, c, &v1.ForwardRequest{Destination: "postgres.home.lattice.internal:5432", Listen: listen}); latticeCode(err) != v1.LatticeErrorCode_LATTICE_ERROR_CODE_INVALID_ARGUMENT {
+		if _, err := startForward(t, c, &v1.ForwardRequest{Destination: "postgres.home.flavor.internal:5432", Listen: listen}); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_ARGUMENT {
 			t.Fatalf("%s accepted: %v", listen, err)
 		}
 	}
-	if _, err := startForward(t, c, &v1.ForwardRequest{Destination: "postgres.home.lattice.internal"}); latticeCode(err) != v1.LatticeErrorCode_LATTICE_ERROR_CODE_INVALID_ARGUMENT {
+	if _, err := startForward(t, c, &v1.ForwardRequest{Destination: "postgres.home.flavor.internal"}); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_ARGUMENT {
 		t.Fatalf("missing port: %v", err)
 	}
-	if _, err := startForward(t, c, &v1.ForwardRequest{Destination: "10.1.2.3:80"}); latticeCode(err) != v1.LatticeErrorCode_LATTICE_ERROR_CODE_DESTINATION_NOT_FOUND {
+	if _, err := startForward(t, c, &v1.ForwardRequest{Destination: "10.1.2.3:80"}); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_DESTINATION_NOT_FOUND {
 		t.Fatalf("unknown destination: %v", err)
 	}
 

@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"testing"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/synthetic/layout"
+	"git.lunarlabs.dev/flavor/flavor/internal/synthetic/layout"
 	"gvisor.dev/gvisor/pkg/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"

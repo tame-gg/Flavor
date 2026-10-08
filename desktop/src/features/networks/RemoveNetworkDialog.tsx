@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Network } from "@gen/lattice/v1/network_pb";
+import type { Network } from "@gen/flavor/v1/network_pb";
 import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
 import { deleteNetworkIdentity, removeNetwork } from "../../lib/api/daemon";
@@ -43,7 +43,7 @@ export function RemoveNetworkDialog({ network, onClose, onRemoved }: Props) {
       }
     >
       <p>
-        Lattice disconnects this network and removes it from the app. This device's identity stays on disk, so adding
+        Flavor disconnects this network and removes it from the app. This device's identity stays on disk, so adding
         the network again can reuse it without signing in.
       </p>
       <label className="check">
@@ -51,7 +51,7 @@ export function RemoveNetworkDialog({ network, onClose, onRemoved }: Props) {
         <span>
           Also delete this device's local identity
           <span className="hint check-hint">
-            You will need to sign in again and this device will join as a new machine. Lattice never deletes the machine
+            You will need to sign in again and this device will join as a new machine. Flavor never deletes the machine
             from the control server; an administrator can remove it there.
           </span>
         </span>

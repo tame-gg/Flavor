@@ -7,7 +7,7 @@ import {
   InspectDestinationResponseSchema,
   MatchKind,
   ResolutionDecision,
-} from "@gen/lattice/v1/inspector_pb";
+} from "@gen/flavor/v1/inspector_pb";
 import { describe, expect, it } from "vitest";
 import { candidateLabel, explain, preferenceNote } from "./explain";
 
@@ -80,7 +80,7 @@ describe("explain", () => {
     });
     expect(explain(chosen)).toEqual({
       title: "prod-api on LunarLabs",
-      detail: "Chosen by your Lattice preference for LunarLabs. Without it, 100.64.0.1 would match on 2 networks.",
+      detail: "Chosen by your Flavor preference for LunarLabs. Without it, 100.64.0.1 would match on 2 networks.",
     });
     expect(preferenceNote(chosen)).toBeNull();
     expect(candidateLabel(chosen, CandidateStatus.OUTRANKED)).toBe("Not preferred");
@@ -118,15 +118,15 @@ describe("explain", () => {
     expect(candidateLabel(routed, CandidateStatus.OUTRANKED, MatchKind.SUBNET_ROUTE)).toBe("Less specific route");
   });
 
-  it("explains a Lattice name whose network label is shared", () => {
+  it("explains a Flavor name whose network label is shared", () => {
     const r = create(InspectDestinationResponseSchema, {
-      normalized: "postgres.home.lattice.internal",
+      normalized: "postgres.home.flavor.internal",
       kind: DestinationKind.NAME,
       decision: ResolutionDecision.AMBIGUOUS,
       reason: DecisionReason.AMBIGUOUS_NETWORK_LABEL,
       candidates: [candidate("b", "Home", "postgres", CandidateStatus.TIED, MatchKind.QUALIFIED_NAME)],
     });
-    expect(explain(r).title).toBe("postgres.home.lattice.internal uses a network name more than one network shares");
+    expect(explain(r).title).toBe("postgres.home.flavor.internal uses a network name more than one network shares");
   });
 });
 

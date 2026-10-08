@@ -16,8 +16,8 @@ func TestNoForbiddenImports(t *testing.T) {
 		t.Fatal(err)
 	}
 	forbidden := []string{
-		"git.lunarlabs.dev/lattice/lattice/internal/store",
-		"git.lunarlabs.dev/lattice/lattice/gen/",
+		"git.lunarlabs.dev/flavor/flavor/internal/store",
+		"git.lunarlabs.dev/flavor/flavor/gen/",
 		"tailscale.com/",
 	}
 	fset := token.NewFileSet()

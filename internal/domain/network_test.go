@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
 )
 
 func TestParseProvider(t *testing.T) {
@@ -131,6 +131,6 @@ func TestConnectionStateParse(t *testing.T) {
 		t.Fatalf("got %v %v", s, err)
 	}
 	if _, err := domain.ParseConnectionState("running"); err == nil {
-		t.Fatal("running is not a lattice connection state")
+		t.Fatal("running is not a flavor connection state")
 	}
 }

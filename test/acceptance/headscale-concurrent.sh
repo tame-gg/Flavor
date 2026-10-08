@@ -17,18 +17,18 @@ cleanup() {
 }
 trap cleanup EXIT
 
-"$ROOT/scripts/go.sh" build -o "$BIN/latticed" ./cmd/latticed
-"$ROOT/scripts/go.sh" build -o "$BIN/latticectl" ./cmd/latticectl
-ctl() { "$BIN/latticectl" "$@"; }
+"$ROOT/scripts/go.sh" build -o "$BIN/flavord" ./cmd/flavord
+"$ROOT/scripts/go.sh" build -o "$BIN/flavorctl" ./cmd/flavorctl
+ctl() { "$BIN/flavorctl" "$@"; }
 
 start_daemon() {
-  "$BIN/latticed" --secret-store=memory --log-level=debug >>"$WORK/latticed.log" 2>&1 &
+  "$BIN/flavord" --secret-store=memory --log-level=debug >>"$WORK/flavord.log" 2>&1 &
   DAEMON_PID=$!
   for _ in $(seq 1 100); do
-    [ -S "$XDG_RUNTIME_DIR/lattice/latticed.sock" ] && ctl info >/dev/null 2>&1 && return
+    [ -S "$XDG_RUNTIME_DIR/flavor/flavord.sock" ] && ctl info >/dev/null 2>&1 && return
     sleep 0.1
   done
-  echo "latticed did not become ready" >&2
+  echo "flavord did not become ready" >&2
   exit 1
 }
 
@@ -48,8 +48,8 @@ wait_connected() {
   exit 1
 }
 
-KEY_A="$("$HS/scripts/create-preauth-key.sh" a lattice)"
-KEY_B="$("$HS/scripts/create-preauth-key.sh" b lattice)"
+KEY_A="$("$HS/scripts/create-preauth-key.sh" a flavor)"
+KEY_B="$("$HS/scripts/create-preauth-key.sh" b flavor)"
 
 start_daemon
 INSTANCE_1="$(ctl info | awk '/^instance/ {print $2}')"
@@ -59,7 +59,7 @@ printf '%s\n' "$KEY_A" | ctl enroll "$A"
 printf '%s\n' "$KEY_B" | ctl enroll "$B"
 wait_connected "$A"
 wait_connected "$B"
-echo "== both sessions connected in one latticed"
+echo "== both sessions connected in one flavord"
 ctl list
 ctl devices
 
@@ -76,19 +76,19 @@ wait_connected "$B"
 echo "== restart: new instance $INSTANCE_2, both reconnected from persisted identity without keys"
 
 ctl remove "$A"
-[ -d "$XDG_DATA_HOME/lattice/networks/$A" ] || { echo "soft remove deleted identity" >&2; exit 1; }
+[ -d "$XDG_DATA_HOME/flavor/networks/$A" ] || { echo "soft remove deleted identity" >&2; exit 1; }
 ctl remove --delete-identity "$B"
-[ ! -e "$XDG_DATA_HOME/lattice/networks/$B" ] || { echo "hard delete left identity" >&2; exit 1; }
+[ ! -e "$XDG_DATA_HOME/flavor/networks/$B" ] || { echo "hard delete left identity" >&2; exit 1; }
 ctl remove --delete-identity "$A"
 echo "== soft remove kept identity; hard delete removed it"
 stop_daemon
 
-if grep -rqaF -e "$KEY_A" -e "$KEY_B" "$WORK/latticed.log" "$XDG_DATA_HOME" "$XDG_CONFIG_HOME" 2>/dev/null; then
+if grep -rqaF -e "$KEY_A" -e "$KEY_B" "$WORK/flavord.log" "$XDG_DATA_HOME" "$XDG_CONFIG_HOME" 2>/dev/null; then
   echo "enrollment key found in logs or state" >&2
   exit 1
 fi
-if grep -qE "https?://[^ ]*/register/" "$WORK/latticed.log"; then
-  echo "auth url found in latticed log" >&2
+if grep -qE "https?://[^ ]*/register/" "$WORK/flavord.log"; then
+  echo "auth url found in flavord log" >&2
   exit 1
 fi
 echo "== no enrollment key in logs, data or config; no auth URL in daemon log"

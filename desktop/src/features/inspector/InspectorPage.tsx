@@ -6,7 +6,7 @@ import {
   ResolutionDecision,
   type InspectDestinationResponse,
   type ResolutionCandidate,
-} from "@gen/lattice/v1/inspector_pb";
+} from "@gen/flavor/v1/inspector_pb";
 import { Banner } from "../../components/ui/Banner";
 import { Button } from "../../components/ui/Button";
 import { CopyButton } from "../../components/ui/CopyButton";
@@ -141,8 +141,8 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
             {note && <p className="muted">{note}</p>}
             {result.preference && canPrefer && (
               <div className="row">
-                <span className="badge">Lattice preference: {result.preference.network?.displayName}</span>
-                <span className="hint">Used by Lattice's decisions only. System routing is not changed.</span>
+                <span className="badge">Flavor preference: {result.preference.network?.displayName}</span>
+                <span className="hint">Used by Flavor's decisions only. System routing is not changed.</span>
                 <span className="spacer" />
                 <Button variant="ghost" loading={prefPending} disabled={!canMutate} onClick={() => void unprefer(result.preference!.destination)}>
                   Remove preference
@@ -150,7 +150,7 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
               </div>
             )}
             {prefError && <p className="error-text" role="alert">{prefError}</p>}
-            {result.port > 0 && <p className="hint">Lattice notes the port but does not probe services.</p>}
+            {result.port > 0 && <p className="hint">Flavor notes the port but does not probe services.</p>}
           </section>
 
           {result.candidates.length > 0 && (
@@ -159,7 +159,7 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
                 {result.candidates.length} candidate{result.candidates.length === 1 ? "" : "s"}
               </h3>
               {canPrefer && spansNetworks && result.decision === ResolutionDecision.AMBIGUOUS && (
-                <p className="muted small">Prefer a network to have Lattice choose it whenever you use {result.normalized}.</p>
+                <p className="muted small">Prefer a network to have Flavor choose it whenever you use {result.normalized}.</p>
               )}
               <ul className="list candidate-list">
                 {result.candidates.map((c) => (
@@ -192,7 +192,7 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
       {canPrefer && saved.length > 0 && (
         <section className="stack-sm" aria-labelledby="saved-preferences">
           <h3 id="saved-preferences">Your preferences</h3>
-          <p className="muted small">When a destination exists on several networks, Lattice uses these to decide. They do not change system routing.</p>
+          <p className="muted small">When a destination exists on several networks, Flavor uses these to decide. They do not change system routing.</p>
           <div className="member-table" role="table" aria-label="Destination preferences">
             {saved.map((p) => (
               <div key={p.destination} className="member-row pref-row" role="row">
@@ -223,7 +223,7 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
         <div className="card stack-sm">
           <h3>Try an address or a name</h3>
           <p className="muted">
-            Lattice checks every connected network for devices with that address, full DNS name or device name. The same
+            Flavor checks every connected network for devices with that address, full DNS name or device name. The same
             address on two networks is normal; the inspector shows each one so you can tell them apart.
           </p>
         </div>
@@ -279,7 +279,7 @@ function CandidateRow({
         <dd className="mono">{d.addresses.join(", ")}</dd>
         {c.qualifiedName && (
           <>
-            <dt>Lattice name</dt>
+            <dt>Flavor name</dt>
             <dd className="row">
               <span className="mono grow">{c.qualifiedName}</span>
               <CopyButton value={c.qualifiedName} label="Copy" />

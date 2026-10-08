@@ -6,8 +6,8 @@ import (
 	"sync"
 
 	"connectrpc.com/connect"
-	v1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1"
-	"git.lunarlabs.dev/lattice/lattice/internal/service"
+	v1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1"
+	"git.lunarlabs.dev/flavor/flavor/internal/service"
 )
 
 func (h *handlers) forwardRoute(r service.Route) *v1.ForwardRoute {
@@ -19,13 +19,13 @@ func (h *handlers) forwardRoute(r service.Route) *v1.ForwardRoute {
 	return out
 }
 
-func errorDetail(err error) *v1.LatticeErrorDetail {
+func errorDetail(err error) *v1.FlavorErrorDetail {
 	var se *service.Error
 	if !errors.As(err, &se) {
 		se = &service.Error{Code: service.CodeInternal, SafeMessage: "internal error", Retryable: true}
 	}
-	return &v1.LatticeErrorDetail{
-		Code:        v1.LatticeErrorCode(v1.LatticeErrorCode_value["LATTICE_ERROR_CODE_"+string(se.Code)]),
+	return &v1.FlavorErrorDetail{
+		Code:        v1.FlavorErrorCode(v1.FlavorErrorCode_value["FLAVOR_ERROR_CODE_"+string(se.Code)]),
 		SafeMessage: se.SafeMessage,
 		Retryable:   se.Retryable,
 	}

@@ -3,8 +3,8 @@ package session
 import (
 	"log/slog"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/events"
-	"git.lunarlabs.dev/lattice/lattice/internal/provider"
+	"git.lunarlabs.dev/flavor/flavor/internal/events"
+	"git.lunarlabs.dev/flavor/flavor/internal/provider"
 )
 
 func NewSessionWithFactory(cfg provider.ResolvedSessionConfig, bus *events.Bus, log *slog.Logger, f EngineFactory) (*Session, error) {

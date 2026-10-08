@@ -7,12 +7,12 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	v1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1"
-	"git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1/latticev1connect"
-	"git.lunarlabs.dev/lattice/lattice/internal/events"
-	"git.lunarlabs.dev/lattice/lattice/internal/ipc/transport"
-	"git.lunarlabs.dev/lattice/lattice/internal/secret"
-	"git.lunarlabs.dev/lattice/lattice/internal/service"
+	v1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1"
+	"git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1/flavorv1connect"
+	"git.lunarlabs.dev/flavor/flavor/internal/events"
+	"git.lunarlabs.dev/flavor/flavor/internal/ipc/transport"
+	"git.lunarlabs.dev/flavor/flavor/internal/secret"
+	"git.lunarlabs.dev/flavor/flavor/internal/service"
 )
 
 const maxMessageBytes = 1 << 20
@@ -25,16 +25,16 @@ func New(svc *service.Service) *http.Server {
 	h := &handlers{svc: svc}
 	opts := []connect.HandlerOption{connect.WithReadMaxBytes(maxMessageBytes)}
 	mux := http.NewServeMux()
-	mux.Handle(latticev1connect.NewDaemonServiceHandler(h, opts...))
-	mux.Handle(latticev1connect.NewNetworkServiceHandler(h, opts...))
-	mux.Handle(latticev1connect.NewDeviceServiceHandler(h, opts...))
-	mux.Handle(latticev1connect.NewDiagnosticsServiceHandler(h, opts...))
-	mux.Handle(latticev1connect.NewEventServiceHandler(h, opts...))
-	mux.Handle(latticev1connect.NewInspectorServiceHandler(h, opts...))
-	mux.Handle(latticev1connect.NewConflictServiceHandler(h, opts...))
-	mux.Handle(latticev1connect.NewWorkspaceServiceHandler(h, opts...))
-	mux.Handle(latticev1connect.NewPreferenceServiceHandler(h, opts...))
-	mux.Handle(latticev1connect.NewForwardServiceHandler(h, opts...))
+	mux.Handle(flavorv1connect.NewDaemonServiceHandler(h, opts...))
+	mux.Handle(flavorv1connect.NewNetworkServiceHandler(h, opts...))
+	mux.Handle(flavorv1connect.NewDeviceServiceHandler(h, opts...))
+	mux.Handle(flavorv1connect.NewDiagnosticsServiceHandler(h, opts...))
+	mux.Handle(flavorv1connect.NewEventServiceHandler(h, opts...))
+	mux.Handle(flavorv1connect.NewInspectorServiceHandler(h, opts...))
+	mux.Handle(flavorv1connect.NewConflictServiceHandler(h, opts...))
+	mux.Handle(flavorv1connect.NewWorkspaceServiceHandler(h, opts...))
+	mux.Handle(flavorv1connect.NewPreferenceServiceHandler(h, opts...))
+	mux.Handle(flavorv1connect.NewForwardServiceHandler(h, opts...))
 	var p http.Protocols
 	p.SetUnencryptedHTTP2(true)
 	return &http.Server{
@@ -217,8 +217,8 @@ func (h *handlers) WatchEvents(ctx context.Context, req *connect.Request[v1.Watc
 
 func resyncError(msg string) error {
 	ce := connect.NewError(connect.CodeFailedPrecondition, errors.New(msg))
-	if d, err := connect.NewErrorDetail(&v1.LatticeErrorDetail{
-		Code:        v1.LatticeErrorCode_LATTICE_ERROR_CODE_RESYNC_REQUIRED,
+	if d, err := connect.NewErrorDetail(&v1.FlavorErrorDetail{
+		Code:        v1.FlavorErrorCode_FLAVOR_ERROR_CODE_RESYNC_REQUIRED,
 		SafeMessage: msg,
 		Retryable:   true,
 	}); err == nil {
@@ -253,8 +253,8 @@ func toConnect(err error) error {
 		code = connect.CodeInternal
 	}
 	ce := connect.NewError(code, errors.New(se.SafeMessage))
-	if d, derr := connect.NewErrorDetail(&v1.LatticeErrorDetail{
-		Code:        v1.LatticeErrorCode(v1.LatticeErrorCode_value["LATTICE_ERROR_CODE_"+string(se.Code)]),
+	if d, derr := connect.NewErrorDetail(&v1.FlavorErrorDetail{
+		Code:        v1.FlavorErrorCode(v1.FlavorErrorCode_value["FLAVOR_ERROR_CODE_"+string(se.Code)]),
 		SafeMessage: se.SafeMessage,
 		Retryable:   se.Retryable,
 	}); derr == nil {

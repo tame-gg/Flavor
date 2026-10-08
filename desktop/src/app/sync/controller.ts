@@ -1,11 +1,11 @@
 import { create } from "@bufbuild/protobuf";
-import { NetworkConnectionState } from "@gen/lattice/v1/common_pb";
-import type { GetDaemonInfoResponse, GetStateSnapshotResponse } from "@gen/lattice/v1/daemon_pb";
-import type { Device } from "@gen/lattice/v1/device_pb";
-import type { DaemonEvent } from "@gen/lattice/v1/events_pb";
-import { AuthenticationPromptSchema, type Network } from "@gen/lattice/v1/network_pb";
-import type { DestinationPreference } from "@gen/lattice/v1/preferences_pb";
-import type { Workspace } from "@gen/lattice/v1/workspaces_pb";
+import { NetworkConnectionState } from "@gen/flavor/v1/common_pb";
+import type { GetDaemonInfoResponse, GetStateSnapshotResponse } from "@gen/flavor/v1/daemon_pb";
+import type { Device } from "@gen/flavor/v1/device_pb";
+import type { DaemonEvent } from "@gen/flavor/v1/events_pb";
+import { AuthenticationPromptSchema, type Network } from "@gen/flavor/v1/network_pb";
+import type { DestinationPreference } from "@gen/flavor/v1/preferences_pb";
+import type { Workspace } from "@gen/flavor/v1/workspaces_pb";
 import type { StreamMessage, UiError } from "../../lib/api/types";
 
 export const PROTOCOL_MAJOR = 1;
@@ -149,7 +149,7 @@ export class DaemonSyncController {
   private receive(m: StreamMessage): void {
     if (this.disposed || m.watchId !== this.watchId) return;
     if (m.kind === "closed") {
-      if (m.error?.code === "LATTICE_ERROR_CODE_RESYNC_REQUIRED") {
+      if (m.error?.code === "FLAVOR_ERROR_CODE_RESYNC_REQUIRED") {
         void this.resync();
       } else {
         this.fail(m.error ?? { kind: "unavailable", code: null, message: "event stream ended", retryable: true });

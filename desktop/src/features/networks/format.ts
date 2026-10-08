@@ -1,5 +1,5 @@
-import { ProviderType } from "@gen/lattice/v1/common_pb";
-import type { Network } from "@gen/lattice/v1/network_pb";
+import { ProviderType } from "@gen/flavor/v1/common_pb";
+import type { Network } from "@gen/flavor/v1/network_pb";
 
 export const providerName = (p: ProviderType) => (p === ProviderType.HEADSCALE ? "Headscale" : "Tailscale");
 

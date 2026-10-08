@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	v1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1"
-	"git.lunarlabs.dev/lattice/lattice/internal/app"
+	v1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1"
+	"git.lunarlabs.dev/flavor/flavor/internal/app"
 	"golang.org/x/net/proxy"
 )
 
@@ -102,7 +102,7 @@ func TestSocksRoutesEachRequestThroughTheDecisionEngine(t *testing.T) {
 	var wg sync.WaitGroup
 	got := map[string]string{}
 	var mu sync.Mutex
-	for _, dest := range []string{"postgres.home.lattice.internal:5432", "postgres.lunarlabs.lattice.internal:5432"} {
+	for _, dest := range []string{"postgres.home.flavor.internal:5432", "postgres.lunarlabs.flavor.internal:5432"} {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -118,8 +118,8 @@ func TestSocksRoutesEachRequestThroughTheDecisionEngine(t *testing.T) {
 		}()
 	}
 	wg.Wait()
-	if got["postgres.home.lattice.internal:5432"] != "network="+b.Id+" target=100.64.0.9:5432" ||
-		got["postgres.lunarlabs.lattice.internal:5432"] != "network="+a.Id+" target=100.64.0.9:5432" {
+	if got["postgres.home.flavor.internal:5432"] != "network="+b.Id+" target=100.64.0.9:5432" ||
+		got["postgres.lunarlabs.flavor.internal:5432"] != "network="+a.Id+" target=100.64.0.9:5432" {
 		t.Fatalf("concurrent sessions crossed networks: %v", got)
 	}
 
@@ -127,9 +127,9 @@ func TestSocksRoutesEachRequestThroughTheDecisionEngine(t *testing.T) {
 		t.Fatalf("ambiguous raw IPv4 must be refused by policy, got reply %#x", code)
 	}
 	if code := socksReplyCode(t, addr, domainRequest(1, "example.com", 80)); code != 0x04 {
-		t.Fatalf("destination outside Lattice networks: reply %#x", code)
+		t.Fatalf("destination outside Flavor networks: reply %#x", code)
 	}
-	if code := socksReplyCode(t, addr, domainRequest(2, "postgres.home.lattice.internal", 5432)); code != 0x07 {
+	if code := socksReplyCode(t, addr, domainRequest(2, "postgres.home.flavor.internal", 5432)); code != 0x07 {
 		t.Fatalf("BIND must be unsupported: reply %#x", code)
 	}
 

@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/naming"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/naming"
 )
 
 func TestStableLabels(t *testing.T) {
@@ -89,14 +89,14 @@ func TestDuplicateFriendlyLabelsAreNotPublished(t *testing.T) {
 
 func TestNameRoundTrip(t *testing.T) {
 	name := naming.Name("postgres", "home")
-	if name != "postgres.home.lattice.internal" {
+	if name != "postgres.home.flavor.internal" {
 		t.Fatal(name)
 	}
 	d, n, ok := naming.Split(name)
 	if !ok || d != "postgres" || n != "home" {
 		t.Fatal(d, n, ok)
 	}
-	for _, bad := range []string{"x.lattice.internal", "a.b.c.lattice.internal", "-a.home.lattice.internal", "postgres.home.example.com"} {
+	for _, bad := range []string{"x.flavor.internal", "a.b.c.flavor.internal", "-a.home.flavor.internal", "postgres.home.example.com"} {
 		if _, _, ok := naming.Split(bad); ok {
 			t.Fatalf("%q accepted", bad)
 		}

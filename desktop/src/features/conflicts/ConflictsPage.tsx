@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ConflictSeverity, ConflictType, type Conflict, type ListConflictsResponse } from "@gen/lattice/v1/conflicts_pb";
+import { ConflictSeverity, ConflictType, type Conflict, type ListConflictsResponse } from "@gen/flavor/v1/conflicts_pb";
 import { Banner } from "../../components/ui/Banner";
 import { Button } from "../../components/ui/Button";
 import { CopyButton } from "../../components/ui/CopyButton";
@@ -174,7 +174,7 @@ function ConflictCard({ conflict: c, onInspect, onOpenNetwork, onShowDevice, can
         )}
       </div>
       <p className="muted">{describe(c)}</p>
-      {preferredName && <p className="muted small">Lattice prefers {preferredName} for {c.value}. System routing is not changed.</p>}
+      {preferredName && <p className="muted small">Flavor prefers {preferredName} for {c.value}. System routing is not changed.</p>}
       {prefError && <p className="error-text" role="alert">{prefError}</p>}
       <div className="member-table" role="table" aria-label={`Devices sharing ${c.value}`}>
         <div className="member-row member-head" role="row">

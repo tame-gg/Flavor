@@ -1,10 +1,10 @@
 import { create } from "@bufbuild/protobuf";
-import { NetworkConnectionState, ProviderType } from "@gen/lattice/v1/common_pb";
-import { GetDaemonInfoResponseSchema, GetStateSnapshotResponseSchema, type GetStateSnapshotResponse } from "@gen/lattice/v1/daemon_pb";
-import { DeviceSchema, type Device } from "@gen/lattice/v1/device_pb";
-import { DaemonEventSchema, type DaemonEvent } from "@gen/lattice/v1/events_pb";
-import { AuthenticationPromptSchema, NetworkSchema, type Network } from "@gen/lattice/v1/network_pb";
-import { WorkspaceSchema, type Workspace } from "@gen/lattice/v1/workspaces_pb";
+import { NetworkConnectionState, ProviderType } from "@gen/flavor/v1/common_pb";
+import { GetDaemonInfoResponseSchema, GetStateSnapshotResponseSchema, type GetStateSnapshotResponse } from "@gen/flavor/v1/daemon_pb";
+import { DeviceSchema, type Device } from "@gen/flavor/v1/device_pb";
+import { DaemonEventSchema, type DaemonEvent } from "@gen/flavor/v1/events_pb";
+import { AuthenticationPromptSchema, NetworkSchema, type Network } from "@gen/flavor/v1/network_pb";
+import { WorkspaceSchema, type Workspace } from "@gen/flavor/v1/workspaces_pb";
 import { describe, expect, it } from "vitest";
 import type { StreamMessage, UiError } from "../../lib/api/types";
 import { DaemonSyncController, deviceKey, type SyncTransport } from "./controller";
@@ -121,7 +121,7 @@ describe("DaemonSyncController", () => {
   it("resyncs when the stream reports RESYNC_REQUIRED", async () => {
     const { t, c } = setup(snapshot("i1", 1n));
     await c.start();
-    t.close({ kind: "daemon", code: "LATTICE_ERROR_CODE_RESYNC_REQUIRED", message: "", retryable: true });
+    t.close({ kind: "daemon", code: "FLAVOR_ERROR_CODE_RESYNC_REQUIRED", message: "", retryable: true });
     await flush();
     expect(t.snapshotCalls).toBe(2);
     expect(c.getState().status).toBe("ready");
@@ -131,7 +131,7 @@ describe("DaemonSyncController", () => {
     const { t, c } = setup(snapshot("i1", 1n, { networks: [net("a")] }));
     await c.start();
     const old = t.watchId;
-    t.close({ kind: "daemon", code: "LATTICE_ERROR_CODE_RESYNC_REQUIRED", message: "", retryable: true });
+    t.close({ kind: "daemon", code: "FLAVOR_ERROR_CODE_RESYNC_REQUIRED", message: "", retryable: true });
     await flush();
     t.emit(event("i1", 2n, { case: "networkRemoved", value: { networkId: "a" } as never }), old);
     t.close(null, old);

@@ -1,23 +1,23 @@
 import { fromJson, type JsonValue } from "@bufbuild/protobuf";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { GetStateSnapshotResponseSchema, type GetStateSnapshotResponse } from "@gen/lattice/v1/daemon_pb";
-import { RunDiagnosticsResponseSchema, type RunDiagnosticsResponse } from "@gen/lattice/v1/diagnostics_pb";
-import { ListConflictsResponseSchema, type ListConflictsResponse } from "@gen/lattice/v1/conflicts_pb";
-import { DaemonEventSchema } from "@gen/lattice/v1/events_pb";
+import { GetStateSnapshotResponseSchema, type GetStateSnapshotResponse } from "@gen/flavor/v1/daemon_pb";
+import { RunDiagnosticsResponseSchema, type RunDiagnosticsResponse } from "@gen/flavor/v1/diagnostics_pb";
+import { ListConflictsResponseSchema, type ListConflictsResponse } from "@gen/flavor/v1/conflicts_pb";
+import { DaemonEventSchema } from "@gen/flavor/v1/events_pb";
 import {
   DescribeDeviceResponseSchema,
   InspectDestinationResponseSchema,
   type DescribeDeviceResponse,
   type InspectDestinationResponse,
-} from "@gen/lattice/v1/inspector_pb";
-import { NetworkSchema, type Network } from "@gen/lattice/v1/network_pb";
+} from "@gen/flavor/v1/inspector_pb";
+import { NetworkSchema, type Network } from "@gen/flavor/v1/network_pb";
 import {
   ActivateWorkspaceResponseSchema,
   WorkspaceSchema,
   type ActivateWorkspaceResponse,
   type Workspace,
-} from "@gen/lattice/v1/workspaces_pb";
+} from "@gen/flavor/v1/workspaces_pb";
 import type { LoadedSettings, RawStreamMessage, Settings, StreamMessage } from "./types";
 
 const options = { ignoreUnknownFields: true };
@@ -33,7 +33,7 @@ export async function watchEvents(watchId: number, instanceId: string, afterSequ
 }
 
 export function onStreamMessage(handler: (m: StreamMessage) => void): Promise<() => void> {
-  return listen<RawStreamMessage>("lattice://daemon-event", ({ payload }) => {
+  return listen<RawStreamMessage>("flavor://daemon-event", ({ payload }) => {
     if (payload.kind === "event") {
       handler({ ...payload, event: fromJson(DaemonEventSchema, payload.event, options) });
     } else {

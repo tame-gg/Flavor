@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+package flavor.v1;
+
+import "google/protobuf/timestamp.proto";
+import "flavor/v1/inspector.proto";
+
+service WorkspaceService {
+  rpc ListWorkspaces(ListWorkspacesRequest) returns (ListWorkspacesResponse);
+  rpc CreateWorkspace(CreateWorkspaceRequest) returns (CreateWorkspaceResponse);
+  rpc UpdateWorkspace(UpdateWorkspaceRequest) returns (UpdateWorkspaceResponse);
+  rpc DeleteWorkspace(DeleteWorkspaceRequest) returns (DeleteWorkspaceResponse);
+  rpc ActivateWorkspace(ActivateWorkspaceRequest) returns (ActivateWorkspaceResponse);
+  rpc DeactivateWorkspace(DeactivateWorkspaceRequest) returns (DeactivateWorkspaceResponse);
+}
+
+message Workspace {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  repeated string network_ids = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message NetworkIDList {
+  repeated string network_ids = 1;
+}
+
+message ListWorkspacesRequest {}
+
+message ListWorkspacesResponse {
+  string daemon_instance_id = 1;
+  uint64 snapshot_sequence = 2;
+  repeated Workspace workspaces = 3;
+  string active_workspace_id = 4;
+}
+
+message CreateWorkspaceRequest {
+  string name = 1;
+  string description = 2;
+  repeated string network_ids = 3;
+}
+
+message CreateWorkspaceResponse {
+  Workspace workspace = 1;
+}
+
+message UpdateWorkspaceRequest {
+  string workspace_id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  NetworkIDList networks = 4;
+}
+
+message UpdateWorkspaceResponse {
+  Workspace workspace = 1;
+}
+
+message DeleteWorkspaceRequest {
+  string workspace_id = 1;
+}
+
+message DeleteWorkspaceResponse {}
+
+message ActivateWorkspaceRequest {
+  string workspace_id = 1;
+  bool disconnect_others = 2;
+}
+
+enum ActivationOutcome {
+  ACTIVATION_OUTCOME_UNSPECIFIED = 0;
+  ACTIVATION_OUTCOME_CONNECTING = 1;
+  ACTIVATION_OUTCOME_ALREADY_ACTIVE = 2;
+  ACTIVATION_OUTCOME_DISCONNECTED = 3;
+  ACTIVATION_OUTCOME_FAILED = 4;
+}
+
+message ActivationResult {
+  NetworkRef network = 1;
+  ActivationOutcome outcome = 2;
+  string safe_message = 3;
+}
+
+message ActivateWorkspaceResponse {
+  Workspace workspace = 1;
+  repeated ActivationResult results = 2;
+}
+
+message DeactivateWorkspaceRequest {}
+
+message DeactivateWorkspaceResponse {}

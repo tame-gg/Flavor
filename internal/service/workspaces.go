@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/events"
-	"git.lunarlabs.dev/lattice/lattice/internal/store"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/events"
+	"git.lunarlabs.dev/flavor/flavor/internal/store"
 )
 
 const CodeWorkspaceNotFound Code = "WORKSPACE_NOT_FOUND"

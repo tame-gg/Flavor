@@ -3,8 +3,8 @@ package inspect_test
 import (
 	"testing"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/inspect"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/inspect"
 )
 
 func byID(rep inspect.ConflictReport) map[string]inspect.Conflict {

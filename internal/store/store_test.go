@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/store"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/store"
 
 	_ "modernc.org/sqlite"
 )
@@ -18,7 +18,7 @@ import (
 func openTestDB(t *testing.T) *store.DB {
 	t.Helper()
 	ctx := context.Background()
-	path := filepath.Join(t.TempDir(), "lattice.db")
+	path := filepath.Join(t.TempDir(), "flavor.db")
 	db, err := store.Open(ctx, path)
 	if err != nil {
 		t.Fatal(err)
@@ -147,7 +147,7 @@ func TestTailscaleEmptyControlURL(t *testing.T) {
 
 func TestReopenPreservesRegistry(t *testing.T) {
 	ctx := context.Background()
-	path := filepath.Join(t.TempDir(), "lattice.db")
+	path := filepath.Join(t.TempDir(), "flavor.db")
 	db, err := store.Open(ctx, path)
 	if err != nil {
 		t.Fatal(err)
@@ -328,7 +328,7 @@ func TestHardDeleteRejectsSymlinkDir(t *testing.T) {
 
 func TestCorruptDBNotSilentlyRecreated(t *testing.T) {
 	ctx := context.Background()
-	path := filepath.Join(t.TempDir(), "lattice.db")
+	path := filepath.Join(t.TempDir(), "flavor.db")
 	if err := os.WriteFile(path, []byte("not a sqlite database"), 0o600); err != nil {
 		t.Fatal(err)
 	}

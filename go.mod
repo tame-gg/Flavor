@@ -1,4 +1,4 @@
-module git.lunarlabs.dev/lattice/lattice
+module git.lunarlabs.dev/flavor/flavor
 
 go 1.27.1
 

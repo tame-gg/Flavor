@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package flavor.v1;
+
+import "flavor/v1/device.proto";
+import "flavor/v1/inspector.proto";
+
+service ConflictService {
+  rpc ListConflicts(ListConflictsRequest) returns (ListConflictsResponse);
+}
+
+enum ConflictType {
+  CONFLICT_TYPE_UNSPECIFIED = 0;
+  CONFLICT_TYPE_ADDRESS_COLLISION = 1;
+  CONFLICT_TYPE_DNS_NAME_COLLISION = 2;
+  CONFLICT_TYPE_HOSTNAME_COLLISION = 3;
+  CONFLICT_TYPE_SUBNET_OVERLAP = 4;
+}
+
+enum ConflictSeverity {
+  CONFLICT_SEVERITY_UNSPECIFIED = 0;
+  CONFLICT_SEVERITY_AMBIGUOUS = 1;
+  CONFLICT_SEVERITY_EXPECTED = 2;
+}
+
+enum ConflictScope {
+  CONFLICT_SCOPE_UNSPECIFIED = 0;
+  CONFLICT_SCOPE_CROSS_NETWORK = 1;
+  CONFLICT_SCOPE_WITHIN_NETWORK = 2;
+}
+
+message ConflictMember {
+  NetworkRef network = 1;
+  Device device = 2;
+  string unique_name = 3;
+  string route = 4;
+}
+
+message Conflict {
+  string id = 1;
+  ConflictType type = 2;
+  ConflictSeverity severity = 3;
+  ConflictScope scope = 4;
+  string value = 5;
+  repeated ConflictMember members = 6;
+  bool network_context_resolves = 7;
+  string preferred_network_id = 8;
+  string sample_address = 9;
+}
+
+message ListConflictsRequest {}
+
+message ListConflictsResponse {
+  string daemon_instance_id = 1;
+  uint64 snapshot_sequence = 2;
+  repeated Conflict conflicts = 3;
+  repeated NetworkRef not_inspected = 4;
+}

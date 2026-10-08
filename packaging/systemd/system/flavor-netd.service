@@ -1,0 +1,37 @@
+[Unit]
+Description=Flavor synthetic networking helper
+Requires=flavor-netd.socket
+After=flavor-netd.socket dbus.service
+
+[Service]
+Type=notify
+ExecStart=/usr/libexec/flavor/flavor-netd
+User=root
+CapabilityBoundingSet=CAP_NET_ADMIN
+AmbientCapabilities=
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+DevicePolicy=closed
+DeviceAllow=/dev/net/tun rw
+RestrictAddressFamilies=AF_UNIX AF_NETLINK
+IPAddressDeny=any
+MemoryDenyWriteExecute=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+SystemCallArchitectures=native
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+UMask=0077
+RuntimeDirectory=flavor-netd
+RuntimeDirectoryMode=0700
+
+[Install]
+Also=flavor-netd.socket

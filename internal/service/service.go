@@ -9,13 +9,13 @@ import (
 	"sync"
 	"time"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/config"
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/events"
-	"git.lunarlabs.dev/lattice/lattice/internal/secret"
-	"git.lunarlabs.dev/lattice/lattice/internal/session"
-	"git.lunarlabs.dev/lattice/lattice/internal/store"
-	"git.lunarlabs.dev/lattice/lattice/internal/version"
+	"git.lunarlabs.dev/flavor/flavor/internal/config"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/events"
+	"git.lunarlabs.dev/flavor/flavor/internal/secret"
+	"git.lunarlabs.dev/flavor/flavor/internal/session"
+	"git.lunarlabs.dev/flavor/flavor/internal/store"
+	"git.lunarlabs.dev/flavor/flavor/internal/version"
 )
 
 type Code string
@@ -177,7 +177,7 @@ func DefaultNodeHostname() string {
 		out = strings.Trim(out[:63], "-")
 	}
 	if domain.ValidateNodeHostname(out) != nil {
-		return "lattice"
+		return "flavor"
 	}
 	return out
 }

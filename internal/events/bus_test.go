@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/events"
+	"git.lunarlabs.dev/flavor/flavor/internal/events"
 )
 
 func publish(t *testing.T, bus *events.Bus, label string) events.Event {

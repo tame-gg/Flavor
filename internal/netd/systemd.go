@@ -14,7 +14,7 @@ const listenFD = 3
 
 func ActivatedListener() (*net.UnixListener, error) {
 	if os.Getenv("LISTEN_PID") != strconv.Itoa(os.Getpid()) || os.Getenv("LISTEN_FDS") != "1" {
-		return nil, errors.New("lattice-netd must be started by lattice-netd.socket")
+		return nil, errors.New("flavor-netd must be started by flavor-netd.socket")
 	}
 	os.Unsetenv("LISTEN_PID")
 	os.Unsetenv("LISTEN_FDS")
@@ -24,7 +24,7 @@ func ActivatedListener() (*net.UnixListener, error) {
 	if err != nil || typ != unix.SOCK_SEQPACKET {
 		return nil, fmt.Errorf("activated socket is not SOCK_SEQPACKET (type %d, err %v)", typ, err)
 	}
-	f := os.NewFile(listenFD, "lattice-netd.socket")
+	f := os.NewFile(listenFD, "flavor-netd.socket")
 	defer f.Close()
 	l, err := net.FileListener(f)
 	if err != nil {

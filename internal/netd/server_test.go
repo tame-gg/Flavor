@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	netdv1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/netd/v1"
+	netdv1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/netd/v1"
 	"golang.org/x/sys/unix"
 	"google.golang.org/protobuf/proto"
 )
@@ -455,7 +455,7 @@ func TestConfigureDNSUsesOnlyTheExpectedResolvers(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := []string{"lattice.internal", "tail1234.ts.net", "home.example.com"}; !slices.Equal(got, want) || !slices.Equal(h.applied(resp.InterfaceIndex), want) {
+	if want := []string{"flavor.internal", "tail1234.ts.net", "home.example.com"}; !slices.Equal(got, want) || !slices.Equal(h.applied(resp.InterfaceIndex), want) {
 		t.Fatalf("%v", got)
 	}
 	var servers []netip.Addr
@@ -475,7 +475,7 @@ func TestConfigureDNSUsesOnlyTheExpectedResolvers(t *testing.T) {
 	if _, err := c.ConfigureDNS(many); code(err) != netdv1.ErrorCode_ERROR_CODE_INVALID_DOMAIN {
 		t.Fatalf("more than 32 domains in total accepted: %v", err)
 	}
-	if !slices.Equal(h.applied(resp.InterfaceIndex), []string{"lattice.internal", "tail1234.ts.net", "home.example.com"}) {
+	if !slices.Equal(h.applied(resp.InterfaceIndex), []string{"flavor.internal", "tail1234.ts.net", "home.example.com"}) {
 		t.Fatal("a rejected request must not change the applied configuration")
 	}
 	if err := c.ClearDNS(); err != nil || h.applied(resp.InterfaceIndex) != nil {
@@ -562,7 +562,7 @@ func TestConnectionAndRateLimits(t *testing.T) {
 func TestStartupRemovesOrphanedLinks(t *testing.T) {
 	h := newHarness(t, func(c *Config) {
 		k := c.Kernel.(*fakeKernel)
-		f, _, err := k.CreateTUN("lat-u4242")
+		f, _, err := k.CreateTUN("flv-u4242")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -572,7 +572,7 @@ func TestStartupRemovesOrphanedLinks(t *testing.T) {
 	eventually(t, "reconcile", func() bool {
 		h.kernel.mu.Lock()
 		defer h.kernel.mu.Unlock()
-		return slices.Contains(h.kernel.deleted, "lat-u4242")
+		return slices.Contains(h.kernel.deleted, "flv-u4242")
 	})
 }
 
@@ -639,7 +639,7 @@ func TestVerifyTUNRejectsOtherDescriptors(t *testing.T) {
 	}
 	defer r.Close()
 	defer w.Close()
-	if VerifyTUN(r, "lat-u1000") == nil {
+	if VerifyTUN(r, "flv-u1000") == nil {
 		t.Fatal("a pipe passed as a TUN")
 	}
 }

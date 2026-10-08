@@ -13,15 +13,15 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	v1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1"
-	"git.lunarlabs.dev/lattice/lattice/internal/app"
-	"git.lunarlabs.dev/lattice/lattice/internal/config"
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/ipc/client"
-	"git.lunarlabs.dev/lattice/lattice/internal/logging"
-	"git.lunarlabs.dev/lattice/lattice/internal/provider"
-	"git.lunarlabs.dev/lattice/lattice/internal/secret"
-	"git.lunarlabs.dev/lattice/lattice/internal/session/sessiontest"
+	v1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1"
+	"git.lunarlabs.dev/flavor/flavor/internal/app"
+	"git.lunarlabs.dev/flavor/flavor/internal/config"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/ipc/client"
+	"git.lunarlabs.dev/flavor/flavor/internal/logging"
+	"git.lunarlabs.dev/flavor/flavor/internal/provider"
+	"git.lunarlabs.dev/flavor/flavor/internal/secret"
+	"git.lunarlabs.dev/flavor/flavor/internal/session/sessiontest"
 )
 
 type daemon struct {
@@ -87,19 +87,19 @@ func eventually(t *testing.T, what string, cond func() bool) {
 	t.Fatalf("timed out waiting for %s", what)
 }
 
-func latticeCode(err error) v1.LatticeErrorCode {
+func flavorCode(err error) v1.FlavorErrorCode {
 	var ce *connect.Error
 	if !errors.As(err, &ce) {
-		return v1.LatticeErrorCode_LATTICE_ERROR_CODE_UNSPECIFIED
+		return v1.FlavorErrorCode_FLAVOR_ERROR_CODE_UNSPECIFIED
 	}
 	for _, d := range ce.Details() {
 		if m, err := d.Value(); err == nil {
-			if detail, ok := m.(*v1.LatticeErrorDetail); ok {
+			if detail, ok := m.(*v1.FlavorErrorDetail); ok {
 				return detail.Code
 			}
 		}
 	}
-	return v1.LatticeErrorCode_LATTICE_ERROR_CODE_UNSPECIFIED
+	return v1.FlavorErrorCode_FLAVOR_ERROR_CODE_UNSPECIFIED
 }
 
 func snapshot(t *testing.T, c *client.Client) *v1.GetStateSnapshotResponse {
@@ -193,7 +193,7 @@ func TestDaemonEndToEnd(t *testing.T) {
 	_, err = c.Networks.AddNetwork(ctx, connect.NewRequest(&v1.AddNetworkRequest{
 		DisplayName: "Bad", Provider: v1.ProviderType_PROVIDER_TYPE_HEADSCALE, ControlUrl: "ftp://nope",
 	}))
-	if connect.CodeOf(err) != connect.CodeInvalidArgument || latticeCode(err) != v1.LatticeErrorCode_LATTICE_ERROR_CODE_INVALID_CONTROL_URL {
+	if connect.CodeOf(err) != connect.CodeInvalidArgument || flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_CONTROL_URL {
 		t.Fatalf("invalid control url: %v", err)
 	}
 
@@ -213,7 +213,7 @@ func TestDaemonEndToEnd(t *testing.T) {
 		})
 	}
 	_, err = c.Networks.ConnectNetwork(ctx, connect.NewRequest(&v1.ConnectNetworkRequest{NetworkId: a.Id}))
-	if latticeCode(err) != v1.LatticeErrorCode_LATTICE_ERROR_CODE_NETWORK_ALREADY_CONNECTED {
+	if flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_NETWORK_ALREADY_CONNECTED {
 		t.Fatalf("connect while active: %v", err)
 	}
 
@@ -262,7 +262,7 @@ func TestDaemonEndToEnd(t *testing.T) {
 			}
 			err = stream.Err()
 		}
-		if latticeCode(err) != v1.LatticeErrorCode_LATTICE_ERROR_CODE_RESYNC_REQUIRED {
+		if flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_RESYNC_REQUIRED {
 			t.Fatalf("expected resync for %+v, got %v", req, err)
 		}
 	}
@@ -369,7 +369,7 @@ func TestIPCReadyBeforeAutoConnect(t *testing.T) {
 }
 
 func TestEnrollmentKeyNeverPersistedOrExposed(t *testing.T) {
-	const canary = "tskey-auth-LATTICECANARY0001"
+	const canary = "tskey-auth-FLAVORCANARY0001"
 	var logs bytes.Buffer
 	var mu sync.Mutex
 	var received []string
@@ -428,7 +428,7 @@ func TestEnrollmentKeyNeverPersistedOrExposed(t *testing.T) {
 			return nil
 		})
 	}
-	if strings.Contains(dump.String(), "LATTICECANARY") {
+	if strings.Contains(dump.String(), "FLAVORCANARY") {
 		t.Fatal("enrollment key leaked into logs, IPC responses, events, diagnostics or disk")
 	}
 }

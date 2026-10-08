@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
 )
 
 type Paths struct {
@@ -65,13 +65,13 @@ func Resolve(env Env) (Paths, error) {
 	}
 	p := Paths{
 		Home:         home,
-		Data:         filepath.Join(dataHome, "lattice"),
-		Config:       filepath.Join(configHome, "lattice"),
-		Runtime:      filepath.Join(runtimeParent, "lattice"),
-		Database:     filepath.Join(dataHome, "lattice", "database", "lattice.db"),
-		NetworksRoot: filepath.Join(dataHome, "lattice", "networks"),
-		Socket:       filepath.Join(runtimeParent, "lattice", "latticed.sock"),
-		Lock:         filepath.Join(runtimeParent, "lattice", "latticed.lock"),
+		Data:         filepath.Join(dataHome, "flavor"),
+		Config:       filepath.Join(configHome, "flavor"),
+		Runtime:      filepath.Join(runtimeParent, "flavor"),
+		Database:     filepath.Join(dataHome, "flavor", "database", "flavor.db"),
+		NetworksRoot: filepath.Join(dataHome, "flavor", "networks"),
+		Socket:       filepath.Join(runtimeParent, "flavor", "flavord.sock"),
+		Lock:         filepath.Join(runtimeParent, "flavor", "flavord.lock"),
 	}
 	return p, nil
 }
@@ -112,7 +112,7 @@ func (p Paths) TsnetDir(id domain.NetworkID) (string, error) {
 	return filepath.Join(dir, "tsnet"), nil
 }
 
-func (p Paths) EnsureLatticeDirs() error {
+func (p Paths) EnsureFlavorDirs() error {
 	for _, dir := range []string{p.Data, p.Config, p.Runtime, p.NetworksRoot, filepath.Dir(p.Database)} {
 		if err := mkdirPrivate(dir); err != nil {
 			return err
@@ -125,7 +125,7 @@ func (p Paths) EnsureLatticeDirs() error {
 }
 
 func (p Paths) EnsureNetworkDirs(id domain.NetworkID) (string, error) {
-	if err := p.EnsureLatticeDirs(); err != nil {
+	if err := p.EnsureFlavorDirs(); err != nil {
 		return "", err
 	}
 	netDir, err := p.NetworkDir(id)

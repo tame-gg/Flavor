@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/inspect"
-	"git.lunarlabs.dev/lattice/lattice/internal/naming"
-	"git.lunarlabs.dev/lattice/lattice/internal/store"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/inspect"
+	"git.lunarlabs.dev/flavor/flavor/internal/naming"
+	"git.lunarlabs.dev/flavor/flavor/internal/store"
 )
 
 func (s *Service) Inspect(ctx context.Context, destination string) (inspect.Result, uint64, error) {

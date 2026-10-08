@@ -1,13 +1,13 @@
 use std::sync::Mutex;
 
-use lattice_ipc::proto::{DaemonEvent, WatchEventsRequest};
+use flavor_ipc::proto::{DaemonEvent, WatchEventsRequest};
 use serde::Serialize;
 use tauri::async_runtime::JoinHandle;
 use tauri::{AppHandle, Emitter, State};
 
 use crate::commands::{Daemon, Result, UiError};
 
-pub const CHANNEL: &str = "lattice://daemon-event";
+pub const CHANNEL: &str = "flavor://daemon-event";
 
 #[derive(Default)]
 pub struct Watcher {

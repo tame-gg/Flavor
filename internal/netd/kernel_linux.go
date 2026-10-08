@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	LinkPrefix    = "lat-u"
+	LinkPrefix    = "flv-u"
 	RouteProtocol = 76
 )
 

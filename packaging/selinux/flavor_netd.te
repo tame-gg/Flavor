@@ -1,0 +1,34 @@
+policy_module(flavor_netd, 1.0.0)
+
+type flavor_netd_t;
+type flavor_netd_exec_t;
+init_daemon_domain(flavor_netd_t, flavor_netd_exec_t)
+init_nnp_daemon_domain(flavor_netd_t)
+
+type flavor_netd_var_run_t;
+files_pid_file(flavor_netd_var_run_t)
+
+allow flavor_netd_t self:capability net_admin;
+allow flavor_netd_t self:unix_stream_socket { create_stream_socket_perms accept listen };
+allow flavor_netd_t self:unix_dgram_socket create_socket_perms;
+allow flavor_netd_t self:netlink_route_socket { create_netlink_socket_perms nlmsg_read nlmsg_write };
+allow flavor_netd_t self:tun_socket create;
+
+corenet_rw_tun_tap_dev(flavor_netd_t)
+kernel_dgram_send(flavor_netd_t)
+fs_search_cgroup_dirs(flavor_netd_t)
+domain_read_all_domains_state(flavor_netd_t)
+
+dbus_system_bus_client(flavor_netd_t)
+
+optional_policy(`
+	policykit_dbus_chat(flavor_netd_t)
+')
+
+optional_policy(`
+	systemd_chat_resolved(flavor_netd_t)
+')
+
+optional_policy(`
+	systemd_dbus_chat_logind(flavor_netd_t)
+')

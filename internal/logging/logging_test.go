@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/logging"
-	"git.lunarlabs.dev/lattice/lattice/internal/secret"
+	"git.lunarlabs.dev/flavor/flavor/internal/logging"
+	"git.lunarlabs.dev/flavor/flavor/internal/secret"
 )
 
 func TestSanitizeURL(t *testing.T) {
@@ -20,7 +20,7 @@ func TestSanitizeURL(t *testing.T) {
 }
 
 func TestLoggerDoesNotEmitCanarySecret(t *testing.T) {
-	canary := "LATTICE_TEST_SECRET_DO_NOT_LEAK_7f3c9a"
+	canary := "FLAVOR_TEST_SECRET_DO_NOT_LEAK_7f3c9a"
 	var b strings.Builder
 	logger := logging.New(&b, slog.LevelDebug)
 	logger.Error("enrollment failed",

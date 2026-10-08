@@ -7,21 +7,21 @@ import (
 	"testing"
 	"time"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/events"
-	"git.lunarlabs.dev/lattice/lattice/internal/provider"
-	"git.lunarlabs.dev/lattice/lattice/internal/secret"
-	"git.lunarlabs.dev/lattice/lattice/internal/session"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/events"
+	"git.lunarlabs.dev/flavor/flavor/internal/provider"
+	"git.lunarlabs.dev/flavor/flavor/internal/secret"
+	"git.lunarlabs.dev/flavor/flavor/internal/session"
 )
 
 func TestIntegrationHeadscale(t *testing.T) {
-	if os.Getenv("LATTICE_INTEGRATION") != "1" {
-		t.Skip("set LATTICE_INTEGRATION=1 to run")
+	if os.Getenv("FLAVOR_INTEGRATION") != "1" {
+		t.Skip("set FLAVOR_INTEGRATION=1 to run")
 	}
-	url := os.Getenv("LATTICE_HEADSCALE_URL")
-	key := os.Getenv("LATTICE_HEADSCALE_AUTHKEY")
+	url := os.Getenv("FLAVOR_HEADSCALE_URL")
+	key := os.Getenv("FLAVOR_HEADSCALE_AUTHKEY")
 	if url == "" || key == "" {
-		t.Skip("LATTICE_HEADSCALE_URL and LATTICE_HEADSCALE_AUTHKEY required")
+		t.Skip("FLAVOR_HEADSCALE_URL and FLAVOR_HEADSCALE_AUTHKEY required")
 	}
 	if err := session.PrepareProcessEnv(); err != nil {
 		t.Fatal(err)
@@ -31,7 +31,7 @@ func TestIntegrationHeadscale(t *testing.T) {
 	stateDir := filepath.Join(dir, "tsnet")
 	n := domain.Network{
 		ID: id, DisplayName: "Integration", Provider: domain.ProviderHeadscale,
-		ControlURL: url, NodeHostname: "lattice-itest",
+		ControlURL: url, NodeHostname: "flavor-itest",
 		CreatedAt: time.Now().UTC(), UpdatedAt: time.Now().UTC(),
 	}
 	cfg, err := provider.Resolve(n, stateDir)

@@ -5,7 +5,7 @@ import (
 	"net/netip"
 	"testing"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/synthetic/layout"
+	"git.lunarlabs.dev/flavor/flavor/internal/synthetic/layout"
 )
 
 var ula = netip.MustParsePrefix("fd12:3456:789a::/48")

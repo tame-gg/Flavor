@@ -4,15 +4,15 @@ import (
 	"net/netip"
 	"strings"
 
-	netdv1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/netd/v1"
-	"git.lunarlabs.dev/lattice/lattice/internal/synthetic/layout"
+	netdv1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/netd/v1"
+	"git.lunarlabs.dev/flavor/flavor/internal/synthetic/layout"
 )
 
 const (
 	MinMTU        = 1280
 	MaxMTU        = 9000
 	maxDomains    = 32
-	LatticeDomain = "lattice.internal"
+	FlavorDomain = "flavor.internal"
 )
 
 var (
@@ -81,8 +81,8 @@ func validateDomains(in []string) ([]string, netdv1.ErrorCode) {
 	if len(in) > maxDomains-1 {
 		return nil, netdv1.ErrorCode_ERROR_CODE_INVALID_DOMAIN
 	}
-	out := []string{LatticeDomain}
-	seen := map[string]bool{LatticeDomain: true}
+	out := []string{FlavorDomain}
+	seen := map[string]bool{FlavorDomain: true}
 	for _, raw := range in {
 		d := strings.TrimSuffix(strings.ToLower(raw), ".")
 		if d == "" || d == "~" || raw == "." || d == "~." {

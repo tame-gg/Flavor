@@ -2,24 +2,24 @@
 set -u
 
 [ "$(id -u)" = 0 ] || { echo "uninstall must run as root: sudo $0" >&2; exit 1; }
-manifest=/usr/share/lattice/manifest
-[ -r "$manifest" ] || { echo "no Lattice installation found ($manifest is missing)" >&2; exit 1; }
+manifest=/usr/share/flavor/manifest
+[ -r "$manifest" ] || { echo "no Flavor installation found ($manifest is missing)" >&2; exit 1; }
 files=$(cat "$manifest")
 
 for u in $(loginctl list-users --no-legend 2>/dev/null | awk '{print $2}'); do
-	systemctl --user -M "$u@" disable --now latticed.service >/dev/null 2>&1 || true
+	systemctl --user -M "$u@" disable --now flavord.service >/dev/null 2>&1 || true
 done
-systemctl disable --now lattice-netd.socket lattice-netd.service >/dev/null 2>&1 || true
+systemctl disable --now flavor-netd.socket flavor-netd.service >/dev/null 2>&1 || true
 
-for l in $(ip -o link show 2>/dev/null | awk -F': ' '{print $2}' | grep '^lat-u'); do
+for l in $(ip -o link show 2>/dev/null | awk -F': ' '{print $2}' | grep '^flv-u'); do
 	ip link delete "$l" 2>/dev/null || true
 done
 
-if command -v semodule >/dev/null && semodule -l 2>/dev/null | grep -qx lattice_netd; then
-	semodule -r lattice_netd
+if command -v semodule >/dev/null && semodule -l 2>/dev/null | grep -qx flavor_netd; then
+	semodule -r flavor_netd
 fi
-if [ -r /sys/kernel/security/apparmor/profiles ] && grep -q '^lattice-netd ' /sys/kernel/security/apparmor/profiles && command -v apparmor_parser >/dev/null; then
-	apparmor_parser -R /etc/apparmor.d/lattice-netd
+if [ -r /sys/kernel/security/apparmor/profiles ] && grep -q '^flavor-netd ' /sys/kernel/security/apparmor/profiles && command -v apparmor_parser >/dev/null; then
+	apparmor_parser -R /etc/apparmor.d/flavor-netd
 fi
 
 for f in $files; do
@@ -30,8 +30,8 @@ for f in $files; do
 	case "$f" in *..*) continue ;; esac
 	rm -f "/$f"
 done
-rmdir /usr/libexec/lattice /usr/share/lattice/frontend /usr/share/lattice /usr/share/selinux/packages/lattice 2>/dev/null || true
-rm -rf /run/lattice /run/lattice-netd
+rmdir /usr/libexec/flavor /usr/share/flavor/frontend /usr/share/flavor /usr/share/selinux/packages/flavor 2>/dev/null || true
+rm -rf /run/flavor /run/flavor-netd
 systemctl daemon-reload
 
-echo "Lattice removed. Per-user data in ~/.local/share/lattice and ~/.config/lattice was kept; deleting it removes this machine's device identities."
+echo "Flavor removed. Per-user data in ~/.local/share/flavor and ~/.config/flavor was kept; deleting it removes this machine's device identities."

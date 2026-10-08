@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"net"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/provider"
+	"git.lunarlabs.dev/flavor/flavor/internal/provider"
 	"tailscale.com/client/local"
 	"tailscale.com/ipn"
 	"tailscale.com/tsnet"

@@ -6,11 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/secret"
+	"git.lunarlabs.dev/flavor/flavor/internal/secret"
 )
 
 func TestSecretRedactsFormatting(t *testing.T) {
-	canary := "LATTICE_TEST_SECRET_DO_NOT_LEAK_7f3c9a"
+	canary := "FLAVOR_TEST_SECRET_DO_NOT_LEAK_7f3c9a"
 	s := secret.New(canary)
 	if s.String() != "[REDACTED]" {
 		t.Fatalf("String=%q", s.String())
@@ -32,7 +32,7 @@ func TestSecretRedactsFormatting(t *testing.T) {
 }
 
 func TestSecretSlogDoesNotLeak(t *testing.T) {
-	canary := "LATTICE_TEST_SECRET_DO_NOT_LEAK_7f3c9a"
+	canary := "FLAVOR_TEST_SECRET_DO_NOT_LEAK_7f3c9a"
 	var b strings.Builder
 	logger := slog.New(slog.NewTextHandler(&b, &slog.HandlerOptions{Level: slog.LevelDebug}))
 	logger.Info("probe", "credential", secret.New(canary))

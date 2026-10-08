@@ -1,0 +1,17 @@
+[package]
+name = "flavor-ipc"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+flavor-proto = { path = "../flavor-proto" }
+connectrpc = { version = "=0.9.1", default-features = false, features = ["client", "json"] }
+buffa = "0.9"
+base64 = "0.22"
+http = "1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "process", "time"] }
+tempfile = "3"
+serde_json = "1"

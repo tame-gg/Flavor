@@ -1,0 +1,12 @@
+[Unit]
+Description=Flavor synthetic networking helper socket
+
+[Socket]
+ListenSequentialPacket=/run/flavor/netd.sock
+SocketMode=0666
+DirectoryMode=0755
+RemoveOnStop=yes
+Backlog=16
+
+[Install]
+WantedBy=sockets.target

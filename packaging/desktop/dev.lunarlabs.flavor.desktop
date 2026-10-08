@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Flavor
+Comment=Use several Tailscale and Headscale networks at once
+Exec=flavor-desktop
+Icon=dev.lunarlabs.flavor
+Categories=Network;
+Terminal=false

@@ -1,5 +1,5 @@
 import { create } from "@bufbuild/protobuf";
-import { ConflictSchema, ConflictScope, ConflictSeverity, ConflictType } from "@gen/lattice/v1/conflicts_pb";
+import { ConflictSchema, ConflictScope, ConflictSeverity, ConflictType } from "@gen/flavor/v1/conflicts_pb";
 import { describe as suite, expect, it } from "vitest";
 import { counts, describe, filterConflicts } from "./describe";
 

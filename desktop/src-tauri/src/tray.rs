@@ -6,16 +6,16 @@ use tauri::{App, AppHandle, Manager, State, Wry};
 pub struct Status(MenuItem<Wry>);
 
 pub fn install(app: &App) -> tauri::Result<()> {
-    let show = MenuItem::with_id(app, "show", "Show Lattice", true, None::<&str>)?;
+    let show = MenuItem::with_id(app, "show", "Show Flavor", true, None::<&str>)?;
     let status = MenuItem::with_id(app, "status", "Connecting to daemon…", false, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit Lattice", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit Flavor", true, None::<&str>)?;
     let menu = Menu::with_items(
         app,
         &[&show, &PredefinedMenuItem::separator(app)?, &status, &PredefinedMenuItem::separator(app)?, &quit],
     )?;
     TrayIconBuilder::with_id("main")
         .icon(Image::from_bytes(include_bytes!("../icons/tray.png"))?)
-        .tooltip("Lattice")
+        .tooltip("Flavor")
         .menu(&menu)
         .on_menu_event(|app, event| match event.id().as_ref() {
             "show" => show_main(app),

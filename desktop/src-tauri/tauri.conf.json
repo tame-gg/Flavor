@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Lattice",
+  "productName": "Flavor",
   "version": "0.1.0-beta.1",
-  "identifier": "dev.lunarlabs.lattice",
+  "identifier": "dev.lunarlabs.flavor",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Lattice",
+        "title": "Flavor",
         "width": 1100,
         "height": 720,
         "minWidth": 760,

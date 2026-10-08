@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"connectrpc.com/connect"
-	v1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1"
-	"git.lunarlabs.dev/lattice/lattice/internal/app"
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/provider"
-	"git.lunarlabs.dev/lattice/lattice/internal/session/sessiontest"
+	v1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1"
+	"git.lunarlabs.dev/flavor/flavor/internal/app"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/provider"
+	"git.lunarlabs.dev/flavor/flavor/internal/session/sessiontest"
 )
 
 func TestInspectDestinationAcrossNetworks(t *testing.T) {
@@ -82,7 +82,7 @@ func TestInspectDestinationAcrossNetworks(t *testing.T) {
 	}
 
 	_, err = c.Inspector.InspectDestination(ctx, connect.NewRequest(&v1.InspectDestinationRequest{Destination: "https://nope/"}))
-	if connect.CodeOf(err) != connect.CodeInvalidArgument || latticeCode(err) != v1.LatticeErrorCode_LATTICE_ERROR_CODE_INVALID_ARGUMENT {
+	if connect.CodeOf(err) != connect.CodeInvalidArgument || flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_ARGUMENT {
 		t.Fatalf("malformed destination: %v", err)
 	}
 }

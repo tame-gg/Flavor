@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { timestampDate } from "@bufbuild/protobuf/wkt";
-import type { DescribeDeviceResponse } from "@gen/lattice/v1/inspector_pb";
+import type { DescribeDeviceResponse } from "@gen/flavor/v1/inspector_pb";
 import { Button } from "../../components/ui/Button";
 import { CopyButton } from "../../components/ui/CopyButton";
 import { StatusBadge } from "../../components/ui/StatusBadge";
@@ -149,7 +149,7 @@ export function DeviceDetails({ deviceKey, onClose, onInspect, onOpenNetwork, ca
           <dd className="mono">{d.id.nodeId}</dd>
           {names?.name && (
             <>
-              <dt>Lattice name</dt>
+              <dt>Flavor name</dt>
               <dd className="mono">{names.name}</dd>
             </>
           )}

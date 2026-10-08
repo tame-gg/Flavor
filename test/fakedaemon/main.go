@@ -13,20 +13,20 @@ import (
 	"strings"
 	"syscall"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/app"
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/logging"
-	"git.lunarlabs.dev/lattice/lattice/internal/provider"
-	"git.lunarlabs.dev/lattice/lattice/internal/secret"
-	"git.lunarlabs.dev/lattice/lattice/internal/session"
-	"git.lunarlabs.dev/lattice/lattice/internal/session/sessiontest"
+	"git.lunarlabs.dev/flavor/flavor/internal/app"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/logging"
+	"git.lunarlabs.dev/flavor/flavor/internal/provider"
+	"git.lunarlabs.dev/flavor/flavor/internal/secret"
+	"git.lunarlabs.dev/flavor/flavor/internal/session"
+	"git.lunarlabs.dev/flavor/flavor/internal/session/sessiontest"
 )
 
 func main() {
 	runtimeDir := flag.String("runtime-dir", "", "runtime directory parent")
 	peers := flag.Int("peers", 3, "synthetic peers per connected network")
 	experimentalDNS := flag.String("experimental-dns", "", "serve synthetic DNS on this loopback address")
-	syntheticHelper := flag.String("synthetic-helper", "", "use lattice-netd at this socket")
+	syntheticHelper := flag.String("synthetic-helper", "", "use flavor-netd at this socket")
 	flag.Parse()
 
 	seq := &sessiontest.Sequence{Prepare: func(n int, cfg provider.ResolvedSessionConfig, e *sessiontest.Engine) {
@@ -78,7 +78,7 @@ func status(cfg provider.ResolvedSessionConfig, n, peers int) session.EngineStat
 	id := cfg.NetworkID
 	st := sessiontest.StatusSelf("self-"+string(id), "100.64.0.1")
 	st.Self.Hostname = cfg.NodeHostname
-	st.Self.DNSName = cfg.NodeHostname + "." + strings.ToLower(string(id)) + ".lattice.test"
+	st.Self.DNSName = cfg.NodeHostname + "." + strings.ToLower(string(id)) + ".flavor.test"
 	st.Self.OS = "linux"
 	for i := range peers {
 		addr := netip.AddrFrom4([4]byte{100, 64, byte((i + 2) >> 8), byte(i + 2)})
@@ -89,7 +89,7 @@ func status(cfg provider.ResolvedSessionConfig, n, peers int) session.EngineStat
 		st.Peers = append(st.Peers, session.EnginePeer{
 			NodeID:    domain.NodeID(fmt.Sprintf("%s-%d", id, i+1)),
 			Hostname:  node,
-			DNSName:   node + "." + strings.ToLower(string(id)) + ".lattice.test.",
+			DNSName:   node + "." + strings.ToLower(string(id)) + ".flavor.test.",
 			Addresses: []netip.Addr{addr},
 			Online:    i%4 != 3,
 			OS:        peerOS[(i+n)%len(peerOS)],

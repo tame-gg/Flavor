@@ -6,11 +6,11 @@ import (
 	"testing"
 
 	"connectrpc.com/connect"
-	v1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1"
-	"git.lunarlabs.dev/lattice/lattice/internal/app"
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/provider"
-	"git.lunarlabs.dev/lattice/lattice/internal/session/sessiontest"
+	v1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1"
+	"git.lunarlabs.dev/flavor/flavor/internal/app"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/provider"
+	"git.lunarlabs.dev/flavor/flavor/internal/session/sessiontest"
 )
 
 func TestSubnetRoutesAndQualifiedNamesOverIPC(t *testing.T) {
@@ -56,11 +56,11 @@ func TestSubnetRoutesAndQualifiedNamesOverIPC(t *testing.T) {
 	if r.Candidates[0].Network.Id != narrow.Id || r.Candidates[0].MatchedValue != "10.20.0.0/16" || r.Candidates[0].Match != v1.MatchKind_MATCH_KIND_SUBNET_ROUTE {
 		t.Fatalf("%+v", r.Candidates[0])
 	}
-	if r.Candidates[0].QualifiedName != "edge.customer.lattice.internal" {
+	if r.Candidates[0].QualifiedName != "edge.customer.flavor.internal" {
 		t.Fatalf("qualified name %q", r.Candidates[0].QualifiedName)
 	}
 
-	q := inspect("edge.company-hq.lattice.internal")
+	q := inspect("edge.company-hq.flavor.internal")
 	if q.Decision != v1.ResolutionDecision_RESOLUTION_DECISION_UNIQUE || q.Reason != v1.DecisionReason_DECISION_REASON_NETWORK_QUALIFIED_NAME || q.Candidates[0].Network.Id != wide.Id {
 		t.Fatalf("%+v", q)
 	}
@@ -68,10 +68,10 @@ func TestSubnetRoutesAndQualifiedNamesOverIPC(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if desc.Msg.Name != "edge.customer.lattice.internal" || desc.Msg.StableName != r.Candidates[0].StableName || desc.Msg.StableName == "" {
+	if desc.Msg.Name != "edge.customer.flavor.internal" || desc.Msg.StableName != r.Candidates[0].StableName || desc.Msg.StableName == "" {
 		t.Fatalf("%+v", desc.Msg)
 	}
-	if _, err := c.Inspector.DescribeDevice(ctx, connect.NewRequest(&v1.DescribeDeviceRequest{NetworkId: narrow.Id, NodeId: "nope"})); latticeCode(err) != v1.LatticeErrorCode_LATTICE_ERROR_CODE_DEVICE_NOT_FOUND {
+	if _, err := c.Inspector.DescribeDevice(ctx, connect.NewRequest(&v1.DescribeDeviceRequest{NetworkId: narrow.Id, NodeId: "nope"})); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_DEVICE_NOT_FOUND {
 		t.Fatalf("missing device: %v", err)
 	}
 	stable := inspect(r.Candidates[0].StableName)

@@ -4,15 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"git.lunarlabs.dev/lattice/lattice/internal/synthetic/layout"
+	"git.lunarlabs.dev/flavor/flavor/internal/synthetic/layout"
 	"net/netip"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/store"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/store"
 )
 
 type clock struct{ t time.Time }
@@ -21,7 +21,7 @@ func (c *clock) now() time.Time { return c.t }
 
 func setup(t *testing.T) (string, *store.DB, *clock, []domain.NetworkID) {
 	t.Helper()
-	path := filepath.Join(t.TempDir(), "lattice.db")
+	path := filepath.Join(t.TempDir(), "flavor.db")
 	db, err := store.Open(context.Background(), path)
 	if err != nil {
 		t.Fatal(err)

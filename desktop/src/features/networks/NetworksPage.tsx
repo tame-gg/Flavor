@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { Network } from "@gen/lattice/v1/network_pb";
+import type { Network } from "@gen/flavor/v1/network_pb";
 import { Button } from "../../components/ui/Button";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { useCanMutate, useDaemon } from "../../app/sync/useDaemon";

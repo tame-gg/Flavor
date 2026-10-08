@@ -3,7 +3,7 @@ package version_test
 import (
 	"testing"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/version"
+	"git.lunarlabs.dev/flavor/flavor/internal/version"
 )
 
 func TestInfoHasProtocolV1(t *testing.T) {

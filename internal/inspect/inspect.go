@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/naming"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/naming"
 )
 
 var ErrInvalidDestination = errors.New("invalid destination")

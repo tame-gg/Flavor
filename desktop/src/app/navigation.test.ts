@@ -1,4 +1,4 @@
-import { Capability } from "@gen/lattice/v1/common_pb";
+import { Capability } from "@gen/flavor/v1/common_pb";
 import { describe, expect, it } from "vitest";
 import { visiblePages } from "./navigation";
 

@@ -75,4 +75,4 @@ func Open(ctx context.Context, opts Options) (Store, error) {
 	}
 }
 
-const DefaultService = "dev.lunarlabs.lattice"
+const DefaultService = "dev.lunarlabs.flavor"

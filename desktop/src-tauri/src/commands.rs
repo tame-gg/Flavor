@@ -2,8 +2,8 @@ use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use buffa::Enumeration;
-use lattice_ipc::proto::*;
-use lattice_ipc::{ConnectError, IpcError, LatticeIpcClient};
+use flavor_ipc::proto::*;
+use flavor_ipc::{ConnectError, IpcError, FlavorIpcClient};
 use serde::Serialize;
 use tauri::{AppHandle, State};
 use tauri_plugin_opener::OpenerExt;
@@ -12,7 +12,7 @@ use crate::settings::{self, Settings};
 
 pub struct Daemon {
     socket: Option<PathBuf>,
-    client: OnceLock<LatticeIpcClient>,
+    client: OnceLock<FlavorIpcClient>,
 }
 
 impl Daemon {
@@ -20,14 +20,14 @@ impl Daemon {
         Self { socket, client: OnceLock::new() }
     }
 
-    pub fn client(&self) -> Result<&LatticeIpcClient> {
+    pub fn client(&self) -> Result<&FlavorIpcClient> {
         let socket = self.socket.as_ref().ok_or_else(|| UiError {
             kind: "unavailable",
             code: None,
             message: "XDG_RUNTIME_DIR is not set, so the daemon socket cannot be located.".into(),
             retryable: false,
         })?;
-        Ok(self.client.get_or_init(|| LatticeIpcClient::new(socket)))
+        Ok(self.client.get_or_init(|| FlavorIpcClient::new(socket)))
     }
 }
 
@@ -49,11 +49,11 @@ impl UiError {
 impl From<IpcError> for UiError {
     fn from(e: IpcError) -> Self {
         let kind = match () {
-            _ if e.lattice.is_some() => "daemon",
+            _ if e.flavor.is_some() => "daemon",
             _ if e.is_unavailable() => "unavailable",
             _ => "transport",
         };
-        Self { kind, code: e.lattice_code().map(|c| c.proto_name()), retryable: e.retryable(), message: e.message }
+        Self { kind, code: e.flavor_code().map(|c| c.proto_name()), retryable: e.retryable(), message: e.message }
     }
 }
 

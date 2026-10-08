@@ -13,7 +13,7 @@ const themes: [Theme, string][] = [
 ];
 
 const closeOptions: [CloseBehavior, string, string][] = [
-  ["tray", "Keep Lattice in the tray", "Closing the window hides it. Use the tray icon to show it again."],
+  ["tray", "Keep Flavor in the tray", "Closing the window hides it. Use the tray icon to show it again."],
   ["quit_gui", "Quit the window", "Closing the window quits the desktop app."],
 ];
 
@@ -57,7 +57,7 @@ export function SettingsPage({ settings, error, onChange }: Props) {
 
       <section className="card stack" aria-labelledby="closing">
         <h3 id="closing">When the window closes</h3>
-        <p className="muted small">Networks stay connected either way. The Lattice daemon keeps running in the background.</p>
+        <p className="muted small">Networks stay connected either way. The Flavor daemon keeps running in the background.</p>
         {closeOptions.map(([value, label, hint]) => (
           <label key={value} className="check">
             <input
@@ -77,7 +77,7 @@ export function SettingsPage({ settings, error, onChange }: Props) {
       <section className="card stack" aria-labelledby="about">
         <h3 id="about">About</h3>
         <dl className="dl">
-          <dt>Lattice desktop</dt>
+          <dt>Flavor desktop</dt>
           <dd className="mono">{version || "…"}</dd>
           <dt>Daemon</dt>
           <dd className="mono">{info ? `${info.daemonVersion}${info.buildCommit ? ` (${info.buildCommit.slice(0, 12)})` : ""}` : "Not connected"}</dd>

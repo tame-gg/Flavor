@@ -8,7 +8,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/relay"
+	"git.lunarlabs.dev/flavor/flavor/internal/relay"
 )
 
 const (

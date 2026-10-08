@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/events"
-	"git.lunarlabs.dev/lattice/lattice/internal/provider"
-	"git.lunarlabs.dev/lattice/lattice/internal/secret"
-	"git.lunarlabs.dev/lattice/lattice/internal/session"
-	"git.lunarlabs.dev/lattice/lattice/internal/session/sessiontest"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/events"
+	"git.lunarlabs.dev/flavor/flavor/internal/provider"
+	"git.lunarlabs.dev/flavor/flavor/internal/secret"
+	"git.lunarlabs.dev/flavor/flavor/internal/session"
+	"git.lunarlabs.dev/flavor/flavor/internal/session/sessiontest"
 )
 
 func cfgFor(id domain.NetworkID, name string) provider.ResolvedSessionConfig {
@@ -22,7 +22,7 @@ func cfgFor(id domain.NetworkID, name string) provider.ResolvedSessionConfig {
 		Provider:     domain.ProviderHeadscale,
 		ControlURL:   "https://hs.example.com",
 		NodeHostname: name,
-		StateDir:     "/tmp/lattice-test/" + string(id) + "/tsnet",
+		StateDir:     "/tmp/flavor-test/" + string(id) + "/tsnet",
 		ControlPlane: domain.ControlPlaneIDFor(domain.ProviderHeadscale, "https://hs.example.com"),
 	}
 }

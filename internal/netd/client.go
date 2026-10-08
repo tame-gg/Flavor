@@ -9,13 +9,13 @@ import (
 	"os"
 	"time"
 
-	netdv1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/netd/v1"
+	netdv1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/netd/v1"
 	"golang.org/x/sys/unix"
 	"google.golang.org/protobuf/proto"
 )
 
 const (
-	DefaultSocket = "/run/lattice/netd.sock"
+	DefaultSocket = "/run/flavor/netd.sock"
 	clientTimeout = 30 * time.Second
 )
 
@@ -24,7 +24,7 @@ type Error struct {
 	Detail string
 }
 
-func (e *Error) Error() string { return fmt.Sprintf("lattice-netd: %s: %s", e.Code, e.Detail) }
+func (e *Error) Error() string { return fmt.Sprintf("flavor-netd: %s: %s", e.Code, e.Detail) }
 
 type Client struct {
 	c      *net.UnixConn

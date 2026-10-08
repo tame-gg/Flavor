@@ -37,11 +37,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: dnf install -y selinux-policy-devel make
-      - run: make -C packaging/selinux -f /usr/share/selinux/devel/Makefile lattice_netd.pp
+      - run: make -C packaging/selinux -f /usr/share/selinux/devel/Makefile flavor_netd.pp
       - uses: actions/upload-artifact@v4
         with:
           name: selinux
-          path: packaging/selinux/lattice_netd.pp
+          path: packaging/selinux/flavor_netd.pp
 
   build:
     needs: [version, selinux]
@@ -79,7 +79,7 @@ jobs:
         env:
           VERSION: ${{ needs.version.outputs.version }}
           ARCH: ${{ matrix.arch }}
-        run: SELINUX_PP=selinux/lattice_netd.pp ./scripts/release.sh "$VERSION" "$ARCH"
+        run: SELINUX_PP=selinux/flavor_netd.pp ./scripts/release.sh "$VERSION" "$ARCH"
       - uses: actions/upload-artifact@v4
         with:
           name: tarball-${{ matrix.arch }}
@@ -104,7 +104,7 @@ jobs:
       - uses: anchore/sbom-action/download-syft@v0
       - name: sboms
         run: |
-          syft scan dir:. --exclude './dist/**' --source-name lattice --source-version "$VERSION" -o "spdx-json=dist/lattice-$VERSION-source.spdx.json"
+          syft scan dir:. --exclude './dist/**' --source-name flavor --source-version "$VERSION" -o "spdx-json=dist/flavor-$VERSION-source.spdx.json"
           for t in dist/*.tar.gz; do
             d="$(mktemp -d)"
             tar -xzf "$t" -C "$d"
@@ -132,5 +132,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" --verify-tag --draft --prerelease \
-            --title "Lattice $VERSION" --notes "Draft. Add SHA256SUMS.asc before publishing." \
+            --title "Flavor $VERSION" --notes "Draft. Add SHA256SUMS.asc before publishing." \
             dist/*.tar.gz dist/*.spdx.json dist/SHA256SUMS dist/SHA256SUMS.sigstore.json

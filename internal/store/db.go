@@ -21,7 +21,7 @@ var (
 	ErrNotFound              = errors.New("not found")
 	ErrCorruptDB             = errors.New("database corrupt or unreadable")
 	ErrInvalidInput          = errors.New("invalid input")
-	ErrNewerSchema           = errors.New("database was written by a newer version of Lattice")
+	ErrNewerSchema           = errors.New("database was written by a newer version of Flavor")
 	ErrIdentityDeletePending = errors.New("identity metadata deleted; directory removal pending")
 )
 

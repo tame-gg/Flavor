@@ -1,6 +1,6 @@
-import { NetworkConnectionState as S } from "@gen/lattice/v1/common_pb";
-import type { Network } from "@gen/lattice/v1/network_pb";
-import type { Workspace } from "@gen/lattice/v1/workspaces_pb";
+import { NetworkConnectionState as S } from "@gen/flavor/v1/common_pb";
+import type { Network } from "@gen/flavor/v1/network_pb";
+import type { Workspace } from "@gen/flavor/v1/workspaces_pb";
 
 const running = new Set([S.CONNECTING, S.AUTHENTICATING, S.AWAITING_APPROVAL, S.CONNECTED, S.DEGRADED, S.RECONNECTING]);
 

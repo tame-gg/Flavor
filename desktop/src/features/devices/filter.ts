@@ -1,5 +1,5 @@
-import type { Device } from "@gen/lattice/v1/device_pb";
-import type { Network } from "@gen/lattice/v1/network_pb";
+import type { Device } from "@gen/flavor/v1/device_pb";
+import type { Network } from "@gen/flavor/v1/network_pb";
 import { deviceKey } from "../../app/sync/controller";
 import { providerName } from "../networks/format";
 

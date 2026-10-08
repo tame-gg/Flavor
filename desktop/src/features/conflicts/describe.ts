@@ -1,4 +1,4 @@
-import { ConflictScope, ConflictSeverity, ConflictType, type Conflict } from "@gen/lattice/v1/conflicts_pb";
+import { ConflictScope, ConflictSeverity, ConflictType, type Conflict } from "@gen/flavor/v1/conflicts_pb";
 
 export const typeLabel: Record<ConflictType, string> = {
   [ConflictType.UNSPECIFIED]: "Overlap",

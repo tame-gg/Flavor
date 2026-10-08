@@ -17,13 +17,13 @@ import (
 	"testing"
 	"time"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/dataplane/dataplanetest"
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/inspect"
-	"git.lunarlabs.dev/lattice/lattice/internal/store"
-	"git.lunarlabs.dev/lattice/lattice/internal/syndns"
-	"git.lunarlabs.dev/lattice/lattice/internal/synthetic"
-	"git.lunarlabs.dev/lattice/lattice/internal/synthetic/layout"
+	"git.lunarlabs.dev/flavor/flavor/internal/dataplane/dataplanetest"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/inspect"
+	"git.lunarlabs.dev/flavor/flavor/internal/store"
+	"git.lunarlabs.dev/flavor/flavor/internal/syndns"
+	"git.lunarlabs.dev/flavor/flavor/internal/synthetic"
+	"git.lunarlabs.dev/flavor/flavor/internal/synthetic/layout"
 	"golang.org/x/net/dns/dnsmessage"
 	"gvisor.dev/gvisor/pkg/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip"
@@ -116,7 +116,7 @@ type fixture struct {
 func start(t *testing.T, withPeer bool) *fixture {
 	t.Helper()
 	ctx := context.Background()
-	db, err := store.Open(ctx, filepath.Join(t.TempDir(), "lattice.db"))
+	db, err := store.Open(ctx, filepath.Join(t.TempDir(), "flavor.db"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -278,7 +278,7 @@ func rcode(t *testing.T, resp []byte) dnsmessage.RCode {
 
 func TestResolverAnswersOverUDPAndTCPOnBothFamilies(t *testing.T) {
 	f := start(t, true)
-	q := query(t, "missing.home.lattice.internal.", dnsmessage.TypeAAAA)
+	q := query(t, "missing.home.flavor.internal.", dnsmessage.TypeAAAA)
 	for _, server := range []netip.Addr{layout.ResolverAddress(f.alloc.ULA()), layout.ResolverV4(f.alloc.Pool())} {
 		ap := netip.AddrPortFrom(server, 53)
 		u, err := f.peer.DialUDP(ap)

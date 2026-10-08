@@ -5,8 +5,8 @@ import (
 	"net/netip"
 	"testing"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/inspect"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/inspect"
 )
 
 func dev(net domain.NetworkID, node, host, dns string, addrs ...string) domain.Device {

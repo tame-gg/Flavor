@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/logging"
-	"git.lunarlabs.dev/lattice/lattice/internal/provider"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/logging"
+	"git.lunarlabs.dev/flavor/flavor/internal/provider"
 	"tailscale.com/envknob"
 )
 
@@ -41,7 +41,7 @@ func TestTsnetEngineRefusesUnpreparedEnv(t *testing.T) {
 }
 
 func TestAmbientAuthKeysNeverReachTsnet(t *testing.T) {
-	const a, b = "LATTICE_TEST_SECRET_A", "LATTICE_TEST_SECRET_B"
+	const a, b = "FLAVOR_TEST_SECRET_A", "FLAVOR_TEST_SECRET_B"
 	t.Setenv("TS_AUTHKEY", a)
 	t.Setenv("TS_AUTH_KEY", b)
 	var buf bytes.Buffer
@@ -76,7 +76,7 @@ func TestTsnetLogAdapterDropsAuthURL(t *testing.T) {
 	if err := PrepareProcessEnv(); err != nil {
 		t.Fatal(err)
 	}
-	const token = "LATTICE_CANARY_TOKEN_5e7d"
+	const token = "FLAVOR_CANARY_TOKEN_5e7d"
 	canary := "https://login.example.com/a/" + token + "?token=" + token
 	var buf bytes.Buffer
 	e, err := newTsnetEngine(tsnetCfg(t), "", logging.New(&buf, slog.LevelDebug))

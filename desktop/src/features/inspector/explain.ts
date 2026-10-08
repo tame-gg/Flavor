@@ -6,7 +6,7 @@ import {
   PreferenceState,
   ResolutionDecision,
   type InspectDestinationResponse,
-} from "@gen/lattice/v1/inspector_pb";
+} from "@gen/flavor/v1/inspector_pb";
 
 export const matchLabel: Record<MatchKind, string> = {
   [MatchKind.UNSPECIFIED]: "Match",
@@ -14,7 +14,7 @@ export const matchLabel: Record<MatchKind, string> = {
   [MatchKind.DEVICE_DNS_NAME]: "Full DNS name",
   [MatchKind.DEVICE_HOSTNAME]: "Device name",
   [MatchKind.SUBNET_ROUTE]: "Subnet route",
-  [MatchKind.QUALIFIED_NAME]: "Lattice name",
+  [MatchKind.QUALIFIED_NAME]: "Flavor name",
 };
 
 export const statusLabel: Record<CandidateStatus, string> = {
@@ -36,7 +36,7 @@ const basis: Record<MatchKind, string> = {
   [MatchKind.DEVICE_DNS_NAME]: "a full DNS name",
   [MatchKind.DEVICE_HOSTNAME]: "a device name",
   [MatchKind.SUBNET_ROUTE]: "a subnet route",
-  [MatchKind.QUALIFIED_NAME]: "its Lattice name, which names the network explicitly",
+  [MatchKind.QUALIFIED_NAME]: "its Flavor name, which names the network explicitly",
 };
 
 const what = (r: InspectDestinationResponse) => (r.kind === DestinationKind.ADDRESS ? "address" : "name");
@@ -54,7 +54,7 @@ export function explain(r: InspectDestinationResponse): { title: string; detail:
         return {
           title: `${device} on ${network}`,
           detail:
-            `Chosen by your Lattice preference for ${network}.` +
+            `Chosen by your Flavor preference for ${network}.` +
             (others > 0 ? ` Without it, ${r.normalized} would match on ${others + 1} networks.` : ""),
         };
       }
@@ -80,14 +80,14 @@ export function explain(r: InspectDestinationResponse): { title: string; detail:
       if (r.reason === DecisionReason.AMBIGUOUS_NETWORK_LABEL) {
         return {
           title: `${r.normalized} uses a network name more than one network shares`,
-          detail: "Several networks have the same name, so this Lattice name could point at either of them. Use the device's stable name, which includes the network ID.",
+          detail: "Several networks have the same name, so this Flavor name could point at either of them. Use the device's stable name, which includes the network ID.",
         };
       }
       const count = new Set(tied.map((c) => c.network?.id)).size;
       if (r.decidedBy === MatchKind.SUBNET_ROUTE) {
         return {
           title: `${r.normalized} is routed by ${count} networks`,
-          detail: `Each one advertises a route of the same length that covers this address, so Lattice will not pick one on its own.`,
+          detail: `Each one advertises a route of the same length that covers this address, so Flavor will not pick one on its own.`,
         };
       }
       const where = count > 1 ? `${count} networks` : "one network, on more than one device";
@@ -95,7 +95,7 @@ export function explain(r: InspectDestinationResponse): { title: string; detail:
         title: `${r.normalized} exists on ${where}`,
         detail:
           count > 1
-            ? `Each network has its own device with this ${what(r)}. Lattice keeps them separate; a full DNS name always points at exactly one of them.`
+            ? `Each network has its own device with this ${what(r)}. Flavor keeps them separate; a full DNS name always points at exactly one of them.`
             : `More than one device on this network reports this ${what(r)}.`,
       };
     }

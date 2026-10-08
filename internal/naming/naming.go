@@ -5,10 +5,10 @@ import (
 	"encoding/base32"
 	"strings"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
 )
 
-const Suffix = "lattice.internal"
+const Suffix = "flavor.internal"
 
 type Labels struct {
 	Stable   string

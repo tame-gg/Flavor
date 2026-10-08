@@ -15,10 +15,10 @@ const (
 )
 
 var (
-	ErrNotSynthetic   = errors.New("address is not a Lattice synthetic address")
+	ErrNotSynthetic   = errors.New("address is not a Flavor synthetic address")
 	ErrInvalidIndex   = errors.New("network index must be between 1 and 65534")
 	ErrCounterSpent   = errors.New("synthetic IPv6 counter exhausted")
-	ErrInvalidPrefix  = errors.New("invalid Lattice ULA prefix")
+	ErrInvalidPrefix  = errors.New("invalid Flavor ULA prefix")
 	ErrNotIPv4        = errors.New("embedding requires an IPv4 target")
 	ErrNotInNamespace = errors.New("address is in a reserved part of the network /64")
 )

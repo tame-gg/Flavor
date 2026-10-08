@@ -14,17 +14,17 @@ import (
 	"syscall"
 	"time"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/config"
-	"git.lunarlabs.dev/lattice/lattice/internal/events"
-	"git.lunarlabs.dev/lattice/lattice/internal/ipc/server"
-	"git.lunarlabs.dev/lattice/lattice/internal/ipc/transport"
-	"git.lunarlabs.dev/lattice/lattice/internal/secret"
-	"git.lunarlabs.dev/lattice/lattice/internal/service"
-	"git.lunarlabs.dev/lattice/lattice/internal/session"
-	"git.lunarlabs.dev/lattice/lattice/internal/store"
+	"git.lunarlabs.dev/flavor/flavor/internal/config"
+	"git.lunarlabs.dev/flavor/flavor/internal/events"
+	"git.lunarlabs.dev/flavor/flavor/internal/ipc/server"
+	"git.lunarlabs.dev/flavor/flavor/internal/ipc/transport"
+	"git.lunarlabs.dev/flavor/flavor/internal/secret"
+	"git.lunarlabs.dev/flavor/flavor/internal/service"
+	"git.lunarlabs.dev/flavor/flavor/internal/session"
+	"git.lunarlabs.dev/flavor/flavor/internal/store"
 )
 
-var ErrAlreadyRunning = errors.New("another latticed instance is running for this user")
+var ErrAlreadyRunning = errors.New("another flavord instance is running for this user")
 
 type Options struct {
 	Env             *config.Env
@@ -60,7 +60,7 @@ func Run(ctx context.Context, opts Options) error {
 	if err != nil {
 		return fmt.Errorf("resolve paths: %w", err)
 	}
-	if err := paths.EnsureLatticeDirs(); err != nil {
+	if err := paths.EnsureFlavorDirs(); err != nil {
 		return fmt.Errorf("prepare directories: %w", err)
 	}
 
@@ -109,7 +109,7 @@ func Run(ctx context.Context, opts Options) error {
 	httpSrv := server.New(svc)
 	serveErr := make(chan error, 1)
 	go func() { serveErr <- httpSrv.Serve(l) }()
-	log.Info("latticed ready", "socket", paths.Socket, "instance_id", instanceID)
+	log.Info("flavord ready", "socket", paths.Socket, "instance_id", instanceID)
 	if opts.OnReady != nil {
 		opts.OnReady(paths)
 	}
@@ -135,7 +135,7 @@ func Run(ctx context.Context, opts Options) error {
 	cancelRun()
 	stopSynthetic()
 
-	log.Info("latticed shutting down")
+	log.Info("flavord shutting down")
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), opts.ShutdownTimeout)
 	defer cancel()
 	if err := svc.Shutdown(shutdownCtx); err != nil {

@@ -1,8 +1,8 @@
 [workspace]
 resolver = "2"
 members = [
-  "crates/lattice-ipc",
-  "crates/lattice-proto",
+  "crates/flavor-ipc",
+  "crates/flavor-proto",
   "desktop/src-tauri",
 ]
 

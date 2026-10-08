@@ -1,7 +1,7 @@
 version: v2
 modules:
   - path: .
-    name: buf.build/lunarlabs/lattice
+    name: buf.build/lunarlabs/flavor
 lint:
   use:
     - STANDARD

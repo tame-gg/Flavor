@@ -7,9 +7,9 @@ import (
 	"net"
 	"net/netip"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/domain"
-	"git.lunarlabs.dev/lattice/lattice/internal/inspect"
-	"git.lunarlabs.dev/lattice/lattice/internal/store"
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
+	"git.lunarlabs.dev/flavor/flavor/internal/inspect"
+	"git.lunarlabs.dev/flavor/flavor/internal/store"
 )
 
 const (
@@ -33,7 +33,7 @@ func (s *Service) Route(ctx context.Context, destination, rawNetwork string, def
 		q.Port = defaultPort
 	}
 	if q.Port == 0 {
-		return Route{}, fail(CodeInvalidArgument, "include a port, for example postgres.home.lattice.internal:5432", false)
+		return Route{}, fail(CodeInvalidArgument, "include a port, for example postgres.home.flavor.internal:5432", false)
 	}
 	if rawNetwork != "" {
 		id, err := s.resolveNetworkRef(ctx, rawNetwork)
@@ -64,7 +64,7 @@ func (s *Service) Route(ctx context.Context, destination, rawNetwork string, def
 				n[c.Network.ID] = true
 			}
 		}
-		return r, fail(CodeDestinationAmbiguous, fmt.Sprintf("%s matches %d candidates on %d network(s); use a Lattice name, a preference or an explicit network", q.Normalized(), countTied(res), len(n)), false)
+		return r, fail(CodeDestinationAmbiguous, fmt.Sprintf("%s matches %d candidates on %d network(s); use a Flavor name, a preference or an explicit network", q.Normalized(), countTied(res), len(n)), false)
 	case inspect.DecisionNoMatch:
 		return r, fail(CodeDestinationNotFound, "no connected network has a device or route for "+q.Normalized(), false)
 	}

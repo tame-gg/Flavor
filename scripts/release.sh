@@ -15,9 +15,9 @@ rm -rf "$stage" "dist/$name.tar.gz"
 mkdir -p "$stage"
 
 pkg=git.lunarlabs.dev/flavor/flavor/internal/version
-ldflags="-s -w -buildid= -X $pkg.daemonVersion=$version -X $pkg.buildCommit=$commit"
+ldflags="-s -w -buildid= -bindnow -X $pkg.daemonVersion=$version -X $pkg.buildCommit=$commit"
 gobuild() {
-	CGO_ENABLED=0 GOOS=linux GOARCH="$arch" ./scripts/go.sh build -trimpath -buildvcs=false -ldflags "$ldflags" -o "$stage/$1" "$2"
+	CGO_ENABLED=0 GOOS=linux GOARCH="$arch" ./scripts/go.sh build -trimpath -buildvcs=false -buildmode=pie -ldflags "$ldflags" -o "$stage/$1" "$2"
 }
 gobuild usr/bin/flavord ./cmd/flavord
 gobuild usr/bin/flavorctl ./cmd/flavorctl

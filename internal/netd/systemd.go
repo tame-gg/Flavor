@@ -2,6 +2,7 @@ package netd
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"strconv"
@@ -21,7 +22,7 @@ func ActivatedListener() (*net.UnixListener, error) {
 	unix.CloseOnExec(listenFD)
 	typ, err := unix.GetsockoptInt(listenFD, unix.SOL_SOCKET, unix.SO_TYPE)
 	if err != nil || typ != unix.SOCK_SEQPACKET {
-		return nil, errors.New("activated socket is not SOCK_SEQPACKET")
+		return nil, fmt.Errorf("activated socket is not SOCK_SEQPACKET (type %d, err %v)", typ, err)
 	}
 	f := os.NewFile(listenFD, "lattice-netd.socket")
 	defer f.Close()

@@ -21,6 +21,7 @@ var (
 	ErrNotFound              = errors.New("not found")
 	ErrCorruptDB             = errors.New("database corrupt or unreadable")
 	ErrInvalidInput          = errors.New("invalid input")
+	ErrNewerSchema           = errors.New("database was written by a newer version of Lattice")
 	ErrIdentityDeletePending = errors.New("identity metadata deleted; directory removal pending")
 )
 
@@ -59,7 +60,7 @@ func Open(ctx context.Context, path string) (*DB, error) {
 	db := &DB{sql: sqlDB, path: path}
 	if err := db.migrate(ctx); err != nil {
 		_ = sqlDB.Close()
-		if fileLooksPresent(path) {
+		if fileLooksPresent(path) && !errors.Is(err, ErrNewerSchema) {
 			return nil, fmt.Errorf("%w: migrate: %v", ErrCorruptDB, err)
 		}
 		return nil, err

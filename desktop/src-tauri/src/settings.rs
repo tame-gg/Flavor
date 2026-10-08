@@ -79,6 +79,7 @@ pub fn default_path() -> Option<PathBuf> {
     let base = std::env::var_os("XDG_CONFIG_HOME")
         .map(PathBuf::from)
         .filter(|p| p.is_absolute())
+        .or_else(flavor_ipc::macos_support_dir)
         .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")))?;
     base.is_absolute().then(|| base.join("flavor").join("config.toml"))
 }

@@ -15,6 +15,7 @@ pub fn install(app: &App) -> tauri::Result<()> {
     )?;
     TrayIconBuilder::with_id("main")
         .icon(Image::from_bytes(include_bytes!("../icons/tray.png"))?)
+        .icon_as_template(true)
         .tooltip("Flavor")
         .menu(&menu)
         .on_menu_event(|app, event| match event.id().as_ref() {

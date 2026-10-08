@@ -57,9 +57,14 @@ jobs:
         run: plutil -lint packaging/launchd/*.plist
 
   rust:
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, macos-15]
+    runs-on: ${{ matrix.runner }}
     env:
       GOENV: ${{ github.workspace }}/go.env
+      TMPDIR: ${{ matrix.runner == 'macos-15' && '/tmp' || '' }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
@@ -71,6 +76,7 @@ jobs:
         with:
           toolchain: stable
       - name: system libraries
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev

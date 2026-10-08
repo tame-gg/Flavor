@@ -48,6 +48,12 @@ fn main() {
             events::watch_events,
             tray::set_tray_summary,
         ])
-        .run(tauri::generate_context!())
-        .expect("run flavor desktop");
+        .build(tauri::generate_context!())
+        .expect("build flavor desktop")
+        .run(|_app, _event| {
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Reopen { .. } = _event {
+                tray::show_main(_app);
+            }
+        });
 }

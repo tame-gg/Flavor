@@ -11,7 +11,7 @@ import (
 
 const (
 	DefaultBackoff     = time.Second
-	MaxBackoff         = time.Minute
+	MaxBackoff         = 10 * time.Second
 	DefaultProbe       = 5 * time.Second
 	healthyLifetime    = 30 * time.Second
 	WarnUnavailable    = "synthetic_unavailable"

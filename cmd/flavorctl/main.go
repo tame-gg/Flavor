@@ -18,11 +18,13 @@ import (
 	v1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1"
 	"git.lunarlabs.dev/flavor/flavor/internal/config"
 	"git.lunarlabs.dev/flavor/flavor/internal/ipc/client"
+	"git.lunarlabs.dev/flavor/flavor/internal/version"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
 
 const usage = `usage: flavorctl [--runtime-dir DIR] [--json] <command> [args]
+       flavorctl --version
 
 commands:
   info                                 daemon version and protocol
@@ -57,8 +59,13 @@ commands:
 func main() {
 	runtimeDir := flag.String("runtime-dir", "", "runtime directory parent (defaults to $XDG_RUNTIME_DIR)")
 	asJSON := flag.Bool("json", false, "print machine-readable JSON")
+	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Usage = func() { fmt.Fprint(os.Stderr, usage) }
 	flag.Parse()
+	if *showVersion {
+		fmt.Println(version.Info().Line("flavorctl"))
+		return
+	}
 	if flag.NArg() == 0 {
 		flag.Usage()
 		os.Exit(2)

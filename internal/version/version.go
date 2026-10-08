@@ -1,5 +1,7 @@
 package version
 
+import "fmt"
+
 type BuildInfo struct {
 	DaemonVersion string
 	ProtocolMajor int
@@ -16,6 +18,10 @@ func Info() BuildInfo {
 		BuildCommit:   buildCommit,
 		Capabilities:  []string{"headscale", "device_snapshots", "connection_inspector", "conflict_center", "workspaces", "destination_preferences", "forwarding", "socks_proxy"},
 	}
+}
+
+func (b BuildInfo) Line(program string) string {
+	return fmt.Sprintf("%s %s (commit %s) protocol %d.%d", program, b.DaemonVersion, b.BuildCommit, b.ProtocolMajor, b.ProtocolMinor)
 }
 
 var (

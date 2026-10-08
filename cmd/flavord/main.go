@@ -32,7 +32,7 @@ func main() {
 
 	info := version.Info()
 	if *showVersion {
-		fmt.Printf("flavord %s protocol %d.%d\n", info.DaemonVersion, info.ProtocolMajor, info.ProtocolMinor)
+		fmt.Println(info.Line("flavord"))
 		return
 	}
 	var level slog.Level

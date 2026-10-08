@@ -11,13 +11,14 @@ jobs:
     env:
       GOENV: ${{ github.workspace }}/go.env
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
-      - uses: bufbuild/buf-setup-action@v1
+      - uses: bufbuild/buf-action@v1
         with:
           version: "1.47.2"
+          setup_only: true
       - name: proto dirty check
         run: |
           ./scripts/generate-proto.sh
@@ -32,8 +33,8 @@ jobs:
     env:
       GOENV: ${{ github.workspace }}/go.env
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
       - uses: dtolnay/rust-toolchain@stable
@@ -52,8 +53,8 @@ jobs:
       run:
         working-directory: desktop
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm

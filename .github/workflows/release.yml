@@ -18,7 +18,7 @@ jobs:
     outputs:
       version: ${{ steps.v.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - id: v
         env:
           INPUT_VERSION: ${{ inputs.version }}
@@ -35,10 +35,10 @@ jobs:
     runs-on: ubuntu-24.04
     container: fedora:43
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: dnf install -y selinux-policy-devel make
       - run: make -C packaging/selinux -f /usr/share/selinux/devel/Makefile flavor_netd.pp
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: selinux
           path: packaging/selinux/flavor_netd.pp
@@ -56,13 +56,13 @@ jobs:
     env:
       GOENV: ${{ github.workspace }}/go.env
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo install cargo-auditable --locked --version 0.7.7
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
@@ -71,7 +71,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: selinux
           path: selinux
@@ -80,7 +80,7 @@ jobs:
           VERSION: ${{ needs.version.outputs.version }}
           ARCH: ${{ matrix.arch }}
         run: SELINUX_PP=selinux/flavor_netd.pp ./scripts/release.sh "$VERSION" "$ARCH"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: tarball-${{ matrix.arch }}
           path: dist/*.tar.gz
@@ -95,8 +95,8 @@ jobs:
     env:
       VERSION: ${{ needs.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v7
         with:
           pattern: tarball-*
           merge-multiple: true
@@ -113,7 +113,7 @@ jobs:
       - name: checksums
         working-directory: dist
         run: sha256sum -- *.tar.gz *.spdx.json > SHA256SUMS
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: release
           path: dist/*

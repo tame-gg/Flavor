@@ -1,0 +1,41 @@
+name: Feature request
+description: Suggest an improvement or a new feature.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check the [roadmap](https://github.com/tame-gg/Flavor#roadmap) and existing issues first.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe what you are trying to do and what gets in the way today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like Flavor to do?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you have considered
+      description: Workarounds you use today, or other ways to solve it.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - Desktop app
+        - flavorctl
+        - Networks and sign-in
+        - Devices
+        - Connection Inspector or Conflict Center
+        - Forwarding or SOCKS5 proxy
+        - System-wide names
+        - Packaging and installation
+        - Documentation

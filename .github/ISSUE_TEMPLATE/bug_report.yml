@@ -1,0 +1,103 @@
+name: Bug report
+description: Something in Flavor does not work as described.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please do not include pre-auth keys, sign-in links, or hostnames and addresses you do not want to publish.
+
+        Security problems should be reported privately: see [SECURITY.md](https://github.com/tame-gg/Flavor/blob/main/SECURITY.md).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Add a Headscale network ...
+        2. Run `flavorctl explain ...`
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Flavor version
+      description: The first line of `flavorctl info`.
+      placeholder: flavord 0.1.0-beta.2 (commit 0de2000...)
+    validations:
+      required: true
+  - type: input
+    id: distribution
+    attributes:
+      label: Distribution and version
+      placeholder: Ubuntu 24.04, Fedora 43, Arch Linux, ...
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you install Flavor?
+      options:
+        - Release tarball (install.sh)
+        - Arch Linux PKGBUILD (flavor-bin)
+        - Arch Linux PKGBUILD (flavor)
+        - Built from source
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Which part is affected?
+      multiple: true
+      options:
+        - Desktop app
+        - flavorctl
+        - flavord (daemon)
+        - Forwarding or SOCKS5 proxy
+        - System-wide names (flavor-netd)
+        - Installer or packaging
+        - Documentation
+  - type: dropdown
+    id: control
+    attributes:
+      label: Control servers involved
+      multiple: true
+      options:
+        - Tailscale
+        - Headscale
+        - Not related to a network
+  - type: input
+    id: headscale-version
+    attributes:
+      label: Headscale version
+      description: Only if a Headscale server is involved.
+      placeholder: "0.26.1"
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: Output of `flavorctl diag`. It never contains keys or sign-in links.
+      render: text
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant lines from `journalctl --user -u flavord -e`, and for system-wide names `sudo journalctl -u flavor-netd -e`.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I removed pre-auth keys, sign-in links and anything else I do not want to publish.
+          required: true
+        - label: I searched existing issues for this problem.
+          required: true

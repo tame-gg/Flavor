@@ -1,292 +1,303 @@
 <div align="center">
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/banner-dark.svg">
-  <img src="assets/readme/banner-light.svg" alt="Flavor: every tailnet, side by side" width="100%">
-</picture>
+<img src="assets/icon.svg" width="88" height="88" alt="Flavor logo">
 
-<br>
-<br>
+# Flavor
 
-[![CI](https://img.shields.io/github/actions/workflow/status/tame-gg/flavor/ci.yml?branch=main&style=flat-square&label=ci&labelColor=0F1419)](https://github.com/tame-gg/flavor/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-MIT-6BA3C7?style=flat-square&labelColor=0F1419)](LICENSE) [![Platform](https://img.shields.io/badge/platform-Linux-6BA3C7?style=flat-square&labelColor=0F1419)](#requirements) [![Stars](https://img.shields.io/github/stars/tame-gg/flavor?style=flat-square&color=6BA3C7&labelColor=0F1419)](https://github.com/tame-gg/flavor/stargazers) [![Last commit](https://img.shields.io/github/last-commit/tame-gg/flavor?style=flat-square&color=6BA3C7&labelColor=0F1419)](https://github.com/tame-gg/flavor/commits) [![Code size](https://img.shields.io/github/languages/code-size/tame-gg/flavor?style=flat-square&color=6BA3C7&labelColor=0F1419)](https://github.com/tame-gg/flavor)
+**Several Tailscale and Headscale networks, connected side by side on one Linux desktop.**
 
-[![Go](https://img.shields.io/badge/Go-1.27-00ADD8?style=flat-square&logo=go&logoColor=white&labelColor=0F1419)](go.mod) [![Rust](https://img.shields.io/badge/Rust-stable-CE422B?style=flat-square&logo=rust&logoColor=white&labelColor=0F1419)](Cargo.toml) [![Tauri](https://img.shields.io/badge/Tauri-2-FFC131?style=flat-square&logo=tauri&logoColor=white&labelColor=0F1419)](desktop/src-tauri) [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white&labelColor=0F1419)](desktop) [![tsnet](https://img.shields.io/badge/tsnet-1.90.9-6BA3C7?style=flat-square&logo=tailscale&logoColor=white&labelColor=0F1419)](https://pkg.go.dev/tailscale.com/tsnet)
+Flavor is an open-source desktop app, CLI and per-user daemon for Linux. It keeps multiple tailnets connected at the same time, shows every device with the network it belongs to, and tells you where a connection will go when two networks use the same address.
 
-**[Quick start](#quick-start)** · **[How it works](#how-it-works)** · **[CLI](#cli)** · **[Security](#security-model)** · **[Development](#development)**
+[![Release](https://img.shields.io/github/v/release/tame-gg/Flavor?include_prereleases&style=flat-square&label=release&labelColor=0F1419&color=6BA3C7)](https://github.com/tame-gg/Flavor/releases) [![CI](https://img.shields.io/github/actions/workflow/status/tame-gg/Flavor/ci.yml?branch=main&style=flat-square&label=ci&labelColor=0F1419)](https://github.com/tame-gg/Flavor/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-6BA3C7?style=flat-square&labelColor=0F1419)](LICENSE) [![Platform: Linux](https://img.shields.io/badge/platform-Linux-6BA3C7?style=flat-square&labelColor=0F1419)](#platform-support)
+
+**[Install](#install)** · **[Quick start](#quick-start)** · **[Documentation](doc/README.md)** · **[Releases](https://github.com/tame-gg/Flavor/releases)**
 
 </div>
 
----
-
-The system Tailscale client joins one tailnet at a time. Switching between a work account, a personal tailnet and a self-hosted Headscale means logging out, logging in and dropping every connection in between.
-
-**Flavor keeps them all connected at once.** A small per-user daemon runs one isolated, embedded Tailscale node for each network you add. Each has its own device identity, state directory and peer list. A Tauri desktop app and a CLI drive it over a local socket. It needs no root and no system `tailscaled`.
-
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/networks-dark.png">
-  <img src="assets/readme/networks-light.png" alt="Flavor networks view with a Headscale lab, a Tailscale work tailnet and a network waiting for sign-in">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/flavor-networks-dark.png">
+  <img src="assets/screenshots/flavor-networks-light.png" alt="The Flavor desktop app with four networks: Acme staging and Home lab on Headscale and Work on Tailscale are connected, and Studio on Headscale is waiting for sign-in">
 </picture>
 
-<table>
-  <tr>
-    <td width="50%">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/readme/signin-dark.png">
-        <img src="assets/readme/signin-light.png" alt="Sign-in panel showing the destination host before opening the browser">
-      </picture>
-      <p align="center"><sub><b>Explicit sign-in.</b> Shows the destination host and opens only after you click.</sub></p>
-    </td>
-    <td width="50%">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/readme/devices-dark.png">
-        <img src="assets/readme/devices-light.png" alt="Devices view showing 100.64.0.1 on two networks as two separate machines">
-      </picture>
-      <p align="center"><sub><b>Same IP, two machines.</b> Devices are keyed by network and node, never by address.</sub></p>
-    </td>
-  </tr>
-</table>
+> [!NOTE]
+> Flavor is in beta. Version 0.1.0-beta.2 runs on Linux (x86_64 and arm64). The project was called Lattice until this release; upgrading keeps your networks and device identities ([details](doc/install.md#upgrading-from-lattice)).
+
+## Why Flavor?
+
+Tailscale and Headscale connect your devices into private, WireGuard-based networks called tailnets. It is common to need more than one: a company tailnet, a Headscale server at home, a customer's network. Connecting to several at once is [one of Tailscale's longest-standing feature requests](https://github.com/tailscale/tailscale/issues/183), and the official Tailscale apps can only have [one tailnet active at a time](https://tailscale.com/docs/features/client/fast-user-switching), so reaching another means switching accounts.
+
+Flavor keeps all of them connected. Each network runs as its own embedded Tailscale node with its own identity, so this computer appears as a separate machine on each one.
+
+Using several networks at once brings a new problem: they can use the same addresses. With its default settings, Headscale hands out `100.64.0.1`, `100.64.0.2` and so on in order, so two Headscale networks usually overlap:
+
+```text
+Home lab       100.64.0.3  ->  pi-hole
+Acme staging   100.64.0.3  ->  grafana
+```
+
+An address alone cannot tell those two machines apart. Flavor identifies every device by its network, and makes the network part of every decision:
+
+| | What Flavor does |
+| --- | --- |
+| **See it** | The device list shows both machines, each with its network. The Conflict Center lists every address, name and subnet route that exists more than once. |
+| **Explain it** | The Connection Inspector and `flavorctl explain` show every network a destination exists on, what matched and whether the answer is unique. Overlapping subnet routes resolve to the most specific one. |
+| **Choose it** | Name the device together with its network (`pi-hole.home-lab.flavor.internal`), pass `--network` to `flavorctl forward`, or set a preference. Flavor never picks one at random. |
+| **Connect to it** | `flavorctl forward` and `flavorctl socks` connect through the right network without changing system routing. |
+| **Use it anywhere** | With the experimental helper, any program can resolve and connect to Flavor names. |
+
+Everything except the last row runs as your user, with no extra privileges. The last row needs an optional helper that runs as root.
 
 ## Features
 
+### Many networks at once
+
+- Connect Tailscale accounts and any number of Headscale servers at the same time, all from one daemon.
+- Each network is its own embedded Tailscale node ([`tsnet`](https://pkg.go.dev/tailscale.com/tsnet)) with its own node key, state and peers. You do not need the `tailscale` package or `tailscaled`.
+- Sign in through the browser, or join with a one-time pre-auth key that is never stored.
+- Device identities survive restarts, so networks reconnect without signing in again. Each network can connect automatically when Flavor starts.
+- Workspaces connect a named set of networks, such as *Work* or *On call*, in one step.
+
+### One device list
+
+- Every device on every connected network in one searchable table. The same address on two networks shows up as two machines, because Flavor identifies devices by network and node.
+- Search by name, address, network, OS or tag, with qualifiers such as `is:online` and `tag:db`.
+- Device details show DNS names, addresses, routes and Flavor names, with buttons to copy them.
+
+### Decisions you can read
+
+- **Connection Inspector:** type an address or name and see which networks it exists on, how it matched, and why one answer wins or why none does.
+- **Conflict Center** (the Conflicts page): every address, DNS name, device name and subnet route that exists more than once, sorted into expected overlaps and real ambiguities.
+- **Flavor names** of the form `<device>.<network>.flavor.internal` point at one device, or are reported as ambiguous if two devices share a label.
+- **Destination preferences** tell Flavor which network you mean for an exact address or name.
+
+### Reach services without root
+
+- `flavorctl forward` listens on a local port and forwards to a service on the network you choose.
+- `flavorctl socks` runs a SOCKS5 proxy for browsers, curl and other clients.
+- Both listen on loopback only, accept connections only from your own user, check every new connection again and refuse ambiguous destinations.
+- **Experimental:** [system-wide names](doc/system-wide-names.md) let any program use Flavor names directly, through a small helper that runs as root with only `CAP_NET_ADMIN`. It is off by default and meant for single-user machines.
+
+### Built for daily use
+
+- A diagnostics page and `flavorctl diag`, which never include keys or sign-in links.
+- `flavorctl` covers networks, device lists, decisions, workspaces and preferences, and adds forwarding and the proxy, with `--json` output for scripts.
+- Closing the window keeps Flavor in the tray, and quitting the app never disconnects your networks.
+- No telemetry, and Tailscale's log upload is turned off for every network.
+
 <table>
   <tr>
-    <td width="50%" valign="top"><b>Many tailnets at once</b><br>Tailscale and any number of Headscale servers side by side in one daemon. Each network runs its own embedded <a href="https://pkg.go.dev/tailscale.com/tsnet"><code>tsnet</code></a> node.</td>
-    <td width="50%" valign="top"><b>Overlapping addresses are fine</b><br>Both networks handing out <code>100.64.0.1</code> is normal. Every device is identified by <code>{network, node}</code> all the way from the daemon to the UI.</td>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/flavor-inspector-dark.png">
+        <img src="assets/screenshots/flavor-inspector-light.png" alt="Connection Inspector showing that 100.64.0.3 exists on two networks, with the grafana device on Acme staging, its DNS name and its Flavor name">
+      </picture>
+      <p align="center"><sub><b>Same address, two networks.</b> Each match comes with the names that tell them apart.</sub></p>
+    </td>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/flavor-inspector-route-dark.png">
+        <img src="assets/screenshots/flavor-inspector-route-light.png" alt="Connection Inspector deciding that 10.20.30.40 goes to the Work network through office-router, because its 10.20.30.0/24 route is more specific than a route on Acme staging">
+      </picture>
+      <p align="center"><sub><b>Overlapping routes.</b> The most specific subnet route wins, and Flavor says why.</sub></p>
+    </td>
   </tr>
   <tr>
-    <td width="50%" valign="top"><b>Unprivileged</b><br>Runs as your user, with no system <code>tailscale</code> or <code>tailscaled</code>. Optional system-wide names use a small socket-activated helper limited to <code>CAP_NET_ADMIN</code>.</td>
-    <td width="50%" valign="top"><b>Sign in your way</b><br>Browser sign-in (including OIDC on a different host) or a one-time pre-auth key that is used once and never stored.</td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top"><b>Survives restarts</b><br>Node identities persist per network, so reconnecting after a reboot needs no keys. <i>Connect automatically when Flavor starts</i> is a per-network choice.</td>
-    <td width="50%" valign="top"><b>Remove vs delete</b><br>Removing a network keeps its identity on disk for later. Deleting the identity is a separate, explicit step. Flavor never deletes machines on the control server.</td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top"><b>Connection Inspector</b><br>Type an address or name and see every network it exists on, which device or subnet route matched, how it matched, and whether the answer is unique. Longest-prefix routes and network-qualified names like <code>postgres.home.flavor.internal</code> are explained the same way. The same engine powers <code>flavorctl explain</code>.</td>
-    <td width="50%" valign="top"><b>Conflict Center</b><br>Every address, DNS name, device name and subnet route that exists more than once, split into expected overlaps (network-specific names or a more specific route decide) and real ambiguities.</td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top"><b>Device Explorer</b><br>Search all networks at once by name, address, network, OS or tag, with qualifiers like <code>is:online</code> and <code>tag:db</code>. Each device opens a details panel with copy, inspect and SSH actions.</td>
-    <td width="50%" valign="top"><b>Live and resilient UI</b><br>A snapshot plus an ordered event stream. The UI resyncs on gaps or daemon restarts and keeps showing last-known state while the daemon is away.</td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top"><b>Workspaces</b><br>Name a set of networks after what you are doing, like Work or On Call, and connect them in one step. Optionally disconnect everything else. Identities are never touched.</td>
-    <td width="50%" valign="top"><b>Destination preferences</b><br>When an address or name exists on several networks, tell Flavor which one you mean. The inspector, conflict view and CLI all explain the choice. System routing is not changed.</td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top"><b>Scriptable</b><br><code>flavorctl</code> speaks the same API as the desktop app, with <code>--json</code> output for automation.</td>
-    <td width="50%" valign="top"><b>Private by default</b><br>No telemetry. Device inventories, sign-in links and keys stay on your machine, and Tailscale log upload is disabled for every session.</td>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/flavor-conflicts-dark.png">
+        <img src="assets/screenshots/flavor-conflicts-light.png" alt="Conflict Center listing 13 overlaps: an ambiguous 192.168.1.0/24 route advertised on two networks, and the address 100.64.0.1 used on two networks, which is an expected overlap">
+      </picture>
+      <p align="center"><sub><b>Conflict Center.</b> Every overlap, sorted into expected and ambiguous.</sub></p>
+    </td>
+    <td width="50%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/flavor-devices-dark.png">
+        <img src="assets/screenshots/flavor-devices-light.png" alt="Device list with devices from the Acme staging, Work and Home lab networks in one table, each with its network, provider, addresses and online status">
+      </picture>
+      <p align="center"><sub><b>One device list.</b> Tailscale and Headscale devices together, each with its network.</sub></p>
+    </td>
   </tr>
 </table>
 
-## How it works
+## Install
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/architecture-dark.svg">
-  <img src="assets/readme/architecture-light.svg" alt="Architecture: React UI and Tauri shell talk Connect-RPC over a Unix socket to flavord, which runs one tsnet NetworkSession per Tailscale or Headscale control plane">
-</picture>
+Flavor runs on Linux (x86_64 and arm64) with systemd. The desktop app needs glibc 2.39 or newer, WebKitGTK 4.1 and libayatana-appindicator ([details](doc/install.md#requirements)).
 
-- **`flavord`**: the per-user Go daemon. It owns the SQLite network registry, the system keyring, an in-memory event bus with bounded replay, and one `NetworkSession` per network.
-- **IPC**: [Connect-RPC](https://connectrpc.com) over HTTP/2 cleartext on `$XDG_RUNTIME_DIR/flavor/flavord.sock`, mode `0600`. Every connection's UID is checked with `SO_PEERCRED`. The contract lives in [`proto/flavor/v1`](proto/flavor/v1).
-- **Desktop**: [Tauri 2](https://tauri.app) with a thin Rust client ([`crates/flavor-ipc`](crates/flavor-ipc)) built on [connect-rust](https://github.com/connectrpc/connect-rust). The React webview never touches the socket. It only calls a fixed list of app commands.
-- **Sync**: the UI loads a snapshot stamped with a sequence number, then streams events after that sequence. Missed events, a slow consumer or a restarted daemon all trigger a fresh snapshot instead of silent drift.
-
-## Quick start
-
-### Install a release
-
-Releases ship a tarball per architecture (`linux-amd64`, `linux-arm64`) with the daemon, CLI, desktop app, the `flavor-netd` helper, its systemd units, polkit action, SELinux module and AppArmor profile. The desktop app needs glibc 2.39+, `libwebkit2gtk-4.1` and `libayatana-appindicator3`.
+**Release tarball,** for recent systemd-based distributions. Download and verify it first:
 
 ```bash
 v=0.1.0-beta.2
 base=https://github.com/tame-gg/Flavor/releases/download/v$v
-curl -fLO $base/flavor-$v-linux-amd64.tar.gz -fLO $base/SHA256SUMS -fLO $base/SHA256SUMS.sigstore.json -fLO $base/SHA256SUMS.asc
-
-cosign verify-blob --bundle SHA256SUMS.sigstore.json \
-  --certificate-identity-regexp '^https://github.com/tame-gg/Flavor/\.github/workflows/release\.yml@refs/tags/v' \
-  --certificate-oidc-issuer https://token.actions.githubusercontent.com SHA256SUMS
-gh attestation verify flavor-$v-linux-amd64.tar.gz --repo tame-gg/Flavor
-gpg --verify SHA256SUMS.asc SHA256SUMS
+curl -fLO $base/flavor-$v-linux-amd64.tar.gz -fLO $base/SHA256SUMS -fLO $base/SHA256SUMS.asc
 sha256sum --check --ignore-missing SHA256SUMS
+curl -fsSL https://github.com/ohemilyy.gpg | gpg --import
+gpg --verify SHA256SUMS.asc SHA256SUMS
+```
 
+Continue only if the checksum is `OK` and `gpg` reports a good signature from the release key `0DFC 4321 62BF 84C0 FD78  0619 FBB9 6BCE C036 1F01`. Then install:
+
+```bash
 tar -xzf flavor-$v-linux-amd64.tar.gz
 sudo ./flavor-$v-linux-amd64/install.sh
 systemctl --user enable --now flavord
 ```
 
-Any one of the three signature checks is enough; each covers `SHA256SUMS`, which covers the tarballs and SBOMs. `install.sh` copies files to `/usr` and `/etc` from the tarball's manifest, loads the AppArmor profile or SELinux module when that LSM is active, and enables `flavor-netd.socket`. Re-running it with a newer tarball upgrades in place and restarts running `flavord` user services.
+On arm64, replace `amd64` with `arm64`. `install.sh` needs root to copy files into `/usr` and `/etc`; Flavor itself runs as your user. A Sigstore signature and GitHub build provenance are also available; see [Verify the download](doc/install.md#verify-the-download).
 
-System-wide names (`postgres.home.flavor.internal` in any app, through a TUN device and systemd-resolved) are experimental and off by default. To try them, run `systemctl --user edit flavord`, add the lines below, and restart it:
+**Arch Linux:** the [`flavor-bin`](packaging/aur/flavor-bin) and [`flavor`](packaging/aur/flavor) PKGBUILDs are ready but not on the AUR yet. [Build them from a clone](doc/install.md#arch-linux) with `makepkg -si`.
 
-```ini
-[Service]
-ExecStart=
-ExecStart=/usr/bin/flavord --synthetic-helper=/run/flavor/netd.sock
-```
+**From source:** [build Flavor yourself](doc/install.md#from-source), optionally into your home directory without root.
 
-### Upgrading from Lattice
+To remove Flavor, run `sudo /usr/libexec/flavor/uninstall`, or `sudo pacman -Rns flavor-bin` (or `flavor`) for the Arch packages. Your networks and identities stay in your home directory unless you delete them.
 
-Flavor was called Lattice until `v0.1.0-beta.2`. Install Flavor the same way, then enable `flavord`:
+## Quick start
 
-- `install.sh` runs Lattice's uninstaller first. It stops `latticed` and removes Lattice's files, but keeps your data.
-- On its first start, `flavord` moves `~/.local/share/lattice` and `~/.config/lattice` to the `flavor` paths. That covers the database, your networks and every device identity, so networks reconnect without signing in again. Lattice never stored credentials in the system keyring, so there is nothing to move there.
-- `flavord` refuses to start while `latticed` is still running, and leaves the Lattice data alone (logging a warning) if `~/.local/share/flavor` already exists.
-- A `systemctl --user edit latticed` override, such as the system-wide names setting, is not carried over. Recreate it with `systemctl --user edit flavord`.
+1. Start the daemon: `systemctl --user enable --now flavord`.
+2. Open **Flavor** from your application menu and choose **Add network**.
+3. For **Tailscale**, name the network, choose **Add network**, then **Open sign-in page** to sign in in your browser. For **Headscale**, also enter your server's address in **Control server**, then sign in through the browser or paste a pre-auth key.
+4. Open **Devices** to see every machine on your networks, and the **Connection Inspector** to check where an address or name goes.
 
-### Uninstall
+The [getting started guide](doc/getting-started.md) walks through each step, including Headscale registration and device approval.
 
-```bash
-sudo /usr/libexec/flavor/uninstall
-```
+## Command line
 
-It stops `flavord` for logged-in users and the helper, removes any `flv-u*` interface, unloads the SELinux module and AppArmor profile, and deletes every installed file. Per-user data is kept:
-
-```bash
-rm -rf ~/.local/share/flavor ~/.config/flavor
-```
-
-> [!WARNING]
-> Removing `~/.local/share/flavor` deletes every local device identity. The machines stay registered on their control servers until an administrator removes them.
-
-### Build from source
-
-Requires Go 1.27+, Rust stable, Node 24+ and the desktop libraries above.
-
-```bash
-./scripts/go.sh build -o ~/.local/bin/flavord   ./cmd/flavord
-./scripts/go.sh build -o ~/.local/bin/flavorctl ./cmd/flavorctl
-
-install -Dm644 packaging/systemd/user/flavord.service ~/.config/systemd/user/flavord.service
-systemctl --user daemon-reload
-systemctl --user enable --now flavord
-
-(cd desktop && npm ci && npm run tauri build)
-./target/release/flavor-desktop
-```
-
-> [!NOTE]
-> Always build Go through `./scripts/go.sh`. It applies the toolchain settings in [`go.env`](go.env) that the pinned Tailscale version needs.
-
-`./scripts/release.sh VERSION [amd64|arm64]` builds the same tarball a release ships; the binaries and the tarball are reproducible for a given commit. It needs `cargo install cargo-auditable --locked`, which embeds the desktop app's crate list. Each tarball's SBOM covers the Go modules, the Rust crates and the npm packages bundled into the desktop frontend; the last come from `/usr/share/flavor/frontend/package-lock.json`, the lockfile trimmed to production packages.
-
-Closing the window hides Flavor in the tray by default. Quitting the desktop app never stops `flavord` or disconnects your networks.
-
-## CLI
+`flavorctl` talks to the same daemon as the desktop app:
 
 ```console
-$ flavorctl add --name "Home lab" --headscale https://headscale.example.com --auto-connect
-01JA7Q3M0000000000000HOME0
+$ flavorctl add --name "Home lab" --headscale https://hs.home.example.net --auto-connect
+01J9X4T6K8M2Q7R3V5W0YBZCDE
+$ printf '%s\n' "$PREAUTH_KEY" | flavorctl enroll 01J9X4T6K8M2Q7R3V5W0YBZCDE
 
-$ printf '%s\n' "$PREAUTH_KEY" | flavorctl enroll 01JA7Q3M0000000000000HOME0
-
-$ flavorctl list
-ID                          NAME      PROVIDER   STATE           AUTO
-01JA7Q3M0000000000000HOME0  Home lab  headscale  connected       true
-01JA7Q3M0000000000000WORK0  Work      tailscale  authenticating  false
-sign in to Work: https://login.tailscale.com/a/…
-
-$ flavorctl explain 100.64.0.1
-destination  100.64.0.1 (address)
+$ flavorctl explain 100.64.0.3
+destination  100.64.0.3 (address)
 decision     ambiguous: exists on 2 network(s); use a full DNS name to pick one
 reason       multiple matches
 
-NETWORK    DEVICE    MATCH           STATUS  ADDRESSES
-Home       desktop   device address  tied    100.64.0.1
-LunarLabs  prod-api  device address  tied    100.64.0.1
+NETWORK       DEVICE   MATCH           STATUS  ADDRESSES
+Acme staging  grafana  device address  tied    100.64.0.3,fd7a:115c:a1e0::3
+Home lab      pi-hole  device address  tied    100.64.0.3,fd7a:115c:a1e0::3
+```
 
-$ flavorctl forward postgres.home.flavor.internal:5432
+Reach a service on a specific network through a local port. `forward` prints the port and runs until you press Ctrl+C:
+
+```console
+$ flavorctl forward --listen 127.0.0.1:5432 postgres.acme-staging.flavor.internal:5432
 Forwarding
 
-  127.0.0.1:41753
+  127.0.0.1:5432
       ↓
-  postgres.home.flavor.internal:5432
+  postgres.acme-staging.flavor.internal:5432
       ↓
-  Home
+  Acme staging
       ↓
-  100.64.0.9:5432
+  100.64.0.2:5432
 
 Reason: network qualified name
-
-$ flavorctl socks          # SOCKS5 on 127.0.0.1:1080, this user only
-$ curl --proxy socks5h://127.0.0.1:1080 http://grafana.home.flavor.internal:3000/
-$ flavorctl preference set 100.64.0.1 --network LunarLabs
-$ flavorctl workspace create --name "On Call" <network-id> <network-id>
-$ flavorctl workspace activate --disconnect-others "On Call"
-$ flavorctl conflicts
-$ flavorctl --json explain prod-api
-$ flavorctl devices
-$ flavorctl remove [--delete-identity] <network-id>
-$ flavorctl diag
+Each new connection is checked again before it is forwarded. Ctrl+C to stop.
 ```
 
-Pre-auth keys are read from stdin, so they never appear in the process list or in command-line arguments.
+Point your client at `127.0.0.1:5432`. Or start a SOCKS5 proxy on `127.0.0.1:1080` with `flavorctl socks`, and point clients at it from another terminal:
 
-`forward` and `socks` run until you press Ctrl+C. They listen on loopback only, refuse connections from other local users, re-check every new connection with the same decision engine as the inspector, and never guess: an address that exists on two networks is refused until you use a Flavor name, a preference or `--network`.
+```console
+$ curl --proxy socks5h://127.0.0.1:1080 http://pi-hole.home-lab.flavor.internal/
+```
 
-## Security model
+See the [flavorctl reference](doc/cli.md) for every command, and [Names, decisions and connections](doc/networking.md) for how Flavor decides.
 
-- **Same-user boundary.** The socket is `0600` inside your private runtime directory, and the daemon rejects any peer whose UID differs from its own. It does not try to defend against malware already running as you.
-- **Keys are transient.** A pre-auth key goes from the request to the embedded node once, then is dropped. It is never written to SQLite, config, the keyring, logs, events or diagnostics. Automated tests plant a canary key and check that it never shows up in logs, RPC responses, events, diagnostics or any file the daemon writes.
-- **No ambient credentials.** The daemon clears `TS_AUTHKEY`/`TS_AUTH_KEY` at startup and refuses to start a node if they are still set. Tailscale log upload is disabled for the whole process.
-- **Untrusted webview.** The Tauri capability grants only Flavor's own commands and event listening: no shell, filesystem, HTTP or opener access. CSP is `self` only. Sign-in links are re-read from the daemon by Rust, limited to `http`/`https` without credentials, and opened in the external browser only after you click.
-- **Logical isolation.** Sessions run in one process with separate state directories and node keys. They are not process-sandboxed from each other.
-- **Minimal privileged helper.** `flavor-netd` is socket-activated, runs with only `CAP_NET_ADMIN` under systemd sandboxing, and is confined by its SELinux module or AppArmor profile. It creates exactly one TUN device with Flavor's own addresses and routes and points systemd-resolved at Flavor for `flavor.internal` only; it never edits `/etc/resolv.conf`. Every change needs polkit authorization and an active local login session, identity comes from the kernel (`SO_PEERCRED`, pidfd), and everything is removed when the owning `flavord` goes away. Routes are host-wide, so system-wide names are supported on single-user machines only.
+## How it works
 
-## Not in this release
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/readme/architecture-dark.svg">
+  <img src="assets/readme/architecture-light.svg" alt="The Flavor desktop app, flavorctl and your own apps talk to flavord, a per-user daemon, over a local Unix socket, SOCKS5 or a forwarded port. flavord runs one embedded tsnet node per network, each connected to its own Tailscale or Headscale control server. An optional root helper, flavor-netd, creates a TUN device, routes and systemd-resolved configuration for system-wide Flavor names.">
+</picture>
 
-Flavor deliberately ships no placeholder screens. These are planned and not built:
+| Component | Runs as | Role |
+| --- | --- | --- |
+| `flavor-desktop` | you | Desktop app: a Tauri 2 shell in Rust with a React interface |
+| `flavorctl` | you | Command-line client for the same API |
+| `flavord` | you, as a systemd user service | Daemon: one embedded Tailscale node per network, the decision engine, forwarding and the SOCKS5 proxy |
+| `flavor-netd` | root, started on demand | Optional helper for system-wide names: a TUN interface, routes and systemd-resolved settings, with `CAP_NET_ADMIN` only |
 
+The desktop app and `flavorctl` talk to `flavord` with [Connect-RPC](https://connectrpc.com) over a Unix socket that only your user can use. The app's webview never touches that socket; it can only call the desktop shell's own commands. See [Architecture](doc/architecture.md) for details.
+
+## Security and privacy
+
+- **No root for everyday use.** `flavord` has no Linux capabilities. Only the optional helper runs as root, with `CAP_NET_ADMIN` only, polkit authorization, systemd sandboxing and an AppArmor or SELinux profile.
+- **Your user only.** The daemon socket, forwarded ports and the SOCKS5 proxy all check that each connection comes from your user ID.
+- **Keys are not kept.** Pre-auth keys are used once and never written to disk, logs or diagnostics. Each network's identity lives in its own directory under `~/.local/share/flavor`.
+- **No telemetry.** Flavor sends nothing to its developers, and Tailscale's log upload is turned off.
+- **Separate identities, shared process.** Networks are kept apart logically, but they run in one daemon process and are not sandboxed from each other.
+- **Verifiable releases.** `SHA256SUMS` is signed with Sigstore and with the maintainer's GPG key, each tarball has a GitHub build-provenance attestation and an SBOM, and rebuilding a release commit with the same toolchains produces identical files.
+
+Flavor has not had an independent security audit. Read the [security model](doc/security.md), and report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+
+## Platform support
+
+| | Status |
+| --- | --- |
+| Linux on x86_64 and arm64, with systemd | Supported (beta) |
+| Desktop app | Needs glibc 2.39 or newer, for example Ubuntu 24.04, Debian 13, Fedora 40 or newer, or Arch Linux |
+| Headscale | Tested with Headscale 0.26.1 |
+| Tailscale's hosted service | Implemented; live acceptance testing is still pending |
+| System-wide names | Experimental; needs systemd-resolved; single-user machines only |
+| macOS, Windows | Not supported |
+
+Flavor embeds version 1.90.9 of Tailscale's client library. Headscale supports a window of recent Tailscale client versions, so a much newer Headscale release may eventually need a newer Flavor. Flavor does not use or replace the official Tailscale client; running both at the same time has not been tested. The [tested environments](doc/install.md#tested-environments) are listed in the install guide.
+
+## Roadmap
+
+**Available in v0.1.0-beta.2:** several Tailscale and Headscale networks at once, the device list, Connection Inspector, Conflict Center, Flavor names, destination preferences, workspaces, port forwarding, the SOCKS5 proxy, diagnostics, `flavorctl`, and signed, reproducible releases.
+
+**Experimental:** [system-wide names](doc/system-wide-names.md) through the `flavor-netd` helper.
+
+**Planned, not built yet:**
+
+- Publishing the `flavor` and `flavor-bin` packages on the AUR
+- Hardened release binaries with PIE and full RELRO ([#1](https://github.com/tame-gg/Flavor/issues/1))
 - System-wide names on multi-user machines
 - Exit nodes, subnet route controls and an HTTP proxy
-- Windows and macOS
-- Remote node removal on the control server
+- macOS (followed by a Homebrew package) and Windows
+- Removing machines from the control server
 
-## Development
+## Documentation
 
-```bash
-./scripts/go.sh run ./cmd/flavord              # daemon on the default socket
-cd desktop && npm install && npm run tauri dev  # desktop app with hot reload
-```
+- [Install, verify, upgrade and uninstall](doc/install.md)
+- [Getting started](doc/getting-started.md)
+- [Names, decisions and connections](doc/networking.md)
+- [flavorctl reference](doc/cli.md)
+- [System-wide names (experimental)](doc/system-wide-names.md)
+- [Troubleshooting](doc/troubleshooting.md)
+- [Security model](doc/security.md)
+- [Architecture](doc/architecture.md)
 
-No tailnet handy? `./scripts/go.sh run ./test/fakedaemon` serves the same API with simulated sessions. Control URLs containing `login` or `approval` simulate those states.
+## Contributing and support
 
-```bash
-./scripts/go.sh test ./...          # Go: services, sessions, IPC end to end
-cargo test --workspace              # Rust: client against a real daemon, Tauri settings
-cd desktop && npm test              # Frontend: sync controller, device keys, link rules
-./scripts/generate-proto.sh         # regenerate Go, TypeScript and Rust bindings
-```
+| To | Go to |
+| --- | --- |
+| Report a bug | [Bug report](https://github.com/tame-gg/Flavor/issues/new?template=bug_report.yml) |
+| Suggest a feature | [Feature request](https://github.com/tame-gg/Flavor/issues/new?template=feature_request.yml) |
+| Ask a question | [Open an issue](https://github.com/tame-gg/Flavor/issues/new/choose) |
+| Contribute code or docs | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Report a vulnerability | Privately, as described in [SECURITY.md](SECURITY.md) |
 
-Real control planes: `test/acceptance/headscale-concurrent.sh` runs two local Headscale servers in Docker and checks concurrent sessions, restart persistence, remove vs delete, and that no key reaches disk or logs.
+Everyone taking part is expected to follow the [code of conduct](CODE_OF_CONDUCT.md).
 
-```bash
-docker compose -f test/integration/headscale/compose.yml --profile dual up -d
-./test/acceptance/headscale-concurrent.sh
-```
+## Related projects
 
-<details>
-<summary><b>Repository layout</b></summary>
+Other open-source projects approach several tailnets at once in different ways, for example:
 
-```text
-cmd/flavord            daemon entry point
-cmd/flavorctl          command-line client
-internal/app            process lifecycle: lock, startup order, phased shutdown
-internal/service        use-cases: networks, devices, diagnostics, snapshot
-internal/session        one tsnet node per network; lifecycle and peer projection
-internal/ipc            Unix socket transport, peer credentials, Connect handlers
-internal/store          SQLite registry and retained identities
-internal/secret         Secret Service keyring and in-memory store
-internal/events         event bus with bounded replay
-proto/flavor/v1        IPC contract
-gen/                    generated Go and TypeScript bindings
-crates/flavor-proto    generated Rust bindings
-crates/flavor-ipc      Rust daemon client
-desktop/                React UI and Tauri shell
-packaging/              systemd user unit
-test/                   fake daemon, Headscale harness, acceptance script
-```
+- [tailmux](https://github.com/GrowlyX/tailmux): a daemon, CLI and desktop app for macOS, Windows and Linux, with a TUN mode and a proxy mode.
+- [tailmix](https://github.com/maisem/tailmix): several tsnet nodes behind one TUN device, for macOS and Linux.
+- [Tailhopper](https://github.com/Jcambass/tailhopper): one SOCKS5 proxy per tailnet.
+- [Hydrascale](https://github.com/Crank-Git/Hydrascale): one `tailscaled` per tailnet, each in its own network namespace, on Linux.
 
-</details>
+For a single tailnet on Linux, [Trayscale](https://github.com/DeedleFake/trayscale) and [KTailctl](https://github.com/f-koehler/KTailctl) are desktop interfaces for the official Tailscale client.
+
+## Acknowledgements
+
+Flavor is built on Tailscale's [`tsnet`](https://pkg.go.dev/tailscale.com/tsnet) library, [Tauri](https://tauri.app), [Connect](https://connectrpc.com) and the [gVisor](https://gvisor.dev) network stack, and is tested against [Headscale](https://github.com/juanfont/headscale).
+
+Flavor is an independent project. It is not affiliated with or endorsed by Tailscale Inc. or the Headscale project. Tailscale is a trademark of Tailscale Inc. WireGuard is a registered trademark of Jason A. Donenfeld.
 
 ## License
 

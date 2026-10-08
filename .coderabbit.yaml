@@ -1,0 +1,117 @@
+language: en-US
+tone_instructions: "Be direct and concise. Point to the exact line, explain the concrete risk, and propose the smallest fix. Skip praise and style nitpicks that gofmt, rustfmt or tsc already enforce."
+early_access: false
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  review_status: true
+  collapse_walkthrough: true
+  sequence_diagrams: false
+  poem: false
+  in_progress_fortune: false
+  related_issues: true
+  related_prs: true
+  suggested_labels: false
+  suggested_reviewers: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+  path_filters:
+    - "!gen/**"
+    - "!crates/flavor-proto/flavor.binpb"
+    - "!**/*.lock"
+    - "!desktop/package-lock.json"
+    - "!go.sum"
+    - "!assets/**/*.png"
+    - "!desktop/src-tauri/icons/**"
+    - "!desktop/src-tauri/gen/**"
+  path_instructions:
+    - path: "**/*"
+      instructions: |
+        House rules for this repository:
+        - The codebase deliberately has no code comments. Never suggest adding comments, docstrings, JSDoc or doc comments; suggest clearer names or smaller functions instead. Flag any newly added comment.
+        - Prefer the smallest correct change. Flag new abstractions, helpers or dependencies that duplicate something already in the repository.
+        - Devices are identified by {network ID, node ID}, never by address alone. Flag any code that keys, deduplicates or looks up devices by IP address or hostname across networks.
+        - Ambiguous destinations must never be resolved by guessing, connection order or map order.
+    - path: "internal/netd/**"
+      instructions: |
+        flavor-netd runs as root with CAP_NET_ADMIN and treats flavord as untrusted. Check every change for: authorization before any host mutation (polkit plus an active, local logind session), identity taken only from the kernel (SO_PEERCRED, pidfd), bounded sizes and rate limits, validation of prefixes and DNS domains, rollback on partial failure, and that nothing outside Flavor's own TUN interface, synthetic ranges and the flavor.internal resolved settings is touched.
+    - path: "cmd/flavor-netd/**"
+      instructions: "Privileged entry point. Apply the same scrutiny as internal/netd."
+    - path: "packaging/{systemd,polkit,apparmor,selinux}/**"
+      instructions: |
+        Security policy for the privileged helper. Flag anything that widens capabilities, sandboxing, polkit defaults, AppArmor rules or SELinux allow rules without a clear need stated in the PR.
+    - path: "packaging/*.sh"
+      instructions: "Runs as root on users' machines. Check for unquoted variables, paths outside /usr and /etc, missing error handling, and that uninstall removes everything install adds."
+    - path: "internal/{session,secret,logging}/**"
+      instructions: |
+        Pre-auth keys and sign-in URLs must never be persisted, logged or exposed through events, diagnostics or errors. Credentials go through secret.Secret; URLs are logged only through the internal/logging helpers. Flag any change that could leak them, including through fmt verbs on wrapped errors.
+    - path: "internal/ipc/**"
+      instructions: "Every connection must be checked against the daemon's own UID via SO_PEERCRED. Flag changes that relax socket permissions or peer checks."
+    - path: "internal/service/{forward,socks,dial,peeruid_linux}.go"
+      instructions: "Forwarding and the SOCKS5 proxy must listen on loopback only, reject connections from other local users, re-resolve every connection and refuse ambiguous destinations."
+    - path: "internal/inspect/**"
+      instructions: "This is the single decision engine. Check that results stay deterministic (stable sort orders), that ambiguity is reported rather than resolved, and that tests cover new decision rules."
+    - path: "internal/store/**"
+      instructions: "Check migrations for forward-only safety, backups before schema changes, and that no secret or key material gets a column."
+    - path: "desktop/src/**"
+      instructions: |
+        The React webview is untrusted. It must never talk to the daemon socket directly, render control-plane or peer strings as HTML, or open URLs itself. User-facing text is in sentence case and plain English.
+    - path: "desktop/src-tauri/**"
+      instructions: "Check that Tauri capabilities stay minimal (no shell, filesystem, HTTP or opener permissions for the webview), the CSP stays self-only, and sign-in URLs are re-fetched from the daemon and validated before opening."
+    - path: "proto/**"
+      instructions: "API changes must be backward compatible within protocol major version 1, and the generated code in gen/ and crates/flavor-proto must be regenerated in the same PR."
+    - path: ".github/workflows/**"
+      instructions: "Check for least-privilege permissions, pinned actions where practical, and that release signing, attestation and SBOM steps are not weakened."
+    - path: "{README.md,doc/**,CONTRIBUTING.md,SECURITY.md}"
+      instructions: |
+        Documentation must match the code. Flag claims about commands, flags, paths, defaults, privileges or security properties that the code does not support, and any claim that Flavor is the first or only tool of its kind.
+  pre_merge_checks:
+    docstrings:
+      mode: "off"
+    title:
+      mode: warning
+      requirements: "Lowercase, starting with `feat:`, `fix:` or `chore:` followed by a short description of the change, for example `fix: refuse ambiguous socks destinations`."
+    description:
+      mode: warning
+    issue_assessment:
+      mode: warning
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+  tools:
+    shellcheck:
+      enabled: true
+    actionlint:
+      enabled: true
+    golangci-lint:
+      enabled: true
+    clippy:
+      enabled: true
+    eslint:
+      enabled: false
+    biome:
+      enabled: false
+    markdownlint:
+      enabled: true
+    yamllint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    buf:
+      enabled: true
+    languagetool:
+      enabled: false
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  learnings:
+    scope: local

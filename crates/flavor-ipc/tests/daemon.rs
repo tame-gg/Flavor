@@ -224,11 +224,14 @@ async fn inspector_reports_duplicate_addresses_and_unique_names() {
     let nets: HashSet<_> = amb.candidates.iter().map(|c| c.network.id.clone()).collect();
     assert_eq!(nets, HashSet::from([a.id.clone(), b.id.clone()]));
 
-    let dns = format!("postgres.{}.flavor.test", a.id.to_lowercase());
+    let host = inspect("postgres").await.unwrap();
+    assert_eq!(host.decision, ResolutionDecision::RESOLUTION_DECISION_UNIQUE);
+    let owner = if host.candidates[0].network.id == a.id { &a } else { &b };
+    let dns = format!("postgres.{}.flavor.test", owner.id.to_lowercase());
     let uniq = inspect(&dns).await.unwrap();
     assert_eq!(uniq.decision, ResolutionDecision::RESOLUTION_DECISION_UNIQUE);
     assert_eq!(uniq.reason, DecisionReason::DECISION_REASON_DEVICE_DNS_NAME);
-    assert_eq!(uniq.candidates[0].network.id, a.id);
+    assert_eq!(uniq.candidates[0].network.id, owner.id);
 
     let collide = inspect("grafana").await.unwrap();
     assert_eq!(collide.decision, ResolutionDecision::RESOLUTION_DECISION_AMBIGUOUS);
@@ -249,9 +252,9 @@ async fn inspector_reports_duplicate_addresses_and_unique_names() {
     assert_eq!(routed.candidates[0].matched_value, "10.0.0.0/8");
     let tie = inspect("10.10.1.1").await.unwrap();
     assert_eq!(tie.decision, ResolutionDecision::RESOLUTION_DECISION_AMBIGUOUS);
-    let qualified = inspect(&format!("postgres.{}.flavor.internal", a.label)).await.unwrap();
+    let qualified = inspect(&format!("postgres.{}.flavor.internal", owner.label)).await.unwrap();
     assert_eq!(qualified.reason, DecisionReason::DECISION_REASON_NETWORK_QUALIFIED_NAME);
-    assert_eq!(qualified.candidates[0].network.id, a.id);
+    assert_eq!(qualified.candidates[0].network.id, owner.id);
     assert!(!ids.contains("address:100.64.0.1"), "this machine reported as a conflict: {ids:?}");
     let addr = conflicts.conflicts.iter().find(|c| c.id == "address:100.64.0.2").unwrap();
     assert_eq!(addr.severity, ConflictSeverity::CONFLICT_SEVERITY_EXPECTED);

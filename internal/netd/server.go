@@ -360,9 +360,13 @@ func LinkName(uid uint32) string { return LinkPrefix + strconv.FormatUint(uint64
 func (s *Server) create(ctx context.Context, cn *conn, req *netdv1.CreateSyntheticInterfaceRequest) (*netdv1.Response, *os.File) {
 	sctx, cancel := context.WithTimeout(ctx, backendCallTimeout)
 	session, err := s.cfg.Sessions.Session(sctx, cn.peer)
+	active := false
+	if err == nil {
+		active, err = s.cfg.Sessions.Active(sctx, session)
+	}
 	cancel()
-	if err != nil {
-		return failure(0, netdv1.ErrorCode_ERROR_CODE_UNAUTHORIZED, "caller has no login session"), nil
+	if err != nil || !active {
+		return failure(0, netdv1.ErrorCode_ERROR_CODE_UNAUTHORIZED, "caller has no active local login session"), nil
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()

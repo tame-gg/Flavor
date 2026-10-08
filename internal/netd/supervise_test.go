@@ -2,6 +2,7 @@ package netd
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"sync"
@@ -128,4 +129,88 @@ func TestSupervisorWarnsWhenTheHelperIsMissing(t *testing.T) {
 		_, w := a.counts()
 		return len(w) == 1
 	})
+}
+
+func TestSupervisorDestroysBeforeStoppingThePlane(t *testing.T) {
+	h := newHarness(t, nil)
+	var order []string
+	var mu sync.Mutex
+	note := func(s string) {
+		mu.Lock()
+		order = append(order, s)
+		mu.Unlock()
+	}
+	a := &attachments{}
+	ctx, cancel := context.WithCancel(context.Background())
+	stopped := make(chan struct{})
+	go func() {
+		defer close(stopped)
+		Supervisor{
+			Socket: h.path, V6: ula, V4: pool, MTU: 1280, Warn: a.warn, Log: slog.New(slog.DiscardHandler),
+			Attach: func(actx context.Context, tun *os.File) (<-chan struct{}, func(), error) {
+				done, stop, err := a.attach(actx, tun)
+				go func() {
+					<-actx.Done()
+					note("plane context cancelled")
+				}()
+				return done, func() {
+					h.with(func() { note(fmt.Sprintf("plane stopped, link deleted=%v", len(h.kernel.deleted) == 1)) })
+					stop()
+				}, err
+			},
+			dial: func(ctx context.Context, path string) (*Client, error) {
+				c, err := Dial(ctx, path)
+				if c != nil {
+					c.verify = func(*os.File, string) error { return nil }
+				}
+				return c, err
+			},
+		}.Run(ctx)
+	}()
+	eventually(t, "instance", func() bool { return h.linkCount() == 1 })
+	cancel()
+	<-stopped
+	mu.Lock()
+	defer mu.Unlock()
+	if len(order) != 1 || order[0] != "plane stopped, link deleted=true" {
+		t.Fatalf("the plane must outlive Destroy and never see the daemon context cancelled: %v", order)
+	}
+}
+
+func TestSupervisorBacksOffWhenInstancesDieImmediately(t *testing.T) {
+	h := newHarness(t, nil)
+	var mu sync.Mutex
+	attached := 0
+	ctx, cancel := context.WithCancel(context.Background())
+	stopped := make(chan struct{})
+	go func() {
+		defer close(stopped)
+		Supervisor{
+			Socket: h.path, V6: ula, V4: pool, MTU: 1280, Warn: func(string, string) {}, Log: slog.New(slog.DiscardHandler),
+			Backoff: 20 * time.Millisecond, Probe: time.Hour,
+			Attach: func(_ context.Context, tun *os.File) (<-chan struct{}, func(), error) {
+				mu.Lock()
+				attached++
+				mu.Unlock()
+				done := make(chan struct{})
+				close(done)
+				return done, func() { tun.Close() }, nil
+			},
+			dial: func(ctx context.Context, path string) (*Client, error) {
+				c, err := Dial(ctx, path)
+				if c != nil {
+					c.verify = func(*os.File, string) error { return nil }
+				}
+				return c, err
+			},
+		}.Run(ctx)
+	}()
+	time.Sleep(700 * time.Millisecond)
+	cancel()
+	<-stopped
+	mu.Lock()
+	defer mu.Unlock()
+	if attached < 2 || attached > 7 {
+		t.Fatalf("instances that die at once must not be recreated in a tight loop: %d attempts", attached)
+	}
 }

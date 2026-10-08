@@ -3,6 +3,7 @@ package netd
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/netip"
 
 	"github.com/godbus/dbus/v5"
@@ -36,7 +37,10 @@ func processSubject(p Peer) polkitSubject {
 	}}
 }
 
-type Polkit struct{ Conn *dbus.Conn }
+type Polkit struct {
+	Conn *dbus.Conn
+	Log  *slog.Logger
+}
 
 func (a Polkit) Authorize(ctx context.Context, p Peer) (bool, error) {
 	if p.PIDFD != nil {
@@ -45,6 +49,7 @@ func (a Polkit) Authorize(ctx context.Context, p Peer) (bool, error) {
 		if !errors.As(err, &rejected) {
 			return ok, err
 		}
+		a.Log.Info("polkit rejected the pidfd subject; using pid and start time", "err", rejected.Error())
 	}
 	return a.check(ctx, processSubject(p))
 }
@@ -140,10 +145,16 @@ func (l Logind) Session(ctx context.Context, p Peer) (string, error) {
 }
 
 func (l Logind) Active(ctx context.Context, session string) (bool, error) {
-	v, err := l.Conn.Object("org.freedesktop.login1", dbus.ObjectPath(session)).GetProperty("org.freedesktop.login1.Session.Active")
+	obj := l.Conn.Object("org.freedesktop.login1", dbus.ObjectPath(session))
+	active, err := obj.GetProperty("org.freedesktop.login1.Session.Active")
 	if err != nil {
 		return false, err
 	}
-	active, ok := v.Value().(bool)
-	return ok && active, nil
+	remote, err := obj.GetProperty("org.freedesktop.login1.Session.Remote")
+	if err != nil {
+		return false, err
+	}
+	a, _ := active.Value().(bool)
+	r, ok := remote.Value().(bool)
+	return a && ok && !r, nil
 }

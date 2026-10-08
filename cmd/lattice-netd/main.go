@@ -32,7 +32,7 @@ func run(log *slog.Logger) error {
 	srv := netd.NewServer(netd.Config{
 		Kernel:     netd.Netlink{},
 		DNS:        netd.Resolved{Conn: bus},
-		Authorizer: netd.Polkit{Conn: bus},
+		Authorizer: netd.Polkit{Conn: bus, Log: log},
 		Sessions:   netd.Logind{Conn: bus},
 		Log:        log,
 		IdleExit:   netd.DefaultIdleExit,

@@ -13,6 +13,7 @@ const (
 	DefaultBackoff     = time.Second
 	MaxBackoff         = time.Minute
 	DefaultProbe       = 30 * time.Second
+	healthyLifetime    = 30 * time.Second
 	WarnUnavailable    = "synthetic_unavailable"
 	WarnDNSUnavailable = "synthetic_dns_unavailable"
 )
@@ -44,12 +45,16 @@ func (s Supervisor) Run(ctx context.Context) {
 	}
 	wait, reported := s.Backoff, ""
 	for {
+		started := time.Now()
 		err := s.once(ctx)
 		if ctx.Err() != nil {
 			return
 		}
 		if err == nil {
-			wait, reported = s.Backoff, ""
+			if time.Since(started) >= healthyLifetime {
+				wait = s.Backoff
+			}
+			reported = ""
 			s.Log.Info("synthetic interface lost; recreating")
 		} else if msg := err.Error(); msg != reported {
 			reported = msg
@@ -75,7 +80,7 @@ func (s Supervisor) once(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	done, stop, err := s.Attach(ctx, tun)
+	done, stop, err := s.Attach(context.WithoutCancel(ctx), tun)
 	if err != nil {
 		_ = c.Destroy()
 		return err

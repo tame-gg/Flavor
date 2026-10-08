@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/netip"
 	"os"
+	"os/exec"
 	"slices"
 	"strings"
 	"testing"
@@ -41,6 +42,27 @@ func TestIdentityComesFromTheKernel(t *testing.T) {
 	}
 	if want, _ := startTime(int32(os.Getpid())); p.StartTime == 0 || p.StartTime != want {
 		t.Fatalf("start time %d, want %d", p.StartTime, want)
+	}
+}
+
+func TestLivenessNeedsNoSignalPermission(t *testing.T) {
+	cmd := exec.Command("sleep", "30")
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	fd, err := unix.PidfdOpen(cmd.Process.Pid, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pidfd := os.NewFile(uintptr(fd), "pidfd")
+	defer pidfd.Close()
+	if !alive(pidfd) {
+		t.Fatal("a running process reported as exited")
+	}
+	_ = cmd.Process.Kill()
+	_ = cmd.Wait()
+	if alive(pidfd) {
+		t.Fatal("an exited process reported as alive")
 	}
 }
 
@@ -163,6 +185,14 @@ func TestCallersWithoutALoginSessionAreRefused(t *testing.T) {
 	h.with(func() { h.sessions.none = true })
 	if _, _, err := h.client().Create(ula, pool, 1280); code(err) != netdv1.ErrorCode_ERROR_CODE_UNAUTHORIZED || len(h.ops()) != 0 {
 		t.Fatal(err)
+	}
+}
+
+func TestInactiveOrRemoteSessionsCannotCreate(t *testing.T) {
+	h := newHarness(t, nil)
+	h.with(func() { h.sessions.inactive = true })
+	if _, _, err := h.client().Create(ula, pool, 1280); code(err) != netdv1.ErrorCode_ERROR_CODE_UNAUTHORIZED || len(h.ops()) != 0 {
+		t.Fatalf("polkit may authorize a session-less process while the user has any active session; the helper must still refuse: %v", err)
 	}
 }
 

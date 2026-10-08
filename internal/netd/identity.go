@@ -60,13 +60,25 @@ func Identify(c *net.UnixConn) (Peer, error) {
 		return Peer{}, fmt.Errorf("%w: %v", ErrUnidentified, err)
 	}
 	p.StartTime = start
-	if p.PIDFD != nil {
-		if err := unix.PidfdSendSignal(int(p.PIDFD.Fd()), 0, nil, 0); err != nil {
-			p.Close()
-			return Peer{}, fmt.Errorf("%w: peer exited during identification", ErrUnidentified)
-		}
+	if p.PIDFD != nil && !alive(p.PIDFD) {
+		p.Close()
+		return Peer{}, fmt.Errorf("%w: peer exited during identification", ErrUnidentified)
 	}
 	return p, nil
+}
+
+func alive(pidfd *os.File) bool {
+	raw, err := pidfd.SyscallConn()
+	if err != nil {
+		return false
+	}
+	ready := 1
+	if err := raw.Control(func(fd uintptr) {
+		ready, err = unix.Poll([]unix.PollFd{{Fd: int32(fd), Events: unix.POLLIN}}, 0)
+	}); err != nil || ready != 0 {
+		return false
+	}
+	return err == nil
 }
 
 func startTime(pid int32) (uint64, error) {

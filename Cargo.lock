@@ -2086,7 +2086,7 @@ dependencies = [
 
 [[package]]
 name = "lattice-desktop"
-version = "0.1.0"
+version = "0.1.0-beta.1"
 dependencies = [
  "buffa",
  "lattice-ipc",
@@ -2101,7 +2101,7 @@ dependencies = [
 
 [[package]]
 name = "lattice-ipc"
-version = "0.1.0"
+version = "0.1.0-beta.1"
 dependencies = [
  "base64 0.22.1",
  "buffa",
@@ -2115,7 +2115,7 @@ dependencies = [
 
 [[package]]
 name = "lattice-proto"
-version = "0.1.0"
+version = "0.1.0-beta.1"
 dependencies = [
  "buffa",
  "buffa-types",

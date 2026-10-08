@@ -10,7 +10,7 @@ type BuildInfo struct {
 
 func Info() BuildInfo {
 	return BuildInfo{
-		DaemonVersion: "0.1.0-dev",
+		DaemonVersion: daemonVersion,
 		ProtocolMajor: 1,
 		ProtocolMinor: 3,
 		BuildCommit:   buildCommit,
@@ -18,4 +18,7 @@ func Info() BuildInfo {
 	}
 }
 
-var buildCommit = "unknown"
+var (
+	daemonVersion = "0.1.0-dev"
+	buildCommit   = "unknown"
+)

@@ -50,11 +50,20 @@ impl FlavorIpcClient {
 }
 
 pub fn default_socket_path() -> Option<PathBuf> {
-    let runtime = std::env::var_os("XDG_RUNTIME_DIR")?;
-    let runtime = Path::new(&runtime);
+    let runtime = std::env::var_os("XDG_RUNTIME_DIR")
+        .filter(|p| !p.is_empty())
+        .map(PathBuf::from)
+        .or_else(macos_support_dir)?;
     runtime
         .is_absolute()
         .then(|| runtime.join("flavor").join("flavord.sock"))
+}
+
+pub fn macos_support_dir() -> Option<PathBuf> {
+    if !cfg!(target_os = "macos") {
+        return None;
+    }
+    std::env::var_os("HOME").map(|h| Path::new(&h).join("Library").join("Application Support"))
 }
 
 #[derive(Debug, Clone)]

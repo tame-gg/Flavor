@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>dev.lunarlabs.flavor.flavord</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>@HOME@/.local/bin/flavord</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<dict>
+		<key>SuccessfulExit</key>
+		<false/>
+	</dict>
+	<key>ExitTimeOut</key>
+	<integer>30</integer>
+	<key>StandardErrorPath</key>
+	<string>@HOME@/Library/Logs/flavord.log</string>
+</dict>
+</plist>

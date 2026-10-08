@@ -53,6 +53,8 @@ jobs:
         run: |
           ./scripts/go.sh vet ./...
           ./scripts/go.sh test ./...
+      - name: launchd plist
+        run: plutil -lint packaging/launchd/*.plist
 
   rust:
     runs-on: ubuntu-24.04

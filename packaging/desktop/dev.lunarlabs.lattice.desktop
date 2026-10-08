@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Lattice
+Comment=Use several Tailscale and Headscale networks at once
+Exec=lattice-desktop
+Icon=dev.lunarlabs.lattice
+Categories=Network;
+Terminal=false

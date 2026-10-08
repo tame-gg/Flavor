@@ -1,0 +1,135 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to build without publishing, e.g. 0.1.0-beta.1
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then v="$INPUT_VERSION"; else v="${GITHUB_REF_NAME#v}"; fi
+          printf '%s' "$v" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$' || { echo "bad version $v"; exit 1; }
+          grep -q "^version = \"$v\"$" Cargo.toml || { echo "Cargo.toml is not $v"; exit 1; }
+          for f in desktop/package.json desktop/src-tauri/tauri.conf.json; do
+            jq -e --arg v "$v" '.version == $v' "$f" >/dev/null || { echo "$f is not $v"; exit 1; }
+          done
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+  selinux:
+    runs-on: ubuntu-24.04
+    container: fedora:43
+    steps:
+      - uses: actions/checkout@v4
+      - run: dnf install -y selinux-policy-devel make
+      - run: make -C packaging/selinux -f /usr/share/selinux/devel/Makefile lattice_netd.pp
+      - uses: actions/upload-artifact@v4
+        with:
+          name: selinux
+          path: packaging/selinux/lattice_netd.pp
+
+  build:
+    needs: [version, selinux]
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    env:
+      GOENV: ${{ github.workspace }}/go.env
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - name: system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
+      - uses: actions/download-artifact@v4
+        with:
+          name: selinux
+          path: selinux
+      - name: build
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          ARCH: ${{ matrix.arch }}
+        run: SELINUX_PP=selinux/lattice_netd.pp ./scripts/release.sh "$VERSION" "$ARCH"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tarball-${{ matrix.arch }}
+          path: dist/*.tar.gz
+
+  publish:
+    needs: [version, build]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tarball-*
+          merge-multiple: true
+          path: dist
+      - uses: anchore/sbom-action/download-syft@v0
+      - name: sboms
+        run: |
+          syft scan dir:. --exclude './dist/**' -o "spdx-json=dist/lattice-$VERSION-source.spdx.json"
+          for t in dist/*.tar.gz; do
+            d="$(mktemp -d)"
+            tar -xzf "$t" -C "$d"
+            syft scan "dir:$d" -o "spdx-json=${t%.tar.gz}.spdx.json"
+          done
+      - name: checksums
+        working-directory: dist
+        run: sha256sum -- *.tar.gz *.spdx.json > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: dist/*
+      - if: startsWith(github.ref, 'refs/tags/v')
+        uses: sigstore/cosign-installer@v3
+      - if: startsWith(github.ref, 'refs/tags/v')
+        name: sign checksums
+        run: cosign sign-blob --yes --bundle dist/SHA256SUMS.sigstore.json dist/SHA256SUMS
+      - if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/*.tar.gz
+      - if: startsWith(github.ref, 'refs/tags/v')
+        name: draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --verify-tag --draft --prerelease \
+            --title "Lattice $VERSION" --notes "Draft. Add SHA256SUMS.asc before publishing." \
+            dist/*.tar.gz dist/*.spdx.json dist/SHA256SUMS dist/SHA256SUMS.sigstore.json

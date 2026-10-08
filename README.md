@@ -54,7 +54,7 @@ The system Tailscale client joins one tailnet at a time. Switching between a wor
     <td width="50%" valign="top"><b>Overlapping addresses are fine</b><br>Both networks handing out <code>100.64.0.1</code> is normal. Every device is identified by <code>{network, node}</code> all the way from the daemon to the UI.</td>
   </tr>
   <tr>
-    <td width="50%" valign="top"><b>Unprivileged</b><br>Runs as your user. No root, no TUN device, no system <code>tailscale</code> or <code>tailscaled</code>.</td>
+    <td width="50%" valign="top"><b>Unprivileged</b><br>Runs as your user, with no system <code>tailscale</code> or <code>tailscaled</code>. Optional system-wide names use a small socket-activated helper limited to <code>CAP_NET_ADMIN</code>.</td>
     <td width="50%" valign="top"><b>Sign in your way</b><br>Browser sign-in (including OIDC on a different host) or a one-time pre-auth key that is used once and never stored.</td>
   </tr>
   <tr>
@@ -93,13 +93,55 @@ The system Tailscale client joins one tailnet at a time. Switching between a wor
 
 ## Quick start
 
-### Requirements
+### Install a release
 
-- Linux with a user session (`$XDG_RUNTIME_DIR`)
-- Go 1.27+, Rust stable, Node 24+
-- `libwebkit2gtk-4.1` and `libayatana-appindicator3` for the desktop app
+Releases ship a tarball per architecture (`linux-amd64`, `linux-arm64`) with the daemon, CLI, desktop app, the `lattice-netd` helper, its systemd units, polkit action, SELinux module and AppArmor profile. The desktop app needs glibc 2.39+, `libwebkit2gtk-4.1` and `libayatana-appindicator3`.
 
-### Install for your user
+```bash
+v=0.1.0-beta.1
+base=https://github.com/tame-gg/Lattice/releases/download/v$v
+curl -fLO $base/lattice-$v-linux-amd64.tar.gz -fLO $base/SHA256SUMS -fLO $base/SHA256SUMS.sigstore.json -fLO $base/SHA256SUMS.asc
+
+cosign verify-blob --bundle SHA256SUMS.sigstore.json \
+  --certificate-identity-regexp '^https://github.com/tame-gg/Lattice/\.github/workflows/release\.yml@refs/tags/v' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com SHA256SUMS
+gh attestation verify lattice-$v-linux-amd64.tar.gz --repo tame-gg/Lattice
+gpg --verify SHA256SUMS.asc SHA256SUMS
+sha256sum --check --ignore-missing SHA256SUMS
+
+tar -xzf lattice-$v-linux-amd64.tar.gz
+sudo ./lattice-$v-linux-amd64/install.sh
+systemctl --user enable --now latticed
+```
+
+Any one of the three signature checks is enough; each covers `SHA256SUMS`, which covers the tarballs and SBOMs. `install.sh` copies files to `/usr` and `/etc` from the tarball's manifest, loads the AppArmor profile or SELinux module when that LSM is active, and enables `lattice-netd.socket`. Re-running it with a newer tarball upgrades in place and restarts running `latticed` user services.
+
+System-wide names (`postgres.home.lattice.internal` in any app, through a TUN device and systemd-resolved) are experimental and off by default. To try them, run `systemctl --user edit latticed`, add the lines below, and restart it:
+
+```ini
+[Service]
+ExecStart=
+ExecStart=/usr/bin/latticed --synthetic-helper=/run/lattice/netd.sock
+```
+
+### Uninstall
+
+```bash
+sudo /usr/libexec/lattice/uninstall
+```
+
+It stops `latticed` for logged-in users and the helper, removes any `lat-u*` interface, unloads the SELinux module and AppArmor profile, and deletes every installed file. Per-user data is kept:
+
+```bash
+rm -rf ~/.local/share/lattice ~/.config/lattice
+```
+
+> [!WARNING]
+> Removing `~/.local/share/lattice` deletes every local device identity. The machines stay registered on their control servers until an administrator removes them.
+
+### Build from source
+
+Requires Go 1.27+, Rust stable, Node 24+ and the desktop libraries above.
 
 ```bash
 ./scripts/go.sh build -o ~/.local/bin/latticed   ./cmd/latticed
@@ -116,18 +158,9 @@ systemctl --user enable --now latticed
 > [!NOTE]
 > Always build Go through `./scripts/go.sh`. It applies the toolchain settings in [`go.env`](go.env) that the pinned Tailscale version needs.
 
+`./scripts/release.sh VERSION [amd64|arm64]` builds the same tarball a release ships; the Go binaries and the tarball are reproducible for a given commit.
+
 Closing the window hides Lattice in the tray by default. Quitting the desktop app never stops `latticed` or disconnects your networks.
-
-### Uninstall
-
-```bash
-systemctl --user disable --now latticed
-rm ~/.config/systemd/user/latticed.service ~/.local/bin/latticed ~/.local/bin/latticectl
-rm -rf ~/.local/share/lattice ~/.config/lattice
-```
-
-> [!WARNING]
-> Removing `~/.local/share/lattice` deletes every local device identity. The machines stay registered on their control servers until an administrator removes them.
 
 ## CLI
 
@@ -188,14 +221,14 @@ Pre-auth keys are read from stdin, so they never appear in the process list or i
 - **No ambient credentials.** The daemon clears `TS_AUTHKEY`/`TS_AUTH_KEY` at startup and refuses to start a node if they are still set. Tailscale log upload is disabled for the whole process.
 - **Untrusted webview.** The Tauri capability grants only Lattice's own commands and event listening: no shell, filesystem, HTTP or opener access. CSP is `self` only. Sign-in links are re-read from the daemon by Rust, limited to `http`/`https` without credentials, and opened in the external browser only after you click.
 - **Logical isolation.** Sessions run in one process with separate state directories and node keys. They are not process-sandboxed from each other.
+- **Minimal privileged helper.** `lattice-netd` is socket-activated, runs with only `CAP_NET_ADMIN` under systemd sandboxing, and is confined by its SELinux module or AppArmor profile. It creates exactly one TUN device with Lattice's own addresses and routes and points systemd-resolved at Lattice for `lattice.internal` only; it never edits `/etc/resolv.conf`. Every change needs polkit authorization and an active local login session, identity comes from the kernel (`SO_PEERCRED`, pidfd), and everything is removed when the owning `latticed` goes away. Routes are host-wide, so system-wide names are supported on single-user machines only.
 
 ## Not in this release
 
 Lattice deliberately ships no placeholder screens. These are planned and not built:
 
-- System routing, a TUN device and a minimal privileged helper
-- Collision-safe DNS and synthetic addressing for overlapping subnets
-- Exit nodes, subnet route controls and a SOCKS/HTTP proxy
+- System-wide names on multi-user machines
+- Exit nodes, subnet route controls and an HTTP proxy
 - Windows and macOS
 - Remote node removal on the control server
 

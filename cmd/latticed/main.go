@@ -26,6 +26,7 @@ func main() {
 	secretStore := flag.String("secret-store", "auto", "secret store backend: auto or memory")
 	logLevel := flag.String("log-level", "info", "log level: debug, info, warn or error")
 	experimentalDNS := flag.String("experimental-dns", "", "development only: serve synthetic DNS (IPv6) on this loopback address, e.g. 127.0.0.1:5353")
+	syntheticHelper := flag.String("synthetic-helper", "", "experimental: use lattice-netd at this socket (e.g. /run/lattice/netd.sock) for system-wide Lattice names and addresses")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
 
@@ -48,7 +49,7 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	err := app.Run(ctx, app.Options{RuntimeOverride: *runtimeDir, SecretMode: mode, Log: log, ExperimentalDNS: *experimentalDNS})
+	err := app.Run(ctx, app.Options{RuntimeOverride: *runtimeDir, SecretMode: mode, Log: log, ExperimentalDNS: *experimentalDNS, SyntheticHelper: *syntheticHelper})
 	if errors.Is(err, app.ErrAlreadyRunning) {
 		log.Error(err.Error())
 		os.Exit(3)

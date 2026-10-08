@@ -6,9 +6,11 @@ import (
 	"log/slog"
 	"net"
 	"net/netip"
+	"os"
 
 	"git.lunarlabs.dev/lattice/lattice/internal/dataplane"
 	"git.lunarlabs.dev/lattice/lattice/internal/domain"
+	"git.lunarlabs.dev/lattice/lattice/internal/netd"
 	"git.lunarlabs.dev/lattice/lattice/internal/service"
 	"git.lunarlabs.dev/lattice/lattice/internal/session"
 	"git.lunarlabs.dev/lattice/lattice/internal/store"
@@ -16,9 +18,9 @@ import (
 	"git.lunarlabs.dev/lattice/lattice/internal/synthetic"
 )
 
-func startSynthetic(ctx context.Context, opts Options, db *store.DB, svc *service.Service, sessions *session.Manager, log *slog.Logger) (*dataplane.Plane, error) {
-	if opts.ExperimentalDNS == "" && opts.TUN == nil {
-		return nil, nil
+func startSynthetic(ctx context.Context, opts Options, db *store.DB, svc *service.Service, sessions *session.Manager, log *slog.Logger) (func(), error) {
+	if opts.ExperimentalDNS == "" && opts.TUN == nil && opts.SyntheticHelper == "" {
+		return func() {}, nil
 	}
 	alloc, err := synthetic.Open(ctx, db, nil)
 	if err != nil {
@@ -38,16 +40,43 @@ func startSynthetic(ctx context.Context, opts Options, db *store.DB, svc *servic
 			opts.OnDNSReady(addr)
 		}
 	}
-	if opts.TUN == nil {
-		return nil, nil
-	}
-	return dataplane.Start(ctx, opts.TUN, alloc, engine, func(ctx context.Context, id domain.NetworkID, proto, address string) (net.Conn, error) {
+	dial := func(ctx context.Context, id domain.NetworkID, proto, address string) (net.Conn, error) {
 		s, ok := sessions.Get(id)
 		if !ok {
 			return nil, session.ErrNotRunning
 		}
 		return s.Dial(ctx, proto, address)
-	}, log)
+	}
+	if opts.TUN != nil {
+		plane, err := dataplane.Start(ctx, opts.TUN, alloc, engine, dial, log)
+		if err != nil {
+			return nil, err
+		}
+		return plane.Close, nil
+	}
+	if opts.SyntheticHelper == "" {
+		return func() {}, nil
+	}
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		netd.Supervisor{
+			Socket: opts.SyntheticHelper,
+			V6:     alloc.ULA(),
+			V4:     alloc.Pool(),
+			MTU:    dataplane.MTU,
+			Log:    log,
+			Warn:   svc.Warn,
+			Attach: func(ctx context.Context, tun *os.File) (<-chan struct{}, func(), error) {
+				plane, err := dataplane.Start(ctx, tun, alloc, engine, dial, log)
+				if err != nil {
+					return nil, nil, err
+				}
+				return plane.Done(), plane.Close, nil
+			},
+		}.Run(ctx)
+	}()
+	return func() { <-done }, nil
 }
 
 func serveExperimentalDNS(ctx context.Context, listen string, engine *syndns.Engine) (net.Addr, error) {

@@ -9,6 +9,10 @@ import (
 
 const ambiguityWarningInterval = time.Minute
 
+func (s *Service) Warn(code, message string) {
+	s.publish(events.DaemonWarning{Code: code, SafeMessage: message})
+}
+
 func (s *Service) WarnAmbiguousName(name string, candidates, networks int) {
 	s.mu.Lock()
 	if s.warned == nil {
@@ -22,8 +26,5 @@ func (s *Service) WarnAmbiguousName(name string, candidates, networks int) {
 	}
 	s.warned[name] = now
 	s.mu.Unlock()
-	s.publish(events.DaemonWarning{
-		Code:        "dns_ambiguous",
-		SafeMessage: fmt.Sprintf("DNS lookup for %s was refused: it matches %d candidates on %d networks. Use a Lattice name or set a preference.", name, candidates, networks),
-	})
+	s.Warn("dns_ambiguous", fmt.Sprintf("DNS lookup for %s was refused: it matches %d candidates on %d networks. Use a Lattice name or set a preference.", name, candidates, networks))
 }

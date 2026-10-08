@@ -5,6 +5,8 @@ import (
 	"context"
 	"net"
 	"net/netip"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,6 +14,7 @@ import (
 	v1 "git.lunarlabs.dev/lattice/lattice/gen/go/lattice/v1"
 	"git.lunarlabs.dev/lattice/lattice/internal/app"
 	"git.lunarlabs.dev/lattice/lattice/internal/dataplane/dataplanetest"
+	"git.lunarlabs.dev/lattice/lattice/internal/netd"
 	"git.lunarlabs.dev/lattice/lattice/internal/synthetic"
 	"git.lunarlabs.dev/lattice/lattice/internal/synthetic/layout"
 	"golang.org/x/net/dns/dnsmessage"
@@ -112,4 +115,22 @@ func TestSyntheticDataPlaneEndToEnd(t *testing.T) {
 		conn.Close()
 		t.Fatal("a disconnected network must refuse, never fall back to another network")
 	}
+}
+
+func TestMissingHelperDegradesToAWarning(t *testing.T) {
+	d := start(t, testEnv(t), app.Options{
+		EngineFactory:   identifyingEngines().Factory,
+		SyntheticHelper: filepath.Join(t.TempDir(), "netd.sock"),
+	})
+	col, stop := watch(t, d.client, snapshot(t, d.client).DaemonInstanceId, 0)
+	defer stop()
+	eventually(t, "synthetic warning", func() bool {
+		for _, ev := range col.snapshot() {
+			if w := ev.GetDaemonWarning(); w != nil && w.Code == netd.WarnUnavailable && strings.Contains(w.SafeMessage, "not reachable") {
+				return true
+			}
+		}
+		return false
+	})
+	addHeadscale(t, d.client, "Home", "https://home.example.com", false)
 }

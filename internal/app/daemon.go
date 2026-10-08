@@ -37,6 +37,7 @@ type Options struct {
 	ExperimentalDNS string
 	OnDNSReady      func(net.Addr)
 	TUN             io.ReadWriteCloser
+	SyntheticHelper string
 }
 
 func Run(ctx context.Context, opts Options) error {
@@ -115,7 +116,7 @@ func Run(ctx context.Context, opts Options) error {
 
 	runCtx, cancelRun := context.WithCancel(ctx)
 	defer cancelRun()
-	plane, err := startSynthetic(runCtx, opts, db, svc, sessions, log)
+	stopSynthetic, err := startSynthetic(runCtx, opts, db, svc, sessions, log)
 	if err != nil {
 		cancelRun()
 		_ = httpSrv.Close()
@@ -132,9 +133,7 @@ func Run(ctx context.Context, opts Options) error {
 		}
 	}
 	cancelRun()
-	if plane != nil {
-		plane.Close()
-	}
+	stopSynthetic()
 
 	log.Info("latticed shutting down")
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), opts.ShutdownTimeout)

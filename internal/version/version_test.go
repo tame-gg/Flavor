@@ -1,6 +1,7 @@
 package version_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -20,7 +21,7 @@ func TestInfoHasProtocolV1(t *testing.T) {
 func TestLineIncludesVersionCommitAndProtocol(t *testing.T) {
 	info := version.Info()
 	line := info.Line("flavorctl")
-	for _, want := range []string{"flavorctl ", info.DaemonVersion, "(commit " + info.BuildCommit + ")", "protocol 1."} {
+	for _, want := range []string{"flavorctl ", info.DaemonVersion, "(commit " + info.BuildCommit + ")", fmt.Sprintf("protocol %d.%d", info.ProtocolMajor, info.ProtocolMinor)} {
 		if !strings.Contains(line, want) {
 			t.Fatalf("%q does not contain %q", line, want)
 		}

@@ -60,6 +60,9 @@ func Run(ctx context.Context, opts Options) error {
 	if err != nil {
 		return fmt.Errorf("resolve paths: %w", err)
 	}
+	if err := migrateFromLattice(paths, log); err != nil {
+		return fmt.Errorf("migrate Lattice data: %w", err)
+	}
 	if err := paths.EnsureFlavorDirs(); err != nil {
 		return fmt.Errorf("prepare directories: %w", err)
 	}

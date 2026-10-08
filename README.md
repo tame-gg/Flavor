@@ -98,7 +98,7 @@ The system Tailscale client joins one tailnet at a time. Switching between a wor
 Releases ship a tarball per architecture (`linux-amd64`, `linux-arm64`) with the daemon, CLI, desktop app, the `flavor-netd` helper, its systemd units, polkit action, SELinux module and AppArmor profile. The desktop app needs glibc 2.39+, `libwebkit2gtk-4.1` and `libayatana-appindicator3`.
 
 ```bash
-v=0.1.0-beta.1
+v=0.1.0-beta.2
 base=https://github.com/tame-gg/Flavor/releases/download/v$v
 curl -fLO $base/flavor-$v-linux-amd64.tar.gz -fLO $base/SHA256SUMS -fLO $base/SHA256SUMS.sigstore.json -fLO $base/SHA256SUMS.asc
 
@@ -123,6 +123,15 @@ System-wide names (`postgres.home.flavor.internal` in any app, through a TUN dev
 ExecStart=
 ExecStart=/usr/bin/flavord --synthetic-helper=/run/flavor/netd.sock
 ```
+
+### Upgrading from Lattice
+
+Flavor was called Lattice until `v0.1.0-beta.2`. Install Flavor the same way, then enable `flavord`:
+
+- `install.sh` runs Lattice's uninstaller first. It stops `latticed` and removes Lattice's files, but keeps your data.
+- On its first start, `flavord` moves `~/.local/share/lattice` and `~/.config/lattice` to the `flavor` paths. That covers the database, your networks and every device identity, so networks reconnect without signing in again. Lattice never stored credentials in the system keyring, so there is nothing to move there.
+- `flavord` refuses to start while `latticed` is still running, and leaves the Lattice data alone (logging a warning) if `~/.local/share/flavor` already exists.
+- A `systemctl --user edit latticed` override, such as the system-wide names setting, is not carried over. Recreate it with `systemctl --user edit flavord`.
 
 ### Uninstall
 

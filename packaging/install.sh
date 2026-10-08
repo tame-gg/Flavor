@@ -5,6 +5,11 @@ here=$(cd "$(dirname "$0")" && pwd)
 [ "$(id -u)" = 0 ] || { echo "install.sh must run as root: sudo $0" >&2; exit 1; }
 command -v systemctl >/dev/null || { echo "Flavor needs systemd" >&2; exit 1; }
 
+if [ -x /usr/libexec/lattice/uninstall ]; then
+	echo "Removing Lattice first; per-user data is kept and moved to Flavor when flavord first starts"
+	/usr/libexec/lattice/uninstall
+fi
+
 systemctl stop flavor-netd.service 2>/dev/null || true
 
 cd "$here"

@@ -387,6 +387,7 @@ func (s *Server) create(ctx context.Context, cn *conn, req *netdv1.CreateSynthet
 	name := LinkName(cn.peer.UID)
 	tun, index, err := s.cfg.Kernel.CreateTUN(name)
 	if err != nil {
+		s.cfg.Log.Warn("creating tun failed", "link", name, "err", err.Error())
 		return failure(0, netdv1.ErrorCode_ERROR_CODE_TUN_UNAVAILABLE, "could not create "+name), nil
 	}
 	steps := []func() error{

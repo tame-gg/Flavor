@@ -5,7 +5,7 @@ After=lattice-netd.socket dbus.service
 
 [Service]
 Type=notify
-ExecStart=/usr/lib/lattice/lattice-netd
+ExecStart=/usr/libexec/lattice/lattice-netd
 User=root
 CapabilityBoundingSet=CAP_NET_ADMIN
 AmbientCapabilities=

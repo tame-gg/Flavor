@@ -103,11 +103,11 @@ jobs:
       - uses: anchore/sbom-action/download-syft@v0
       - name: sboms
         run: |
-          syft scan dir:. --exclude './dist/**' -o "spdx-json=dist/lattice-$VERSION-source.spdx.json"
+          syft scan dir:. --exclude './dist/**' --source-name lattice --source-version "$VERSION" -o "spdx-json=dist/lattice-$VERSION-source.spdx.json"
           for t in dist/*.tar.gz; do
             d="$(mktemp -d)"
             tar -xzf "$t" -C "$d"
-            syft scan "dir:$d" -o "spdx-json=${t%.tar.gz}.spdx.json"
+            syft scan "dir:$d" --source-name "$(basename "$t" .tar.gz)" --source-version "$VERSION" -o "spdx-json=${t%.tar.gz}.spdx.json"
           done
       - name: checksums
         working-directory: dist

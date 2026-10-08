@@ -8,7 +8,7 @@ Thanks for your interest in Flavor. Bug reports, documentation fixes, testing on
 
 ## How the project is organized
 
-Flavor is a Go daemon (`flavord`), a Go CLI (`flavorctl`), a desktop app (Rust and Tauri with a React interface) and an optional Go helper (`flavor-netd`). [doc/architecture.md](doc/architecture.md) explains how they fit together and where each part lives.
+Flavor is a Go daemon (`flavord`), a Go CLI (`flavorctl`), a desktop app (Rust and Tauri with a React interface) and an optional Go helper (`flavor-netd`). The [Architecture](https://github.com/tame-gg/Flavor/wiki/Architecture) wiki page explains how they fit together and where each part lives.
 
 `main` is the stable branch: every commit on it should be releasable. Work happens on branches and lands through pull requests.
 
@@ -108,7 +108,7 @@ See [test/integration/headscale/README.md](test/integration/headscale/README.md)
 
 ### The privileged helper and the installer
 
-`packaging/install.sh` writes to `/usr` and `/etc` and enables a system service, and `flavor-netd` changes host networking. Do not try them on your workstation. Use a disposable virtual machine. The helper's unit tests use fake kernel, polkit, logind and systemd-resolved backends; the manual validation done so far is described in [doc/system-wide-names.md](doc/system-wide-names.md#testing-status).
+`packaging/install.sh` writes to `/usr` and `/etc` and enables a system service, and `flavor-netd` changes host networking. Do not try them on your workstation. Use a disposable virtual machine. The helper's unit tests use fake kernel, polkit, logind and systemd-resolved backends; the manual validation done so far is described in [System-wide names](https://github.com/tame-gg/Flavor/wiki/System-Wide-Names#testing-status).
 
 ### Release builds
 
@@ -125,7 +125,7 @@ builds a release tarball. It needs `jq` and cargo-auditable; the release workflo
 - The codebase does not use code comments. Express intent through names, small functions and tests.
 - Keep the webview unprivileged: the React interface must not talk to the daemon socket directly. CI checks this.
 - Never log secrets or full sign-in links. Wrap credentials in `secret.Secret`, which redacts itself, and log URLs through the helpers in `internal/logging`.
-- Add or update tests for behavior changes, and update the docs in [`doc/`](doc) and the [README](README.md) when user-facing behavior changes.
+- Add or update tests for behavior changes, and update the [README](README.md) and the [wiki](https://github.com/tame-gg/Flavor/wiki) when user-facing behavior changes.
 
 ## Pull requests
 

@@ -13,6 +13,6 @@ Closes #
 
 - [ ] The title is lowercase and starts with `feat:`, `fix:` or `chore:`
 - [ ] Tests cover the change, or it does not change behavior
-- [ ] Docs (`README.md`, `doc/`) are updated if user-facing behavior changed
+- [ ] The README and the wiki are updated if user-facing behavior changed
 - [ ] No keys, sign-in links or other secrets appear in code, tests, logs or screenshots
 - [ ] Generated code is regenerated with `./scripts/generate-proto.sh` if `.proto` files changed

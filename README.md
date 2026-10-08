@@ -10,7 +10,7 @@ Flavor is an open-source desktop app, CLI and per-user daemon for Linux. It keep
 
 [![Release](https://img.shields.io/github/v/release/tame-gg/Flavor?include_prereleases&style=flat-square&label=release&labelColor=0F1419&color=6BA3C7)](https://github.com/tame-gg/Flavor/releases) [![CI](https://img.shields.io/github/actions/workflow/status/tame-gg/Flavor/ci.yml?branch=main&style=flat-square&label=ci&labelColor=0F1419)](https://github.com/tame-gg/Flavor/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-6BA3C7?style=flat-square&labelColor=0F1419)](LICENSE) [![Platform: Linux](https://img.shields.io/badge/platform-Linux-6BA3C7?style=flat-square&labelColor=0F1419)](#platform-support)
 
-**[Install](#install)** · **[Quick start](#quick-start)** · **[Documentation](doc/README.md)** · **[Releases](https://github.com/tame-gg/Flavor/releases)**
+**[Install](#install)** · **[Quick start](#quick-start)** · **[Documentation](https://github.com/tame-gg/Flavor/wiki)** · **[Releases](https://github.com/tame-gg/Flavor/releases)**
 
 </div>
 
@@ -20,7 +20,7 @@ Flavor is an open-source desktop app, CLI and per-user daemon for Linux. It keep
 </picture>
 
 > [!NOTE]
-> Flavor is in beta. Version 0.1.0-beta.2 runs on Linux (x86_64 and arm64). The project was called Lattice until this release; upgrading keeps your networks and device identities ([details](doc/install.md#upgrading-from-lattice)).
+> Flavor is in beta. Version 0.1.0-beta.2 runs on Linux (x86_64 and arm64). The project was called Lattice until this release; upgrading keeps your networks and device identities ([details](https://github.com/tame-gg/Flavor/wiki/Install#upgrading-from-lattice)).
 
 ## Why Flavor?
 
@@ -75,7 +75,7 @@ Everything except the last row runs as your user, with no extra privileges. The 
 - `flavorctl forward` listens on a local port and forwards to a service on the network you choose.
 - `flavorctl socks` runs a SOCKS5 proxy for browsers, curl and other clients.
 - Both listen on loopback only, accept connections only from your own user, check every new connection again and refuse ambiguous destinations.
-- **Experimental:** [system-wide names](doc/system-wide-names.md) let any program use Flavor names directly, through a small helper that runs as root with only `CAP_NET_ADMIN`. It is off by default and meant for single-user machines.
+- **Experimental:** [system-wide names](https://github.com/tame-gg/Flavor/wiki/System-Wide-Names) let any program use Flavor names directly, through a small helper that runs as root with only `CAP_NET_ADMIN`. It is off by default and meant for single-user machines.
 
 ### Built for daily use
 
@@ -121,7 +121,7 @@ Everything except the last row runs as your user, with no extra privileges. The 
 
 ## Install
 
-Flavor runs on Linux (x86_64 and arm64) with systemd. The desktop app needs glibc 2.39 or newer, WebKitGTK 4.1 and libayatana-appindicator ([details](doc/install.md#requirements)).
+Flavor runs on Linux (x86_64 and arm64) with systemd. The desktop app needs glibc 2.39 or newer, WebKitGTK 4.1 and libayatana-appindicator ([details](https://github.com/tame-gg/Flavor/wiki/Install#requirements)).
 
 **Release tarball,** for recent systemd-based distributions. Download and verify it first:
 
@@ -142,11 +142,11 @@ sudo ./flavor-$v-linux-amd64/install.sh
 systemctl --user enable --now flavord
 ```
 
-On arm64, replace `amd64` with `arm64`. `install.sh` needs root to copy files into `/usr` and `/etc`; Flavor itself runs as your user. A Sigstore signature and GitHub build provenance are also available; see [Verify the download](doc/install.md#verify-the-download).
+On arm64, replace `amd64` with `arm64`. `install.sh` needs root to copy files into `/usr` and `/etc`; Flavor itself runs as your user. A Sigstore signature and GitHub build provenance are also available; see [Verify the download](https://github.com/tame-gg/Flavor/wiki/Install#verify-the-download).
 
-**Arch Linux:** the [`flavor-bin`](packaging/aur/flavor-bin) and [`flavor`](packaging/aur/flavor) PKGBUILDs are ready but not on the AUR yet. [Build them from a clone](doc/install.md#arch-linux) with `makepkg -si`.
+**Arch Linux:** the [`flavor-bin`](packaging/aur/flavor-bin) and [`flavor`](packaging/aur/flavor) PKGBUILDs are ready but not on the AUR yet. [Build them from a clone](https://github.com/tame-gg/Flavor/wiki/Install#arch-linux) with `makepkg -si`.
 
-**From source:** [build Flavor yourself](doc/install.md#from-source), optionally into your home directory without root.
+**From source:** [build Flavor yourself](https://github.com/tame-gg/Flavor/wiki/Install#from-source), optionally into your home directory without root.
 
 To remove Flavor, run `sudo /usr/libexec/flavor/uninstall`, or `sudo pacman -Rns flavor-bin` (or `flavor`) for the Arch packages. Your networks and identities stay in your home directory unless you delete them.
 
@@ -157,7 +157,7 @@ To remove Flavor, run `sudo /usr/libexec/flavor/uninstall`, or `sudo pacman -Rns
 3. For **Tailscale**, name the network, choose **Add network**, then **Open sign-in page** to sign in in your browser. For **Headscale**, also enter your server's address in **Control server**, then sign in through the browser or paste a pre-auth key.
 4. Open **Devices** to see every machine on your networks, and the **Connection Inspector** to check where an address or name goes.
 
-The [getting started guide](doc/getting-started.md) walks through each step, including Headscale registration and device approval.
+The [getting started guide](https://github.com/tame-gg/Flavor/wiki/Getting-Started) walks through each step, including Headscale registration and device approval.
 
 ## Command line
 
@@ -202,7 +202,7 @@ Point your client at `127.0.0.1:5432`. Or start a SOCKS5 proxy on `127.0.0.1:108
 $ curl --proxy socks5h://127.0.0.1:1080 http://pi-hole.home-lab.flavor.internal/
 ```
 
-See the [flavorctl reference](doc/cli.md) for every command, and [Names, decisions and connections](doc/networking.md) for how Flavor decides.
+See the [flavorctl reference](https://github.com/tame-gg/Flavor/wiki/flavorctl-Reference) for every command, and [Names, decisions and connections](https://github.com/tame-gg/Flavor/wiki/Names-Decisions-and-Connections) for how Flavor decides.
 
 ## How it works
 
@@ -218,7 +218,7 @@ See the [flavorctl reference](doc/cli.md) for every command, and [Names, decisio
 | `flavord` | you, as a systemd user service | Daemon: one embedded Tailscale node per network, the decision engine, forwarding and the SOCKS5 proxy |
 | `flavor-netd` | root, started on demand | Optional helper for system-wide names: a TUN interface, routes and systemd-resolved settings, with `CAP_NET_ADMIN` only |
 
-The desktop app and `flavorctl` talk to `flavord` with [Connect-RPC](https://connectrpc.com) over a Unix socket that only your user can use. The app's webview never touches that socket; it can only call the desktop shell's own commands. See [Architecture](doc/architecture.md) for details.
+The desktop app and `flavorctl` talk to `flavord` with [Connect-RPC](https://connectrpc.com) over a Unix socket that only your user can use. The app's webview never touches that socket; it can only call the desktop shell's own commands. See [Architecture](https://github.com/tame-gg/Flavor/wiki/Architecture) for details.
 
 ## Security and privacy
 
@@ -229,7 +229,7 @@ The desktop app and `flavorctl` talk to `flavord` with [Connect-RPC](https://con
 - **Separate identities, shared process.** Networks are kept apart logically, but they run in one daemon process and are not sandboxed from each other.
 - **Verifiable releases.** `SHA256SUMS` is signed with Sigstore and with the maintainer's GPG key, each tarball has a GitHub build-provenance attestation and an SBOM, and rebuilding a release commit with the same toolchains produces identical files.
 
-Flavor has not had an independent security audit. Read the [security model](doc/security.md), and report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+Flavor has not had an independent security audit. Read the [security model](https://github.com/tame-gg/Flavor/wiki/Security-Model), and report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 
 ## Platform support
 
@@ -242,13 +242,13 @@ Flavor has not had an independent security audit. Read the [security model](doc/
 | System-wide names | Experimental; needs systemd-resolved; single-user machines only |
 | macOS, Windows | Not supported |
 
-Flavor embeds version 1.90.9 of Tailscale's client library. Headscale supports a window of recent Tailscale client versions, so a much newer Headscale release may eventually need a newer Flavor. Flavor does not use or replace the official Tailscale client; running both at the same time has not been tested. The [tested environments](doc/install.md#tested-environments) are listed in the install guide.
+Flavor embeds version 1.90.9 of Tailscale's client library. Headscale supports a window of recent Tailscale client versions, so a much newer Headscale release may eventually need a newer Flavor. Flavor does not use or replace the official Tailscale client; running both at the same time has not been tested. The [tested environments](https://github.com/tame-gg/Flavor/wiki/Install#tested-environments) are listed in the install guide.
 
 ## Roadmap
 
 **Available in v0.1.0-beta.2:** several Tailscale and Headscale networks at once, the device list, Connection Inspector, Conflict Center, Flavor names, destination preferences, workspaces, port forwarding, the SOCKS5 proxy, diagnostics, `flavorctl`, and signed, reproducible releases.
 
-**Experimental:** [system-wide names](doc/system-wide-names.md) through the `flavor-netd` helper.
+**Experimental:** [system-wide names](https://github.com/tame-gg/Flavor/wiki/System-Wide-Names) through the `flavor-netd` helper.
 
 **Planned, not built yet:**
 
@@ -261,14 +261,17 @@ Flavor embeds version 1.90.9 of Tailscale's client library. Headscale supports a
 
 ## Documentation
 
-- [Install, verify, upgrade and uninstall](doc/install.md)
-- [Getting started](doc/getting-started.md)
-- [Names, decisions and connections](doc/networking.md)
-- [flavorctl reference](doc/cli.md)
-- [System-wide names (experimental)](doc/system-wide-names.md)
-- [Troubleshooting](doc/troubleshooting.md)
-- [Security model](doc/security.md)
-- [Architecture](doc/architecture.md)
+The guides live in the [project wiki](https://github.com/tame-gg/Flavor/wiki):
+
+
+- [Install, verify, upgrade and uninstall](https://github.com/tame-gg/Flavor/wiki/Install)
+- [Getting started](https://github.com/tame-gg/Flavor/wiki/Getting-Started)
+- [Names, decisions and connections](https://github.com/tame-gg/Flavor/wiki/Names-Decisions-and-Connections)
+- [flavorctl reference](https://github.com/tame-gg/Flavor/wiki/flavorctl-Reference)
+- [System-wide names (experimental)](https://github.com/tame-gg/Flavor/wiki/System-Wide-Names)
+- [Troubleshooting](https://github.com/tame-gg/Flavor/wiki/Troubleshooting)
+- [Security model](https://github.com/tame-gg/Flavor/wiki/Security-Model)
+- [Architecture](https://github.com/tame-gg/Flavor/wiki/Architecture)
 
 ## Contributing and support
 

@@ -7,7 +7,7 @@ on:
 
 jobs:
   go:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       GOENV: ${{ github.workspace }}/go.env
     steps:
@@ -28,7 +28,7 @@ jobs:
           ./scripts/go.sh test ./...
 
   rust:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       GOENV: ${{ github.workspace }}/go.env
     steps:
@@ -47,7 +47,7 @@ jobs:
         run: cargo test --workspace
 
   desktop:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: desktop

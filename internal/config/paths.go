@@ -1,10 +1,12 @@
 package config
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"syscall"
 
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
@@ -77,12 +79,23 @@ func Resolve(env Env) (Paths, error) {
 }
 
 func ResolveFromOS(runtimeOverride string) (Paths, error) {
-	return Resolve(Env{
+	env := Env{
 		DataHome:        os.Getenv("XDG_DATA_HOME"),
 		ConfigHome:      os.Getenv("XDG_CONFIG_HOME"),
 		RuntimeDir:      os.Getenv("XDG_RUNTIME_DIR"),
 		RuntimeOverride: runtimeOverride,
-	})
+	}
+	if runtime.GOOS == "darwin" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return Paths{}, err
+		}
+		support := filepath.Join(home, "Library", "Application Support")
+		env.DataHome = cmp.Or(env.DataHome, support)
+		env.ConfigHome = cmp.Or(env.ConfigHome, support)
+		env.RuntimeDir = cmp.Or(env.RuntimeDir, support)
+	}
+	return Resolve(env)
 }
 
 func (p Paths) NetworksRootPath() string { return p.NetworksRoot }

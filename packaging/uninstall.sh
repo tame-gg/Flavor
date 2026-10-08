@@ -30,7 +30,7 @@ for f in $files; do
 	case "$f" in *..*) continue ;; esac
 	rm -f "/$f"
 done
-rmdir /usr/libexec/lattice /usr/share/lattice /usr/share/selinux/packages/lattice 2>/dev/null || true
+rmdir /usr/libexec/lattice /usr/share/lattice/frontend /usr/share/lattice /usr/share/selinux/packages/lattice 2>/dev/null || true
 rm -rf /run/lattice /run/lattice-netd
 systemctl daemon-reload
 

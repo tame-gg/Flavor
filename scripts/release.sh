@@ -25,11 +25,14 @@ gobuild usr/libexec/lattice/lattice-netd ./cmd/lattice-netd
 
 if [ "${DESKTOP:-1}" = 1 ]; then
 	[ "$arch" = "$(./scripts/go.sh env GOHOSTARCH)" ] || { echo "the desktop app builds natively only; use DESKTOP=0 to cross-build" >&2; exit 1; }
-	export RUSTFLAGS="${RUSTFLAGS:-} --remap-path-prefix=$ROOT=/build --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=$(rustc --print sysroot)=/rust"
-	(cd desktop && npm ci && npm run tauri build)
+	sysroot="$(rustc --print sysroot)"
+	export RUSTFLAGS="${RUSTFLAGS:-} --remap-path-prefix=$ROOT=/build --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=$sysroot=/rust"
+	(cd desktop && npm ci && npm run tauri build -- --runner "$ROOT/scripts/cargo-auditable.sh")
 	install -Dm755 target/release/lattice-desktop "$stage/usr/bin/lattice-desktop"
 	install -Dm644 packaging/desktop/dev.lunarlabs.lattice.desktop "$stage/usr/share/applications/dev.lunarlabs.lattice.desktop"
 	install -Dm644 desktop/src-tauri/icons/128x128.png "$stage/usr/share/icons/hicolor/128x128/apps/dev.lunarlabs.lattice.png"
+	mkdir -p "$stage/usr/share/lattice/frontend"
+	jq '.packages |= with_entries(select(.value.dev != true)) | del(.packages[""].devDependencies)' desktop/package-lock.json > "$stage/usr/share/lattice/frontend/package-lock.json"
 fi
 
 p=packaging

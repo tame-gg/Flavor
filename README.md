@@ -158,7 +158,7 @@ systemctl --user enable --now latticed
 > [!NOTE]
 > Always build Go through `./scripts/go.sh`. It applies the toolchain settings in [`go.env`](go.env) that the pinned Tailscale version needs.
 
-`./scripts/release.sh VERSION [amd64|arm64]` builds the same tarball a release ships; the Go binaries and the tarball are reproducible for a given commit.
+`./scripts/release.sh VERSION [amd64|arm64]` builds the same tarball a release ships; the binaries and the tarball are reproducible for a given commit. It needs `cargo install cargo-auditable --locked`, which embeds the desktop app's crate list. Each tarball's SBOM covers the Go modules, the Rust crates and the npm packages bundled into the desktop frontend; the last come from `/usr/share/lattice/frontend/package-lock.json`, the lockfile trimmed to production packages.
 
 Closing the window hides Lattice in the tray by default. Quitting the desktop app never stops `latticed` or disconnects your networks.
 

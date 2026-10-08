@@ -61,6 +61,7 @@ jobs:
         with:
           go-version-file: go.mod
       - uses: dtolnay/rust-toolchain@stable
+      - run: cargo install cargo-auditable --locked --version 0.7.7
       - uses: actions/setup-node@v4
         with:
           node-version: 24

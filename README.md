@@ -20,7 +20,7 @@ Flavor is an open-source desktop app, CLI and per-user daemon for Linux. It keep
 </picture>
 
 > [!NOTE]
-> Flavor is in beta. Version 0.1.0-beta.2 runs on Linux (x86_64 and arm64). The project was called Lattice until this release; upgrading keeps your networks and device identities ([details](https://github.com/tame-gg/Flavor/wiki/Install#upgrading-from-lattice)).
+> Flavor is in beta. Version 0.1.0-beta.3 runs on Linux (x86_64 and arm64). The project was called Lattice until 0.1.0-beta.2; upgrading keeps your networks and device identities ([details](https://github.com/tame-gg/Flavor/wiki/Install#upgrading-from-lattice)).
 
 ## Why Flavor?
 
@@ -126,7 +126,7 @@ Flavor runs on Linux (x86_64 and arm64) with systemd. The desktop app needs glib
 **Release tarball,** for recent systemd-based distributions. Download and verify it first:
 
 ```bash
-v=0.1.0-beta.2
+v=0.1.0-beta.3
 base=https://github.com/tame-gg/Flavor/releases/download/v$v
 curl -fLO $base/flavor-$v-linux-amd64.tar.gz -fLO $base/SHA256SUMS -fLO $base/SHA256SUMS.asc
 sha256sum --check --ignore-missing SHA256SUMS
@@ -253,16 +253,15 @@ Flavor embeds version 1.90.9 of Tailscale's client library. Headscale supports a
 
 ## Roadmap
 
-**Available in v0.1.0-beta.2:** several Tailscale and Headscale networks at once, the device list, Connection Inspector, Conflict Center, Flavor names, destination preferences, workspaces, port forwarding, the SOCKS5 proxy, diagnostics, `flavorctl`, signed and reproducible releases, and the [`flavor`](https://aur.archlinux.org/packages/flavor) and [`flavor-bin`](https://aur.archlinux.org/packages/flavor-bin) AUR packages.
+**Available in v0.1.0-beta.3:** several Tailscale and Headscale networks at once, the device list, Connection Inspector, Conflict Center, Flavor names, destination preferences, workspaces, port forwarding, the SOCKS5 proxy, diagnostics, `flavorctl`, signed, reproducible and hardened (PIE, full RELRO) releases, and the [`flavor`](https://aur.archlinux.org/packages/flavor) and [`flavor-bin`](https://aur.archlinux.org/packages/flavor-bin) AUR packages.
 
 **Experimental:** [system-wide names](https://github.com/tame-gg/Flavor/wiki/System-Wide-Names) through the `flavor-netd` helper.
 
 **Planned, not built yet:**
 
-- Hardened release binaries with PIE and full RELRO ([#1](https://github.com/tame-gg/Flavor/issues/1))
 - System-wide names on multi-user machines
 - Exit nodes, subnet route controls and an HTTP proxy
-- macOS (followed by a Homebrew package) and Windows
+- macOS ([#15](https://github.com/tame-gg/Flavor/issues/15), followed by a Homebrew package) and Windows
 - Removing machines from the control server
 
 ## Documentation

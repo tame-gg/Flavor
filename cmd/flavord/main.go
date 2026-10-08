@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 
 	"git.lunarlabs.dev/flavor/flavor/internal/app"
@@ -38,6 +39,10 @@ func main() {
 	var level slog.Level
 	if err := level.UnmarshalText([]byte(*logLevel)); err != nil {
 		fmt.Fprintf(os.Stderr, "flavord: invalid --log-level %q\n", *logLevel)
+		os.Exit(2)
+	}
+	if *syntheticHelper != "" && runtime.GOOS != "linux" {
+		fmt.Fprintln(os.Stderr, "flavord: --synthetic-helper is only supported on Linux")
 		os.Exit(2)
 	}
 	mode := secret.Mode(*secretStore)

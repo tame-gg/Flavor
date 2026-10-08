@@ -1,0 +1,34 @@
+policy_module(lattice_netd, 1.0.0)
+
+type lattice_netd_t;
+type lattice_netd_exec_t;
+init_daemon_domain(lattice_netd_t, lattice_netd_exec_t)
+init_nnp_daemon_domain(lattice_netd_t)
+
+type lattice_netd_var_run_t;
+files_pid_file(lattice_netd_var_run_t)
+
+allow lattice_netd_t self:capability net_admin;
+allow lattice_netd_t self:unix_stream_socket { create_stream_socket_perms accept listen };
+allow lattice_netd_t self:unix_dgram_socket create_socket_perms;
+allow lattice_netd_t self:netlink_route_socket { create_netlink_socket_perms nlmsg_read nlmsg_write };
+allow lattice_netd_t self:tun_socket create;
+
+corenet_rw_tun_tap_dev(lattice_netd_t)
+kernel_dgram_send(lattice_netd_t)
+fs_search_cgroup_dirs(lattice_netd_t)
+domain_read_all_domains_state(lattice_netd_t)
+
+dbus_system_bus_client(lattice_netd_t)
+
+optional_policy(`
+	policykit_dbus_chat(lattice_netd_t)
+')
+
+optional_policy(`
+	systemd_chat_resolved(lattice_netd_t)
+')
+
+optional_policy(`
+	systemd_dbus_chat_logind(lattice_netd_t)
+')

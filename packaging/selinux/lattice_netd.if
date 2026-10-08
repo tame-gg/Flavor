@@ -1,0 +1,9 @@
+interface(`lattice_netd_stream_connect',`
+	gen_require(`
+		type lattice_netd_t, lattice_netd_var_run_t;
+	')
+
+	files_search_pids($1)
+	stream_connect_pattern($1, lattice_netd_var_run_t, lattice_netd_var_run_t, lattice_netd_t)
+	allow $1 lattice_netd_t:fd use;
+')

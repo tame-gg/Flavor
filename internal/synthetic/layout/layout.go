@@ -1,18 +1,17 @@
-package synthetic
+package layout
 
 import (
 	"crypto/rand"
 	"encoding/binary"
 	"errors"
 	"net/netip"
-
-	"git.lunarlabs.dev/lattice/lattice/internal/store"
 )
 
 const (
-	nsEmbeddedV4 uint16 = 0x0000
-	nsAllocated  uint16 = 0x0001
-	maxCounter          = 1<<48 - 1
+	MaxNetworkIndex        = 0xFFFE
+	nsEmbeddedV4    uint16 = 0x0000
+	nsAllocated     uint16 = 0x0001
+	maxCounter             = 1<<48 - 1
 )
 
 var (
@@ -55,7 +54,7 @@ func NetworkPrefix(ula netip.Prefix, index uint16) (netip.Prefix, error) {
 	if !ValidULA(ula) {
 		return netip.Prefix{}, ErrInvalidPrefix
 	}
-	if index == 0 || index > store.MaxNetworkIndex {
+	if index == 0 || index > MaxNetworkIndex {
 		return netip.Prefix{}, ErrInvalidIndex
 	}
 	b := ula.Addr().As16()
@@ -81,7 +80,7 @@ func ResolverV4(pool netip.Prefix) netip.Addr {
 	return HostV4(pool).Next()
 }
 
-func firstMappableV4(pool netip.Prefix) netip.Addr {
+func FirstMappableV4(pool netip.Prefix) netip.Addr {
 	return ResolverV4(pool).Next()
 }
 
@@ -122,7 +121,7 @@ func Decode(ula netip.Prefix, a netip.Addr) (Decoded, error) {
 	}
 	b := a.As16()
 	d := Decoded{Index: binary.BigEndian.Uint16(b[6:8])}
-	if d.Index == 0 || d.Index > store.MaxNetworkIndex {
+	if d.Index == 0 || d.Index > MaxNetworkIndex {
 		return Decoded{}, ErrInvalidIndex
 	}
 	switch binary.BigEndian.Uint16(b[8:10]) {

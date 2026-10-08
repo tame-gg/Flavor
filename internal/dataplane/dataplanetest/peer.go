@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"testing"
 
-	"git.lunarlabs.dev/lattice/lattice/internal/synthetic"
+	"git.lunarlabs.dev/lattice/lattice/internal/synthetic/layout"
 	"gvisor.dev/gvisor/pkg/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
@@ -64,9 +64,9 @@ func NewPeer(t testing.TB, dev *os.File, ula, pool netip.Prefix) *Peer {
 		}
 		routes = append(routes, tcpip.Route{Destination: sub, NIC: 1})
 	}
-	add(synthetic.HostAddress(ula), ula)
+	add(layout.HostAddress(ula), ula)
 	if pool.IsValid() {
-		add(synthetic.HostV4(pool), pool)
+		add(layout.HostV4(pool), pool)
 	}
 	s.SetRouteTable(routes)
 	ctx, cancel := context.WithCancel(context.Background())

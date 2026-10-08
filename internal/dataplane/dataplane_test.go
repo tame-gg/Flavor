@@ -23,6 +23,7 @@ import (
 	"git.lunarlabs.dev/lattice/lattice/internal/store"
 	"git.lunarlabs.dev/lattice/lattice/internal/syndns"
 	"git.lunarlabs.dev/lattice/lattice/internal/synthetic"
+	"git.lunarlabs.dev/lattice/lattice/internal/synthetic/layout"
 	"golang.org/x/net/dns/dnsmessage"
 	"gvisor.dev/gvisor/pkg/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip"
@@ -222,13 +223,13 @@ func TestUnknownDestinationsAreRefusedNotAccepted(t *testing.T) {
 	f := start(t, true)
 	pool := f.alloc.Pool()
 	unmapped := pool.Addr().Next().Next().Next().Next().Next()
-	other, _ := synthetic.EmbedV4(f.alloc.ULA(), 999, shared)
+	other, _ := layout.EmbedV4(f.alloc.ULA(), 999, shared)
 	for _, ap := range []netip.AddrPort{
 		netip.AddrPortFrom(unmapped, 80),
 		netip.AddrPortFrom(other, 80),
-		netip.AddrPortFrom(synthetic.ResolverAddress(f.alloc.ULA()), 80),
-		netip.AddrPortFrom(synthetic.ResolverV4(pool), 80),
-		netip.AddrPortFrom(synthetic.HostV4(pool), 80),
+		netip.AddrPortFrom(layout.ResolverAddress(f.alloc.ULA()), 80),
+		netip.AddrPortFrom(layout.ResolverV4(pool), 80),
+		netip.AddrPortFrom(layout.HostV4(pool), 80),
 	} {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		_, err := f.peer.DialTCP(ctx, ap)
@@ -278,7 +279,7 @@ func rcode(t *testing.T, resp []byte) dnsmessage.RCode {
 func TestResolverAnswersOverUDPAndTCPOnBothFamilies(t *testing.T) {
 	f := start(t, true)
 	q := query(t, "missing.home.lattice.internal.", dnsmessage.TypeAAAA)
-	for _, server := range []netip.Addr{synthetic.ResolverAddress(f.alloc.ULA()), synthetic.ResolverV4(f.alloc.Pool())} {
+	for _, server := range []netip.Addr{layout.ResolverAddress(f.alloc.ULA()), layout.ResolverV4(f.alloc.Pool())} {
 		ap := netip.AddrPortFrom(server, 53)
 		u, err := f.peer.DialUDP(ap)
 		if err != nil {
@@ -369,7 +370,7 @@ func TestDeviceLossShutsThePlaneDown(t *testing.T) {
 	near := <-f.up.conns
 	f.peer.Close()
 	select {
-	case <-f.plane.done:
+	case <-f.plane.Done():
 	case <-time.After(5 * time.Second):
 		t.Fatal("plane did not shut down after losing its device")
 	}
@@ -404,7 +405,7 @@ func echoRequests(src4, dst4, src6, dst6 netip.Addr) [][]byte {
 func TestICMPEchoIsNeverAnsweredOnBehalfOfARemoteDevice(t *testing.T) {
 	f := start(t, false)
 	a := f.synthetic(t, 0, shared)
-	pings := echoRequests(synthetic.HostV4(f.alloc.Pool()), a.V4, synthetic.HostAddress(f.alloc.ULA()), a.V6)
+	pings := echoRequests(layout.HostV4(f.alloc.Pool()), a.V4, layout.HostAddress(f.alloc.ULA()), a.V6)
 
 	bare, ep, err := newStack()
 	if err != nil {

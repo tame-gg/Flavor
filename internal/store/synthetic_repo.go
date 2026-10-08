@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"git.lunarlabs.dev/lattice/lattice/internal/domain"
+	"git.lunarlabs.dev/lattice/lattice/internal/synthetic/layout"
 )
 
 const (
-	MaxNetworkIndex = 0xFFFE
 	V4Quarantine    = 24 * time.Hour
 	IndexQuarantine = 7 * 24 * time.Hour
 )
@@ -110,7 +110,7 @@ func (r *SyntheticRepository) NetworkIndex(ctx context.Context, id domain.Networ
 		if err != nil {
 			return err
 		}
-		for i := 1; i <= MaxNetworkIndex; i++ {
+		for i := 1; i <= layout.MaxNetworkIndex; i++ {
 			if !blocked[int64(i)] {
 				idx = uint16(i)
 				break

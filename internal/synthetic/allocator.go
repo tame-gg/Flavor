@@ -10,6 +10,7 @@ import (
 
 	"git.lunarlabs.dev/lattice/lattice/internal/domain"
 	"git.lunarlabs.dev/lattice/lattice/internal/store"
+	"git.lunarlabs.dev/lattice/lattice/internal/synthetic/layout"
 )
 
 var (
@@ -35,12 +36,12 @@ func Open(ctx context.Context, db *store.DB, now func() time.Time) (*Allocator, 
 	if now == nil {
 		now = time.Now
 	}
-	ula, err := db.Synthetic().EnsureULA(ctx, NewULA)
+	ula, err := db.Synthetic().EnsureULA(ctx, layout.NewULA)
 	if err != nil {
 		return nil, err
 	}
-	if !ValidULA(ula) {
-		return nil, ErrInvalidPrefix
+	if !layout.ValidULA(ula) {
+		return nil, layout.ErrInvalidPrefix
 	}
 	pool, err := db.Synthetic().V4Pool(ctx)
 	if err != nil {
@@ -84,17 +85,17 @@ func (a *Allocator) For(ctx context.Context, network domain.NetworkID, real neti
 	}
 	var out Addresses
 	if real.Is4() {
-		out.V6, err = EmbedV4(a.ula, idx, real)
+		out.V6, err = layout.EmbedV4(a.ula, idx, real)
 	} else {
 		out.V6, err = a.db.Synthetic().MapV6(ctx, network, real, func(counter uint64) (netip.Addr, error) {
-			return AllocatedV6(a.ula, idx, counter)
+			return layout.AllocatedV6(a.ula, idx, counter)
 		})
 	}
 	if err != nil {
 		return Addresses{}, err
 	}
 	if pool := a.Pool(); pool.IsValid() {
-		if out.V4, err = a.db.Synthetic().MapV4(ctx, network, real, pool, firstMappableV4(pool), a.now()); err != nil {
+		if out.V4, err = a.db.Synthetic().MapV4(ctx, network, real, pool, layout.FirstMappableV4(pool), a.now()); err != nil {
 			return out, err
 		}
 	}
@@ -103,11 +104,11 @@ func (a *Allocator) For(ctx context.Context, network domain.NetworkID, real neti
 
 func (a *Allocator) Resolve(ctx context.Context, synthetic netip.Addr) (domain.NetworkID, netip.Addr, error) {
 	if synthetic.Is6() {
-		d, err := Decode(a.ula, synthetic)
+		d, err := layout.Decode(a.ula, synthetic)
 		if err != nil {
 			return "", netip.Addr{}, err
 		}
-		if d.Kind == KindEmbeddedV4 {
+		if d.Kind == layout.KindEmbeddedV4 {
 			id, err := a.networkForIndex(ctx, d.Index)
 			return id, d.V4, err
 		}

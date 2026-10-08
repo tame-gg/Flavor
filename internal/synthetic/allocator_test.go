@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"git.lunarlabs.dev/lattice/lattice/internal/synthetic/layout"
 	"net/netip"
 	"path/filepath"
 	"strings"
@@ -105,8 +106,8 @@ func TestIPv6TargetsUseTheAllocatedNamespace(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	d, err := Decode(a.ULA(), x.V6)
-	if err != nil || d.Kind != KindAllocatedV6 || d.Counter != 1 {
+	d, err := layout.Decode(a.ULA(), x.V6)
+	if err != nil || d.Kind != layout.KindAllocatedV6 || d.Counter != 1 {
 		t.Fatalf("%+v %v", d, err)
 	}
 	y, _ := a.For(ctx, ids[0], real)
@@ -276,7 +277,7 @@ func TestEnsurePool(t *testing.T) {
 	if got := a.Pool().String(); got != "198.19.224.0/20" {
 		t.Fatalf("pool must avoid local prefixes: %s", got)
 	}
-	if HostV4(a.Pool()).String() != "198.19.224.1" || ResolverV4(a.Pool()).String() != "198.19.224.2" {
+	if layout.HostV4(a.Pool()).String() != "198.19.224.1" || layout.ResolverV4(a.Pool()).String() != "198.19.224.2" {
 		t.Fatal("host and resolver are the first two hosts of the pool")
 	}
 	if err := a.EnsurePool(ctx, nil); err != nil || a.Pool().String() != "198.19.224.0/20" {

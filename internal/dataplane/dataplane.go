@@ -17,6 +17,7 @@ import (
 	"git.lunarlabs.dev/lattice/lattice/internal/relay"
 	"git.lunarlabs.dev/lattice/lattice/internal/syndns"
 	"git.lunarlabs.dev/lattice/lattice/internal/synthetic"
+	"git.lunarlabs.dev/lattice/lattice/internal/synthetic/layout"
 	"gvisor.dev/gvisor/pkg/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
@@ -71,9 +72,9 @@ func Start(ctx context.Context, dev io.ReadWriteCloser, alloc *synthetic.Allocat
 		alloc: alloc, dial: dial, log: log, ula: alloc.ULA(), pool: alloc.Pool(), dev: dev, stack: s, ep: ep,
 		ctx: ctx, cancel: cancel, done: make(chan struct{}), open: make(map[io.Closer]struct{}),
 	}
-	resolvers := []netip.Addr{synthetic.ResolverAddress(p.ula)}
+	resolvers := []netip.Addr{layout.ResolverAddress(p.ula)}
 	if p.pool.IsValid() {
-		resolvers = append(resolvers, synthetic.ResolverV4(p.pool))
+		resolvers = append(resolvers, layout.ResolverV4(p.pool))
 	}
 	for _, a := range resolvers {
 		if err := p.serveDNS(a, dns); err != nil {
@@ -94,6 +95,8 @@ func Start(ctx context.Context, dev io.ReadWriteCloser, alloc *synthetic.Allocat
 	}()
 	return p, nil
 }
+
+func (p *Plane) Done() <-chan struct{} { return p.done }
 
 func (p *Plane) Close() {
 	p.cancel()

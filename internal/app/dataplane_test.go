@@ -13,6 +13,7 @@ import (
 	"git.lunarlabs.dev/lattice/lattice/internal/app"
 	"git.lunarlabs.dev/lattice/lattice/internal/dataplane/dataplanetest"
 	"git.lunarlabs.dev/lattice/lattice/internal/synthetic"
+	"git.lunarlabs.dev/lattice/lattice/internal/synthetic/layout"
 	"golang.org/x/net/dns/dnsmessage"
 )
 
@@ -65,7 +66,7 @@ func TestSyntheticDataPlaneEndToEnd(t *testing.T) {
 		defer conn.Close()
 		return askOn(t, conn, framed, name, qtype, false)
 	}
-	r6, r4 := synthetic.ResolverAddress(ula), synthetic.ResolverV4(pool)
+	r6, r4 := layout.ResolverAddress(ula), layout.ResolverV4(pool)
 	if got := resolve(r6, false, "postgres.home.lattice.internal", dnsmessage.TypeAAAA); len(got.addrs) != 1 || got.addrs[0] != v6[0] {
 		t.Fatalf("netstack resolver over udp: %+v", got)
 	}

@@ -3,14 +3,23 @@ package secret
 import (
 	"context"
 	"errors"
+	"runtime"
 )
 
 type Backend string
 
 const (
 	BackendSecretService Backend = "secret-service"
+	BackendKeychain      Backend = "keychain"
 	BackendMemory        Backend = "memory"
 )
+
+func SystemBackend() Backend {
+	if runtime.GOOS == "darwin" {
+		return BackendKeychain
+	}
+	return BackendSecretService
+}
 
 type State string
 
@@ -28,7 +37,7 @@ type Status struct {
 }
 
 func (s Status) Persistent() bool {
-	return s.Backend == BackendSecretService && s.State == StateAvailable
+	return s.Backend == SystemBackend() && s.State == StateAvailable
 }
 
 var (

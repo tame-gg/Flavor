@@ -231,3 +231,7 @@ func (s *Service) isShuttingDown() bool {
 	defer s.mu.Unlock()
 	return s.shuttingDown
 }
+
+func unmapPort(ap netip.AddrPort) netip.AddrPort {
+	return netip.AddrPortFrom(ap.Addr().Unmap(), ap.Port())
+}

@@ -66,7 +66,7 @@ func TestSecretServiceViaFake(t *testing.T) {
 	fk := newFakeKeyring()
 	store := secret.NewSecretServiceForTest("dev.lunarlabs.flavor", fk)
 	st := store.Status(ctx)
-	if st.Backend != secret.BackendSecretService || st.State != secret.StateAvailable {
+	if st.Backend != secret.SystemBackend() || st.State != secret.StateAvailable {
 		t.Fatalf("status=%+v", st)
 	}
 	if !st.Persistent() {

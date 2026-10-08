@@ -6,11 +6,9 @@ import (
 	"log/slog"
 	"net"
 	"net/netip"
-	"os"
 
 	"git.lunarlabs.dev/flavor/flavor/internal/dataplane"
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
-	"git.lunarlabs.dev/flavor/flavor/internal/netd"
 	"git.lunarlabs.dev/flavor/flavor/internal/service"
 	"git.lunarlabs.dev/flavor/flavor/internal/session"
 	"git.lunarlabs.dev/flavor/flavor/internal/store"
@@ -57,26 +55,7 @@ func startSynthetic(ctx context.Context, opts Options, db *store.DB, svc *servic
 	if opts.SyntheticHelper == "" {
 		return func() {}, nil
 	}
-	done := make(chan struct{})
-	go func() {
-		defer close(done)
-		netd.Supervisor{
-			Socket: opts.SyntheticHelper,
-			V6:     alloc.ULA(),
-			V4:     alloc.Pool(),
-			MTU:    dataplane.MTU,
-			Log:    log,
-			Warn:   svc.Warn,
-			Attach: func(ctx context.Context, tun *os.File) (<-chan struct{}, func(), error) {
-				plane, err := dataplane.Start(ctx, tun, alloc, engine, dial, log)
-				if err != nil {
-					return nil, nil, err
-				}
-				return plane.Done(), plane.Close, nil
-			},
-		}.Run(ctx)
-	}()
-	return func() { <-done }, nil
+	return superviseHelper(ctx, opts.SyntheticHelper, alloc, engine, dial, svc, log)
 }
 
 func serveExperimentalDNS(ctx context.Context, listen string, engine *syndns.Engine) (net.Addr, error) {

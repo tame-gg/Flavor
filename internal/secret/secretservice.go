@@ -68,20 +68,20 @@ func (s *secretServiceStore) Delete(ctx context.Context, ref Ref) error {
 
 func (s *secretServiceStore) Status(ctx context.Context) Status {
 	if err := ctx.Err(); err != nil {
-		return Status{Backend: BackendSecretService, State: StateUnavailable, Detail: err.Error()}
+		return Status{Backend: SystemBackend(), State: StateUnavailable, Detail: err.Error()}
 	}
 	probeRef := "flavor/status-probe"
 	_, err := s.api.Get(s.service, probeRef)
 	if err == nil {
-		return Status{Backend: BackendSecretService, State: StateAvailable}
+		return Status{Backend: SystemBackend(), State: StateAvailable}
 	}
 	mapped := mapKeyringErr(err)
 	switch {
 	case errors.Is(mapped, ErrNotFound):
-		return Status{Backend: BackendSecretService, State: StateAvailable}
+		return Status{Backend: SystemBackend(), State: StateAvailable}
 	case errors.Is(mapped, ErrLocked):
-		return Status{Backend: BackendSecretService, State: StateLocked, Detail: "keyring reported locked/unlock required"}
+		return Status{Backend: SystemBackend(), State: StateLocked, Detail: "keyring reported locked/unlock required"}
 	default:
-		return Status{Backend: BackendSecretService, State: StateUnavailable, Detail: "secret service unreachable or unusable"}
+		return Status{Backend: SystemBackend(), State: StateUnavailable, Detail: "secret service unreachable or unusable"}
 	}
 }

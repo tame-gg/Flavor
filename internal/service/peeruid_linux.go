@@ -51,10 +51,6 @@ func findOwner(r io.Reader, local, remote netip.AddrPort) (int, bool) {
 	return 0, false
 }
 
-func unmapPort(ap netip.AddrPort) netip.AddrPort {
-	return netip.AddrPortFrom(ap.Addr().Unmap(), ap.Port())
-}
-
 func parseProcAddr(s string) (netip.AddrPort, bool) {
 	hostHex, portHex, ok := strings.Cut(s, ":")
 	if !ok {

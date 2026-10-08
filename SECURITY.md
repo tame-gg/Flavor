@@ -29,4 +29,4 @@ Out of scope: vulnerabilities in Tailscale, Headscale or other dependencies them
 
 ## Security model
 
-[doc/security.md](doc/security.md) describes what each component may do, how local access is controlled, how credentials are handled and what Flavor does not protect against. To check that a download is genuine, see [Verify the download](doc/install.md#verify-the-download).
+The [security model](https://github.com/tame-gg/Flavor/wiki/Security-Model) in the wiki describes what each component may do, how local access is controlled, how credentials are handled and what Flavor does not protect against. To check that a download is genuine, see [Verify the download](https://github.com/tame-gg/Flavor/wiki/Install#verify-the-download).

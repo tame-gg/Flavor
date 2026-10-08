@@ -67,7 +67,7 @@ reviews:
       instructions: "API changes must be backward compatible within protocol major version 1, and the generated code in gen/ and crates/flavor-proto must be regenerated in the same PR."
     - path: ".github/workflows/**"
       instructions: "Check for least-privilege permissions, pinned actions where practical, and that release signing, attestation and SBOM steps are not weakened."
-    - path: "{README.md,doc/**,CONTRIBUTING.md,SECURITY.md}"
+    - path: "{README.md,CONTRIBUTING.md,SECURITY.md}"
       instructions: |
         Documentation must match the code. Flag claims about commands, flags, paths, defaults, privileges or security properties that the code does not support, and any claim that Flavor is the first or only tool of its kind.
   pre_merge_checks:

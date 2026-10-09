@@ -2,6 +2,21 @@
 
 All notable changes to Flavor are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0-beta.5] - 2026-10-08
+
+### Added
+
+- The daemon log records connect and disconnect requests per network, forward and SOCKS5 listeners starting and stopping with their network and target, refused connections with the reason, including connections from another local user and failed upstream dials, and, at debug level, each connection opening and closing ([#20](https://github.com/tame-gg/Flavor/issues/20)).
+- A [Homebrew tap](https://github.com/tame-gg/homebrew-tap) for macOS: `brew install tame-gg/tap/flavor` for the daemon and CLI, and `brew install --cask tame-gg/tap/flavor-desktop` for the app.
+
+### Changed
+
+- A Headscale control server address without a scheme, such as `vpn.example.com`, now means `https://vpn.example.com` instead of failing with `INVALID_CONTROL_URL`. `http://` is never assumed ([#18](https://github.com/tame-gg/Flavor/issues/18)).
+
+### Fixed
+
+- tsnet lines in the debug log show their values again instead of raw format strings. Sign-in links, auth keys and other key material are replaced with `[REDACTED]` ([#19](https://github.com/tame-gg/Flavor/issues/19)).
+
 ## [0.1.0-beta.4] - 2026-10-08
 
 ### Added
@@ -63,6 +78,7 @@ First public beta, released as Lattice.
 - Experimental system-wide names through the optional `flavor-netd` helper, confined by systemd sandboxing, polkit, AppArmor and SELinux.
 - Release tarballs for x86_64 and arm64 with an installer and uninstaller, SBOMs, and `SHA256SUMS` signed with Sigstore and GPG, plus GitHub build-provenance attestations.
 
+[0.1.0-beta.5]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.4...v0.1.0-beta.5
 [0.1.0-beta.4]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.3...v0.1.0-beta.4
 [0.1.0-beta.3]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.2...v0.1.0-beta.3
 [0.1.0-beta.2]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.1...v0.1.0-beta.2

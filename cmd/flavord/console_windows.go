@@ -12,16 +12,23 @@ const attachParentProcess = ^uintptr(0)
 var attachConsole = windows.NewLazySystemDLL("kernel32.dll").NewProc("AttachConsole")
 
 func prepareConsole() bool {
-	if h, _ := windows.GetStdHandle(windows.STD_ERROR_HANDLE); h != 0 && h != windows.InvalidHandle {
+	if usable(windows.STD_OUTPUT_HANDLE) && usable(windows.STD_ERROR_HANDLE) {
 		return true
 	}
 	if r, _, _ := attachConsole.Call(attachParentProcess); r == 0 {
 		return false
 	}
-	if f, err := os.OpenFile("CONOUT$", os.O_WRONLY, 0); err == nil {
-		os.Stdout, os.Stderr = f, f
+	f, err := os.OpenFile("CONOUT$", os.O_WRONLY, 0)
+	if err != nil {
+		return false
 	}
+	os.Stdout, os.Stderr = f, f
 	return true
+}
+
+func usable(std uint32) bool {
+	h, _ := windows.GetStdHandle(std)
+	return h != 0 && h != windows.InvalidHandle
 }
 
 func defaultLogFile() string {

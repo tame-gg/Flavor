@@ -22,10 +22,6 @@ import (
 
 func main() {
 	console := prepareConsole()
-	if err := session.PrepareProcessEnv(); err != nil {
-		fmt.Fprintf(os.Stderr, "flavord: prepare environment: %v\n", err)
-		os.Exit(1)
-	}
 	runtimeDir := flag.String("runtime-dir", "", "runtime directory parent (defaults to $XDG_RUNTIME_DIR)")
 	secretStore := flag.String("secret-store", "auto", "secret store backend: auto or memory")
 	logLevel := flag.String("log-level", "info", "log level: debug, info, warn or error")
@@ -63,6 +59,10 @@ func main() {
 		os.Exit(1)
 	}
 	log := logging.New(out, level)
+	if err := session.PrepareProcessEnv(); err != nil {
+		log.Error("prepare environment failed", "err", err.Error())
+		os.Exit(1)
+	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -84,5 +84,13 @@ func logOutput(path string) (io.Writer, error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return nil, err
 	}
-	return os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
+	if err != nil {
+		return nil, err
+	}
+	if err := f.Chmod(0o600); err != nil {
+		_ = f.Close()
+		return nil, err
+	}
+	return f, nil
 }

@@ -6,7 +6,7 @@ All notable changes to Flavor are listed here. The format follows [Keep a Change
 
 ### Added
 
-- The daemon log records connect and disconnect requests per network, forward and SOCKS5 listeners starting and stopping with their network and target, refused connections with the reason, including connections from another local user and failed upstream dials, and, at debug level, each connection opening and closing ([#20](https://github.com/tame-gg/Flavor/issues/20)).
+- The daemon log records connect and disconnect requests per network, forward listeners starting and stopping with their network and target, SOCKS5 listeners starting and stopping, refused connections with the reason, including connections from another local user and failed upstream dials, and, at debug level, each connection opening and closing ([#20](https://github.com/tame-gg/Flavor/issues/20)).
 - A [Homebrew tap](https://github.com/tame-gg/homebrew-tap) for macOS: `brew install tame-gg/tap/flavor` for the daemon and CLI, and `brew install --cask tame-gg/tap/flavor-desktop` for the app.
 
 ### Changed

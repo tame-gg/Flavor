@@ -10,16 +10,18 @@ for ($i = 0; $i -lt 30 -and -not (Get-Process flavord -ErrorAction SilentlyConti
 if (-not (Get-Process flavord -ErrorAction SilentlyContinue)) { throw "installer did not start flavord" }
 
 & $ctl --version
+if ($LASTEXITCODE -ne 0) { throw "flavorctl --version failed" }
 for ($i = 0; $i -lt 30; $i++) { & $ctl info; if ($LASTEXITCODE -eq 0) { break }; Start-Sleep 1 }
 if ($LASTEXITCODE -ne 0) { throw "flavorctl info failed" }
 $diag = & $ctl diag | Out-String
 $diag
+if ($LASTEXITCODE -ne 0) { throw "flavorctl diag failed" }
 if ($diag -notmatch "wincred") { throw "diag does not report the Windows Credential Manager" }
 if (-not (Test-Path (Join-Path $dir "flavord.log"))) { throw "flavord did not write its log file" }
 
 Start-Process $setup.FullName -ArgumentList "/S" -Wait
 for ($i = 0; $i -lt 30 -and -not (Get-Process flavord -ErrorAction SilentlyContinue); $i++) { Start-Sleep 1 }
-& $ctl info
+for ($i = 0; $i -lt 30; $i++) { & $ctl info; if ($LASTEXITCODE -eq 0) { break }; Start-Sleep 1 }
 if ($LASTEXITCODE -ne 0) { throw "flavord did not come back after reinstalling" }
 
 Start-Process (Join-Path $dir "uninstall.exe") -ArgumentList "/S" -Wait

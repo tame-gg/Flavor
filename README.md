@@ -153,7 +153,15 @@ systemctl --user enable --now flavord
 
 The packages verify the release's GPG signature, so import the key first if your helper asks for it: `curl -fsSL https://github.com/ohemilyy.gpg | gpg --import` ([details](https://github.com/tame-gg/Flavor/wiki/Install#arch-linux)).
 
-**macOS,** on Intel and Apple Silicon: download the `darwin-arm64` or `darwin-amd64` tarball from the [release](https://github.com/tame-gg/Flavor/releases), then install `flavord`, `flavorctl`, `Flavor.app` and the LaunchAgent into your home directory without `sudo`. The builds are not notarized yet, so a browser download needs one extra step to open. Both are covered in [macOS](https://github.com/tame-gg/Flavor/wiki/macOS).
+**macOS,** on Intel and Apple Silicon, with [Homebrew](https://github.com/tame-gg/homebrew-tap):
+
+```bash
+brew install tame-gg/tap/flavor
+brew services start flavor
+brew install --cask tame-gg/tap/flavor-desktop
+```
+
+The app is not notarized yet, so macOS blocks its first launch until you click **Open Anyway** in **System Settings › Privacy & Security**. Without Homebrew, install the `darwin-arm64` or `darwin-amd64` tarball from the [release](https://github.com/tame-gg/Flavor/releases) into your home directory. Both are covered in [macOS](https://github.com/tame-gg/Flavor/wiki/macOS).
 
 **From source:** [build Flavor yourself](https://github.com/tame-gg/Flavor/wiki/Install#from-source), optionally into your home directory without root.
 
@@ -256,7 +264,7 @@ Flavor embeds version 1.90.9 of Tailscale's client library. Headscale supports a
 
 ## Roadmap
 
-**Available in v0.1.0-beta.4:** several Tailscale and Headscale networks at once, the device list, Connection Inspector, Conflict Center, Flavor names, destination preferences, workspaces, port forwarding, the SOCKS5 proxy, diagnostics, `flavorctl`, signed, reproducible and hardened (PIE, full RELRO) releases, macOS builds for Intel and Apple Silicon, and the [`flavor`](https://aur.archlinux.org/packages/flavor) and [`flavor-bin`](https://aur.archlinux.org/packages/flavor-bin) AUR packages.
+**Available in v0.1.0-beta.4:** several Tailscale and Headscale networks at once, the device list, Connection Inspector, Conflict Center, Flavor names, destination preferences, workspaces, port forwarding, the SOCKS5 proxy, diagnostics, `flavorctl`, signed, reproducible and hardened (PIE, full RELRO) releases, macOS builds for Intel and Apple Silicon, a [Homebrew tap](https://github.com/tame-gg/homebrew-tap), and the [`flavor`](https://aur.archlinux.org/packages/flavor) and [`flavor-bin`](https://aur.archlinux.org/packages/flavor-bin) AUR packages.
 
 **Experimental:** [system-wide names](https://github.com/tame-gg/Flavor/wiki/System-Wide-Names) through the `flavor-netd` helper.
 
@@ -264,7 +272,7 @@ Flavor embeds version 1.90.9 of Tailscale's client library. Headscale supports a
 
 - System-wide names on multi-user machines
 - Exit nodes, subnet route controls and an HTTP proxy
-- A Homebrew package, and signed and notarized macOS builds ([#15](https://github.com/tame-gg/Flavor/issues/15))
+- Signed and notarized macOS builds ([#15](https://github.com/tame-gg/Flavor/issues/15))
 - Windows
 - Removing machines from the control server
 

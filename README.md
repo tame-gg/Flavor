@@ -4,11 +4,11 @@
 
 # Flavor
 
-**Several Tailscale and Headscale networks, connected side by side on one Linux desktop.**
+**Several Tailscale and Headscale networks, connected side by side on one Linux or macOS desktop.**
 
-Flavor is an open-source desktop app, CLI and per-user daemon for Linux. It keeps multiple tailnets connected at the same time, shows every device with the network it belongs to, and tells you where a connection will go when two networks use the same address.
+Flavor is an open-source desktop app, CLI and per-user daemon for Linux and macOS. It keeps multiple tailnets connected at the same time, shows every device with the network it belongs to, and tells you where a connection will go when two networks use the same address.
 
-[![Release](https://img.shields.io/github/v/release/tame-gg/Flavor?include_prereleases&style=flat-square&label=release&labelColor=0F1419&color=6BA3C7)](https://github.com/tame-gg/Flavor/releases) [![AUR](https://img.shields.io/aur/version/flavor-bin?style=flat-square&label=aur&logo=archlinux&logoColor=white&labelColor=0F1419&color=6BA3C7)](https://aur.archlinux.org/packages/flavor-bin) [![CI](https://img.shields.io/github/actions/workflow/status/tame-gg/Flavor/ci.yml?branch=main&style=flat-square&label=ci&labelColor=0F1419)](https://github.com/tame-gg/Flavor/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-6BA3C7?style=flat-square&labelColor=0F1419)](LICENSE) [![Platform: Linux](https://img.shields.io/badge/platform-Linux-6BA3C7?style=flat-square&labelColor=0F1419)](#platform-support)
+[![Release](https://img.shields.io/github/v/release/tame-gg/Flavor?include_prereleases&style=flat-square&label=release&labelColor=0F1419&color=6BA3C7)](https://github.com/tame-gg/Flavor/releases) [![AUR](https://img.shields.io/aur/version/flavor-bin?style=flat-square&label=aur&logo=archlinux&logoColor=white&labelColor=0F1419&color=6BA3C7)](https://aur.archlinux.org/packages/flavor-bin) [![CI](https://img.shields.io/github/actions/workflow/status/tame-gg/Flavor/ci.yml?branch=main&style=flat-square&label=ci&labelColor=0F1419)](https://github.com/tame-gg/Flavor/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-6BA3C7?style=flat-square&labelColor=0F1419)](LICENSE) [![Platform: Linux | macOS](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-6BA3C7?style=flat-square&labelColor=0F1419)](#platform-support)
 
 **[Install](#install)** · **[Quick start](#quick-start)** · **[Documentation](https://github.com/tame-gg/Flavor/wiki)** · **[Releases](https://github.com/tame-gg/Flavor/releases)**
 
@@ -20,7 +20,7 @@ Flavor is an open-source desktop app, CLI and per-user daemon for Linux. It keep
 </picture>
 
 > [!NOTE]
-> Flavor is in beta. Version 0.1.0-beta.3 runs on Linux (x86_64 and arm64). The project was called Lattice until 0.1.0-beta.2; upgrading keeps your networks and device identities ([details](https://github.com/tame-gg/Flavor/wiki/Install#upgrading-from-lattice)).
+> Flavor is in beta. Version 0.1.0-beta.4 runs on Linux and macOS (x86_64 and arm64). The project was called Lattice until 0.1.0-beta.2; upgrading keeps your networks and device identities ([details](https://github.com/tame-gg/Flavor/wiki/Install#upgrading-from-lattice)).
 
 ## Why Flavor?
 
@@ -126,7 +126,7 @@ Flavor runs on Linux (x86_64 and arm64) with systemd. The desktop app needs glib
 **Release tarball,** for recent systemd-based distributions. Download and verify it first:
 
 ```bash
-v=0.1.0-beta.3
+v=0.1.0-beta.4
 base=https://github.com/tame-gg/Flavor/releases/download/v$v
 curl -fLO $base/flavor-$v-linux-amd64.tar.gz -fLO $base/SHA256SUMS -fLO $base/SHA256SUMS.asc
 sha256sum --check --ignore-missing SHA256SUMS
@@ -152,6 +152,8 @@ systemctl --user enable --now flavord
 ```
 
 The packages verify the release's GPG signature, so import the key first if your helper asks for it: `curl -fsSL https://github.com/ohemilyy.gpg | gpg --import` ([details](https://github.com/tame-gg/Flavor/wiki/Install#arch-linux)).
+
+**macOS,** on Intel and Apple Silicon: download the `darwin-arm64` or `darwin-amd64` tarball from the [release](https://github.com/tame-gg/Flavor/releases), then install `flavord`, `flavorctl`, `Flavor.app` and the LaunchAgent into your home directory without `sudo`. The builds are not notarized yet, so a browser download needs one extra step to open. Both are covered in [macOS](https://github.com/tame-gg/Flavor/wiki/macOS).
 
 **From source:** [build Flavor yourself](https://github.com/tame-gg/Flavor/wiki/Install#from-source), optionally into your home directory without root.
 
@@ -243,17 +245,18 @@ Flavor has not had an independent security audit. Read the [security model](http
 | | Status |
 | --- | --- |
 | Linux on x86_64 and arm64, with systemd | Supported (beta) |
+| macOS on Intel and Apple Silicon | Supported (beta); builds are not signed with an Apple Developer ID yet |
 | Desktop app | Needs glibc 2.39 or newer, for example Ubuntu 24.04, Debian 13, Fedora 40 or newer, or Arch Linux |
 | Headscale | Tested with Headscale 0.26.1 |
 | Tailscale's hosted service | Implemented; live acceptance testing is still pending |
-| System-wide names | Experimental; needs systemd-resolved; single-user machines only |
-| macOS, Windows | Not supported |
+| System-wide names | Experimental; Linux only; needs systemd-resolved; single-user machines only |
+| Windows | Not supported |
 
 Flavor embeds version 1.90.9 of Tailscale's client library. Headscale supports a window of recent Tailscale client versions, so a much newer Headscale release may eventually need a newer Flavor. Flavor does not use or replace the official Tailscale client; running both at the same time has not been tested. The [tested environments](https://github.com/tame-gg/Flavor/wiki/Install#tested-environments) are listed in the install guide.
 
 ## Roadmap
 
-**Available in v0.1.0-beta.3:** several Tailscale and Headscale networks at once, the device list, Connection Inspector, Conflict Center, Flavor names, destination preferences, workspaces, port forwarding, the SOCKS5 proxy, diagnostics, `flavorctl`, signed, reproducible and hardened (PIE, full RELRO) releases, and the [`flavor`](https://aur.archlinux.org/packages/flavor) and [`flavor-bin`](https://aur.archlinux.org/packages/flavor-bin) AUR packages.
+**Available in v0.1.0-beta.4:** several Tailscale and Headscale networks at once, the device list, Connection Inspector, Conflict Center, Flavor names, destination preferences, workspaces, port forwarding, the SOCKS5 proxy, diagnostics, `flavorctl`, signed, reproducible and hardened (PIE, full RELRO) releases, macOS builds for Intel and Apple Silicon, and the [`flavor`](https://aur.archlinux.org/packages/flavor) and [`flavor-bin`](https://aur.archlinux.org/packages/flavor-bin) AUR packages.
 
 **Experimental:** [system-wide names](https://github.com/tame-gg/Flavor/wiki/System-Wide-Names) through the `flavor-netd` helper.
 
@@ -261,7 +264,8 @@ Flavor embeds version 1.90.9 of Tailscale's client library. Headscale supports a
 
 - System-wide names on multi-user machines
 - Exit nodes, subnet route controls and an HTTP proxy
-- macOS ([#15](https://github.com/tame-gg/Flavor/issues/15), followed by a Homebrew package) and Windows
+- A Homebrew package, and signed and notarized macOS builds ([#15](https://github.com/tame-gg/Flavor/issues/15))
+- Windows
 - Removing machines from the control server
 
 ## Documentation

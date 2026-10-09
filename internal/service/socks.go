@@ -42,6 +42,8 @@ func (s *Service) Proxy(ctx context.Context, req ProxyRequest, emit func(Forward
 		return fail(CodeBusy, "too many active forwards and proxies", true)
 	}
 	defer s.forwardSlot.Release()
+	emit, stopped := logForward(s.cfg.Log.With("proxy", "socks5"), emit)
+	defer stopped()
 	return s.serveLoopback(ctx, listen,
 		func(bound netip.AddrPort) { emit(ForwardEvent{Kind: ForwardStarted, Listen: bound}) },
 		func(ctx context.Context, c net.Conn, id uint64) { s.serveSocks(ctx, c, id, emit) },

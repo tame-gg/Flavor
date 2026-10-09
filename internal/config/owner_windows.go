@@ -23,10 +23,10 @@ func checkOwner(path string, _ os.FileInfo) error {
 	if err != nil {
 		return err
 	}
-	if !owner.Equals(self) {
-		return fmt.Errorf("unexpected owner %s", owner)
+	if owner.Equals(self) || owner.IsWellKnown(windows.WinBuiltinAdministratorsSid) || owner.IsWellKnown(windows.WinLocalSystemSid) {
+		return nil
 	}
-	return nil
+	return fmt.Errorf("unexpected owner %s", owner)
 }
 
 func socketPath(runtime string) string {

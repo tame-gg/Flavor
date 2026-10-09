@@ -99,3 +99,34 @@ func TestTsnetLogAdapterDropsAuthURL(t *testing.T) {
 		t.Fatalf("expected adapter to log with session attrs: %s", out)
 	}
 }
+
+func TestTsnetLogAdapterFormatsAndRedacts(t *testing.T) {
+	var buf bytes.Buffer
+	logf := tsnetUserLogf(logging.New(&buf, slog.LevelDebug))
+	secrets := []string{
+		"https://hs.example.com/register/FLAVOR_CANARY_REG_1a2b",
+		"tskey-auth-kFLAVORCANARY-0123456789abcdef",
+		"hskey-auth-FLAVOR_CANARY_hs_3c4d",
+		"0123456789abcdef0123456789abcdef0123456789abcdef",
+		"privkey:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+		"nlpriv:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+		"FLAVORCANARYBASE64TOKENaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+	}
+	for _, s := range secrets {
+		logf("To start this tsnet server, restart with TS_AUTHKEY set, or go to: %s", s)
+		logf("value %v here", s)
+	}
+	logf("tsnet starting with hostname %q, varRoot %q", "mac-test", "/tmp/flavor/networks/01M4ENPT42GAJC1W1ATBD995YP")
+	logf("AuthLoop: state is %v; done", "Running")
+	out := buf.String()
+	for _, s := range secrets {
+		if strings.Contains(out, s) || strings.Contains(out, "CANARY") {
+			t.Fatalf("secret %q leaked: %s", s, out)
+		}
+	}
+	for _, want := range []string{`\"mac-test\"`, "01M4ENPT42GAJC1W1ATBD995YP", "state is Running; done", logging.Redacted} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("missing %q in %s", want, out)
+		}
+	}
+}

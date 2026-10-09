@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"regexp"
 
+	"git.lunarlabs.dev/flavor/flavor/internal/logging"
 	"git.lunarlabs.dev/flavor/flavor/internal/provider"
 	"tailscale.com/client/local"
 	"tailscale.com/ipn"
@@ -39,9 +41,11 @@ func newTsnetEngine(cfg provider.ResolvedSessionConfig, authKey string, log *slo
 	return &tsnetEngine{srv: srv}, nil
 }
 
+var tsnetSecrets = regexp.MustCompile(`(?i)[a-z][a-z0-9+.-]*://\S+|\b(?:tskey|hskey)-\S+|\b(?:[a-z]+key|nlpriv|nlpub|chalpriv):[0-9a-f]+|\b[0-9a-f]{32,}\b|[a-z0-9_-]{40,}`)
+
 func tsnetUserLogf(log *slog.Logger) logger.Logf {
-	return func(format string, _ ...any) {
-		log.Debug("tsnet", "format", format)
+	return func(format string, args ...any) {
+		log.Debug("tsnet", "line", tsnetSecrets.ReplaceAllString(fmt.Sprintf(format, args...), logging.Redacted))
 	}
 }
 

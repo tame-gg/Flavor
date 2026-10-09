@@ -7,7 +7,7 @@ $ctl = Join-Path $dir "flavorctl.exe"
 
 function Invoke-Setup($exe) {
     $p = Start-Process $exe -ArgumentList "/S" -PassThru
-    $p.WaitForExit()
+    if (-not $p.WaitForExit(300000)) { $p.Kill(); throw "$exe did not finish within 5 minutes" }
     if ($p.ExitCode -ne 0) { throw "$exe exited with $($p.ExitCode)" }
 }
 

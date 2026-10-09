@@ -26,6 +26,7 @@ func setup(t *testing.T) (string, *store.DB, *clock, []domain.NetworkID) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() { db.Close() })
 	var ids []domain.NetworkID
 	for _, name := range []string{"LunarLabs", "Home"} {
 		now := time.Now().UTC()

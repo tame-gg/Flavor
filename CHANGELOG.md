@@ -2,7 +2,7 @@
 
 All notable changes to Flavor are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0-beta.5] - 2026-10-08
+## [0.1.0-beta.5] - 2026-10-09
 
 ### Added
 

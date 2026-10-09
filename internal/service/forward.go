@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log/slog"
 	"net"
 	"net/netip"
 	"os"
@@ -77,12 +78,44 @@ func (s *Service) Forward(ctx context.Context, req ForwardRequest, emit func(For
 		return fail(CodeBusy, "too many active forwards and proxies", true)
 	}
 	defer s.forwardSlot.Release()
+	emit, stopped := logForward(s.cfg.Log.With("forward", req.Destination), emit)
+	defer stopped()
 	return s.serveLoopback(ctx, listen,
 		func(bound netip.AddrPort) { emit(ForwardEvent{Kind: ForwardStarted, Listen: bound, Route: route}) },
 		func(ctx context.Context, c net.Conn, id uint64) { s.serveForward(ctx, req, c, id, emit) },
 		func(id uint64, client string, err error) {
 			emit(ForwardEvent{Kind: ForwardRefused, ConnID: id, Client: client, Err: err})
 		})
+}
+
+func logForward(log *slog.Logger, emit func(ForwardEvent)) (func(ForwardEvent), func()) {
+	var started []any
+	return func(e ForwardEvent) {
+			var route []any
+			if e.Destination != "" {
+				route = append(route, "destination", e.Destination)
+			}
+			if e.Route.Network.ID != "" {
+				route = append(route, "network_id", e.Route.Network.ID, "target", e.Route.Target)
+			}
+			conn := append([]any{"conn", e.ConnID, "client", e.Client}, route...)
+			switch e.Kind {
+			case ForwardStarted:
+				started = append([]any{"listen", e.Listen}, route...)
+				log.Info("listener started", started...)
+			case ForwardRefused:
+				log.Warn("connection refused", append(conn, "err", e.Err)...)
+			case ForwardOpened:
+				log.Debug("connection opened", conn...)
+			case ForwardClosed:
+				log.Debug("connection closed", append(conn, "sent", e.BytesSent, "received", e.BytesReceived)...)
+			}
+			emit(e)
+		}, func() {
+			if started != nil {
+				log.Info("listener stopped", started...)
+			}
+		}
 }
 
 func (s *Service) serveLoopback(

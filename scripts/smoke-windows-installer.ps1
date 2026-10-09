@@ -26,6 +26,7 @@ if ($LASTEXITCODE -ne 0) { throw "flavord did not come back after reinstalling" 
 
 Start-Process (Join-Path $dir "uninstall.exe") -ArgumentList "/S" -Wait
 for ($i = 0; $i -lt 60 -and (Test-Path $ctl); $i++) { Start-Sleep 1 }
+if (Test-Path $ctl) { throw "uninstall left flavorctl.exe behind" }
 if ((Get-ItemProperty $runKey -ErrorAction SilentlyContinue)."Flavor daemon") { throw "uninstall left the Run entry" }
 if (Get-Process flavord -ErrorAction SilentlyContinue) { throw "uninstall left flavord running" }
 if (-not (Test-Path (Join-Path $dir "database"))) { throw "uninstall removed the network database" }

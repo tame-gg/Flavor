@@ -170,6 +170,7 @@ func (s *Service) begin(ctx context.Context, rawID string, enrollment *session.E
 	if err != nil {
 		return err
 	}
+	s.cfg.Log.Info("connect requested", "network_id", id, "enroll", enrollment != nil)
 	release, err := s.acquire(id, opConnect)
 	if err != nil {
 		return err
@@ -179,7 +180,6 @@ func (s *Service) begin(ctx context.Context, rawID string, enrollment *session.E
 	if err != nil {
 		return s.storeErr(err)
 	}
-	s.cfg.Log.Info("connect requested", "network_id", id, "enroll", enrollment != nil)
 	sess, err := s.session(n)
 	if err != nil {
 		return err
@@ -238,6 +238,7 @@ func (s *Service) DisconnectNetwork(ctx context.Context, rawID string) error {
 	if err != nil {
 		return err
 	}
+	s.cfg.Log.Info("disconnect requested", "network_id", id)
 	release, err := s.acquire(id, opDisconnect)
 	if err != nil {
 		return err
@@ -246,7 +247,6 @@ func (s *Service) DisconnectNetwork(ctx context.Context, rawID string) error {
 	if _, err := s.cfg.Store.Networks().Get(ctx, id); err != nil {
 		return s.storeErr(err)
 	}
-	s.cfg.Log.Info("disconnect requested", "network_id", id)
 	sess, ok := s.cfg.Sessions.Get(id)
 	if !ok {
 		return nil

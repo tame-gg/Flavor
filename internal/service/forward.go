@@ -89,7 +89,7 @@ func (s *Service) Forward(ctx context.Context, req ForwardRequest, emit func(For
 }
 
 func logForward(log *slog.Logger, emit func(ForwardEvent)) (func(ForwardEvent), func()) {
-	var listen netip.AddrPort
+	var started []any
 	return func(e ForwardEvent) {
 			var route []any
 			if e.Destination != "" {
@@ -101,8 +101,8 @@ func logForward(log *slog.Logger, emit func(ForwardEvent)) (func(ForwardEvent), 
 			conn := append([]any{"conn", e.ConnID, "client", e.Client}, route...)
 			switch e.Kind {
 			case ForwardStarted:
-				listen = e.Listen
-				log.Info("listener started", append([]any{"listen", e.Listen}, route...)...)
+				started = append([]any{"listen", e.Listen}, route...)
+				log.Info("listener started", started...)
 			case ForwardRefused:
 				log.Warn("connection refused", append(conn, "err", e.Err)...)
 			case ForwardOpened:
@@ -112,8 +112,8 @@ func logForward(log *slog.Logger, emit func(ForwardEvent)) (func(ForwardEvent), 
 			}
 			emit(e)
 		}, func() {
-			if listen.IsValid() {
-				log.Info("listener stopped", "listen", listen)
+			if started != nil {
+				log.Info("listener stopped", started...)
 			}
 		}
 }

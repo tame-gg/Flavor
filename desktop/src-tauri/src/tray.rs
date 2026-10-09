@@ -3,6 +3,11 @@ use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::TrayIconBuilder;
 use tauri::{App, AppHandle, Manager, State, Wry};
 
+#[cfg(windows)]
+const TRAY_ICON: &[u8] = include_bytes!("../icons/32x32.png");
+#[cfg(not(windows))]
+const TRAY_ICON: &[u8] = include_bytes!("../icons/tray.png");
+
 pub struct Status(MenuItem<Wry>);
 
 pub fn install(app: &App) -> tauri::Result<()> {
@@ -14,7 +19,7 @@ pub fn install(app: &App) -> tauri::Result<()> {
         &[&show, &PredefinedMenuItem::separator(app)?, &status, &PredefinedMenuItem::separator(app)?, &quit],
     )?;
     TrayIconBuilder::with_id("main")
-        .icon(Image::from_bytes(include_bytes!("../icons/tray.png"))?)
+        .icon(Image::from_bytes(TRAY_ICON)?)
         .icon_as_template(true)
         .tooltip("Flavor")
         .menu(&menu)

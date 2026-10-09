@@ -3,6 +3,8 @@ package config_test
 import (
 	"os"
 	"path/filepath"
+	goruntime "runtime"
+	"strings"
 	"testing"
 
 	"git.lunarlabs.dev/flavor/flavor/internal/config"
@@ -36,7 +38,15 @@ func TestResolveXDGDefaults(t *testing.T) {
 	if p.Database != filepath.Join(p.Data, "database", "flavor.db") {
 		t.Fatalf("db=%s", p.Database)
 	}
-	if p.Socket != filepath.Join(p.Runtime, "flavord.sock") {
+	if goruntime.GOOS == "windows" {
+		if !strings.HasPrefix(p.Socket, `\\.\pipe\flavor-`) {
+			t.Fatalf("sock=%s", p.Socket)
+		}
+		other, err := config.Resolve(config.Env{Home: home, RuntimeDir: t.TempDir()})
+		if err != nil || other.Socket == p.Socket {
+			t.Fatalf("different runtime dirs must get different pipes: %s %v", other.Socket, err)
+		}
+	} else if p.Socket != filepath.Join(p.Runtime, "flavord.sock") {
 		t.Fatalf("sock=%s", p.Socket)
 	}
 }
@@ -149,6 +159,9 @@ func TestEnsureFlavorDirsPermissions(t *testing.T) {
 	}
 	if err := p.EnsureFlavorDirs(); err != nil {
 		t.Fatal(err)
+	}
+	if goruntime.GOOS == "windows" {
+		t.Skip("windows uses ACLs, not mode bits")
 	}
 	for _, dir := range []string{p.Data, p.Config, p.Runtime, p.NetworksRoot, filepath.Dir(p.Database)} {
 		st, err := os.Stat(dir)

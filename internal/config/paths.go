@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"syscall"
 
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
 )
@@ -72,7 +71,7 @@ func Resolve(env Env) (Paths, error) {
 		Runtime:      filepath.Join(runtimeParent, "flavor"),
 		Database:     filepath.Join(dataHome, "flavor", "database", "flavor.db"),
 		NetworksRoot: filepath.Join(dataHome, "flavor", "networks"),
-		Socket:       filepath.Join(runtimeParent, "flavor", "flavord.sock"),
+		Socket:       socketPath(filepath.Join(runtimeParent, "flavor")),
 		Lock:         filepath.Join(runtimeParent, "flavor", "flavord.lock"),
 	}
 	return p, nil
@@ -94,6 +93,12 @@ func ResolveFromOS(runtimeOverride string) (Paths, error) {
 		env.DataHome = cmp.Or(env.DataHome, support)
 		env.ConfigHome = cmp.Or(env.ConfigHome, support)
 		env.RuntimeDir = cmp.Or(env.RuntimeDir, support)
+	}
+	if runtime.GOOS == "windows" {
+		local := os.Getenv("LOCALAPPDATA")
+		env.DataHome = cmp.Or(env.DataHome, local)
+		env.ConfigHome = cmp.Or(env.ConfigHome, local)
+		env.RuntimeDir = cmp.Or(env.RuntimeDir, local)
 	}
 	return Resolve(env)
 }
@@ -183,14 +188,7 @@ func assertOwnedDir(path string) error {
 	if !st.IsDir() {
 		return fmt.Errorf("not a directory: %s", path)
 	}
-	stat, ok := st.Sys().(*syscall.Stat_t)
-	if !ok {
-		return nil
-	}
-	if int(stat.Uid) != os.Getuid() {
-		return fmt.Errorf("unexpected owner uid=%d", stat.Uid)
-	}
-	return nil
+	return checkOwner(path, st)
 }
 
 func hasPrefixDir(path, rootWithSep string) bool {

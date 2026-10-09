@@ -56,6 +56,29 @@ jobs:
       - name: launchd plist
         run: plutil -lint packaging/launchd/*.plist
 
+  go-windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [windows-2025, windows-11-arm]
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      GOENV: ${{ github.workspace }}/go.env
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version-file: go.mod
+      - name: test
+        run: |
+          ./scripts/go.sh vet ./...
+          ./scripts/go.sh test ./...
+
   rust:
     strategy:
       fail-fast: false

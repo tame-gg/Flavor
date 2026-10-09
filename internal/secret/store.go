@@ -11,12 +11,16 @@ type Backend string
 const (
 	BackendSecretService Backend = "secret-service"
 	BackendKeychain      Backend = "keychain"
+	BackendWinCred       Backend = "wincred"
 	BackendMemory        Backend = "memory"
 )
 
 func SystemBackend() Backend {
-	if runtime.GOOS == "darwin" {
+	switch runtime.GOOS {
+	case "darwin":
 		return BackendKeychain
+	case "windows":
+		return BackendWinCred
 	}
 	return BackendSecretService
 }

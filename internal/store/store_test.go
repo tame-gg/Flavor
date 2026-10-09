@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -356,8 +357,8 @@ func TestPathResolverRejectsTraversal(t *testing.T) {
 }
 
 func TestHardDeleteFSFailureLeavesSweepableTombstone(t *testing.T) {
-	if os.Getuid() == 0 {
-		t.Skip("root ignores directory permissions")
+	if os.Getuid() == 0 || runtime.GOOS == "windows" {
+		t.Skip("needs unix directory permissions to make the delete fail")
 	}
 	ctx := context.Background()
 	db := openTestDB(t)

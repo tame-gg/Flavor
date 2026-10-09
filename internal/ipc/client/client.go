@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1/flavorv1connect"
+	"git.lunarlabs.dev/flavor/flavor/internal/ipc/transport"
 )
 
 const BaseURL = "http://flavord"
@@ -29,8 +30,7 @@ func HTTPClient(socket string) *http.Client {
 	return &http.Client{Transport: &http.Transport{
 		Protocols: &p,
 		DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
-			var d net.Dialer
-			return d.DialContext(ctx, "unix", socket)
+			return transport.Dial(ctx, socket)
 		},
 	}}
 }

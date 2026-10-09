@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"testing/fstest"
 )
@@ -59,7 +60,7 @@ func TestUpgradeBacksUpTheOldSchemaFirst(t *testing.T) {
 	defer second.Close()
 	backup := path + ".schema-1.bak"
 	st, err := os.Stat(backup)
-	if err != nil || st.Mode().Perm() != 0o600 {
+	if err != nil || (runtime.GOOS != "windows" && st.Mode().Perm() != 0o600) {
 		t.Fatalf("backup missing or not private: %v %v", st, err)
 	}
 	old, err := sql.Open("sqlite", "file:"+backup)

@@ -7,6 +7,7 @@ require (
 	github.com/godbus/dbus/v5 v5.1.1-0.20230522191255-76236955d466
 	github.com/jsimonetti/rtnetlink v1.4.0
 	github.com/oklog/ulid/v2 v2.1.0
+	github.com/tailscale/go-winio v0.0.0-20231025203758-c4f33415bf55
 	github.com/zalando/go-keyring v0.2.6
 	golang.org/x/net v0.40.0
 	golang.org/x/sys v0.33.0
@@ -44,7 +45,6 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/safchain/ethtool v0.3.0 // indirect
 	github.com/tailscale/certstore v0.1.1-0.20231202035212-d3fa0460f47e // indirect
-	github.com/tailscale/go-winio v0.0.0-20231025203758-c4f33415bf55 // indirect
 	github.com/tailscale/goupnp v1.0.1-0.20210804011211-c64d0f06ea05 // indirect
 	github.com/tailscale/hujson v0.0.0-20221223112325-20486734a56a // indirect
 	github.com/tailscale/peercred v0.0.0-20250107143737-35a0c7bd7edc // indirect

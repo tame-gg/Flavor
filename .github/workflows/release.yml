@@ -131,8 +131,51 @@ jobs:
           name: tarball-darwin-${{ matrix.arch }}
           path: dist/*.tar.gz
 
+  build-windows:
+    needs: [version]
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: windows-2025
+          - arch: arm64
+            runner: windows-11-arm
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      GOENV: ${{ github.workspace }}/go.env
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version-file: go.mod
+          cache: false
+      - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d
+        with:
+          toolchain: stable
+      - run: cargo install cargo-auditable --locked --version 0.7.7
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: build
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          ARCH: ${{ matrix.arch }}
+        run: ./scripts/release-windows.sh "$VERSION" "$ARCH"
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: tarball-windows-${{ matrix.arch }}
+          path: |
+            dist/*.zip
+            dist/*-setup.exe
+
   publish:
-    needs: [version, build, build-macos]
+    needs: [version, build, build-macos, build-windows]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -158,9 +201,14 @@ jobs:
             tar -xzf "$t" -C "$d"
             syft scan "dir:$d" --source-name "$(basename "$t" .tar.gz)" --source-version "$VERSION" -o "spdx-json=${t%.tar.gz}.spdx.json"
           done
+          for z in dist/*.zip; do
+            d="$(mktemp -d)"
+            unzip -q "$z" -d "$d"
+            syft scan "dir:$d" --source-name "$(basename "$z" .zip)" --source-version "$VERSION" -o "spdx-json=${z%.zip}.spdx.json"
+          done
       - name: checksums
         working-directory: dist
-        run: sha256sum -- *.tar.gz *.spdx.json > SHA256SUMS
+        run: sha256sum -- *.tar.gz *.zip *-setup.exe *.spdx.json > SHA256SUMS
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: release
@@ -173,7 +221,10 @@ jobs:
       - if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be
         with:
-          subject-path: dist/*.tar.gz
+          subject-path: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/*-setup.exe
       - if: startsWith(github.ref, 'refs/tags/v')
         name: draft release
         env:
@@ -181,4 +232,4 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" --verify-tag --draft --prerelease \
             --title "Flavor $VERSION" --notes "Draft. Add SHA256SUMS.asc before publishing." \
-            dist/*.tar.gz dist/*.spdx.json dist/SHA256SUMS dist/SHA256SUMS.sigstore.json
+            dist/*.tar.gz dist/*.zip dist/*-setup.exe dist/*.spdx.json dist/SHA256SUMS dist/SHA256SUMS.sigstore.json

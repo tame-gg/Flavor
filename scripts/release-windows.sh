@@ -32,6 +32,6 @@ cp target/release/flavor-desktop.exe "$stage/Flavor.exe"
 cp target/release/bundle/nsis/*-setup.exe "dist/$name-setup.exe"
 cp LICENSE README.md "$stage/"
 
-(cd dist && powershell.exe -NoProfile -Command "Compress-Archive -Path '$name' -DestinationPath '$name.zip'")
+(cd dist && "$(cygpath -u "$SYSTEMROOT")/System32/tar.exe" -a -cf "$name.zip" "$name")
 echo "dist/$name.zip"
 echo "dist/$name-setup.exe"

@@ -1,5 +1,6 @@
 use std::fs;
 use std::io::Write;
+#[cfg(unix)]
 use std::os::unix::fs::{DirBuilderExt, OpenOptionsExt};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -79,7 +80,7 @@ pub fn default_path() -> Option<PathBuf> {
     let base = std::env::var_os("XDG_CONFIG_HOME")
         .map(PathBuf::from)
         .filter(|p| p.is_absolute())
-        .or_else(flavor_ipc::macos_support_dir)
+        .or_else(flavor_ipc::platform_data_dir)
         .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")))?;
     base.is_absolute().then(|| base.join("flavor").join("config.toml"))
 }
@@ -123,7 +124,11 @@ fn fallback(msg: &str) -> Loaded {
 
 pub fn save(path: &Path, settings: Settings) -> std::io::Result<()> {
     let dir = path.parent().ok_or_else(|| std::io::Error::other("settings path has no parent"))?;
-    fs::DirBuilder::new().recursive(true).mode(0o700).create(dir)?;
+    let mut builder = fs::DirBuilder::new();
+    builder.recursive(true);
+    #[cfg(unix)]
+    builder.mode(0o700);
+    builder.create(dir)?;
     let body = toml::to_string(&FileOut {
         version: 1,
         desktop: DesktopOut { close_behavior: settings.close_behavior },
@@ -132,11 +137,17 @@ pub fn save(path: &Path, settings: Settings) -> std::io::Result<()> {
     .map_err(std::io::Error::other)?;
     let tmp = dir.join(format!(".config.toml.{}.tmp", std::process::id()));
     let result = (|| {
-        let mut f = fs::OpenOptions::new().write(true).create_new(true).mode(0o600).open(&tmp)?;
+        let mut options = fs::OpenOptions::new();
+        options.write(true).create_new(true);
+        #[cfg(unix)]
+        options.mode(0o600);
+        let mut f = options.open(&tmp)?;
         f.write_all(body.as_bytes())?;
         f.sync_all()?;
         fs::rename(&tmp, path)?;
-        fs::File::open(dir)?.sync_all()
+        #[cfg(unix)]
+        fs::File::open(dir)?.sync_all()?;
+        Ok(())
     })();
     if result.is_err() {
         let _ = fs::remove_file(&tmp);
@@ -174,6 +185,7 @@ impl Store {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(unix)]
     use std::os::unix::fs::PermissionsExt;
 
     #[test]
@@ -195,8 +207,11 @@ mod tests {
         assert!(text.contains("version = 1"));
         assert!(text.contains("close_behavior = \"quit_gui\""));
         assert!(text.contains("theme = \"dark\""));
-        assert_eq!(fs::metadata(&path).unwrap().permissions().mode() & 0o777, 0o600);
-        assert_eq!(fs::metadata(path.parent().unwrap()).unwrap().permissions().mode() & 0o777, 0o700);
+        #[cfg(unix)]
+        {
+            assert_eq!(fs::metadata(&path).unwrap().permissions().mode() & 0o777, 0o600);
+            assert_eq!(fs::metadata(path.parent().unwrap()).unwrap().permissions().mode() & 0o777, 0o700);
+        }
     }
 
     #[test]

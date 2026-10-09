@@ -10,6 +10,9 @@ use flavor_proto::flavor::v1::{
     FlavorErrorCode, FlavorErrorDetail, NetworkServiceClient,
 };
 
+#[cfg(windows)]
+mod pipe;
+
 pub use connectrpc::ConnectError;
 pub use flavor_proto::flavor::v1 as proto;
 
@@ -33,7 +36,7 @@ pub struct FlavorIpcClient {
 impl FlavorIpcClient {
     pub fn new(socket: impl Into<PathBuf>) -> Self {
         let authority: http::Uri = "http://flavord".parse().expect("static uri");
-        let transport = Http2Connection::lazy_unix(socket, authority.clone()).shared(256);
+        let transport = connect(socket.into(), authority.clone()).shared(256);
         let config = || ClientConfig::new(authority.clone());
         Self {
             daemon: DaemonServiceClient::new(transport.clone(), config()),
@@ -49,21 +52,40 @@ impl FlavorIpcClient {
     }
 }
 
+#[cfg(unix)]
+fn connect(socket: PathBuf, authority: http::Uri) -> Http2Connection {
+    Http2Connection::lazy_unix(socket, authority)
+}
+
+#[cfg(windows)]
+fn connect(socket: PathBuf, authority: http::Uri) -> Http2Connection {
+    Http2Connection::lazy_with_connector(pipe::connector(socket), authority)
+}
+
 pub fn default_socket_path() -> Option<PathBuf> {
     let runtime = std::env::var_os("XDG_RUNTIME_DIR")
         .filter(|p| !p.is_empty())
         .map(PathBuf::from)
-        .or_else(macos_support_dir)?;
-    runtime
-        .is_absolute()
-        .then(|| runtime.join("flavor").join("flavord.sock"))
+        .or_else(platform_data_dir)?;
+    runtime.is_absolute().then(|| socket_path_in(&runtime))
 }
 
-pub fn macos_support_dir() -> Option<PathBuf> {
-    if !cfg!(target_os = "macos") {
-        return None;
+pub fn socket_path_in(runtime: &Path) -> PathBuf {
+    let dir = runtime.join("flavor");
+    #[cfg(windows)]
+    return pipe::name(&dir);
+    #[cfg(not(windows))]
+    dir.join("flavord.sock")
+}
+
+pub fn platform_data_dir() -> Option<PathBuf> {
+    if cfg!(target_os = "macos") {
+        return std::env::var_os("HOME").map(|h| Path::new(&h).join("Library").join("Application Support"));
     }
-    std::env::var_os("HOME").map(|h| Path::new(&h).join("Library").join("Application Support"))
+    if cfg!(windows) {
+        return std::env::var_os("LOCALAPPDATA").filter(|p| !p.is_empty()).map(PathBuf::from);
+    }
+    None
 }
 
 #[derive(Debug, Clone)]

@@ -12,8 +12,9 @@ fn fixture_binary() -> &'static Path {
     static BIN: OnceLock<PathBuf> = OnceLock::new();
     BIN.get_or_init(|| {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-        let out = Path::new(env!("CARGO_TARGET_TMPDIR")).join("flavor-fakedaemon");
-        let status = Command::new(root.join("scripts/go.sh"))
+        let out = Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!("flavor-fakedaemon{}", std::env::consts::EXE_SUFFIX));
+        let status = Command::new("go")
+            .env("GOENV", root.join("go.env"))
             .args(["build", "-o"])
             .arg(&out)
             .arg("./test/fakedaemon")
@@ -42,6 +43,7 @@ async fn spawn_daemon() -> Daemon {
     let dir = tempfile::tempdir().unwrap();
     let run = dir.path().join("run");
     std::fs::create_dir(&run).unwrap();
+    #[cfg(unix)]
     std::fs::set_permissions(&run, std::os::unix::fs::PermissionsExt::from_mode(0o700)).unwrap();
     let child = Command::new(fixture_binary())
         .env("HOME", dir.path())
@@ -50,7 +52,7 @@ async fn spawn_daemon() -> Daemon {
         .env("XDG_RUNTIME_DIR", &run)
         .spawn()
         .expect("spawn fake daemon");
-    let socket = run.join("flavor/flavord.sock");
+    let socket = flavor_ipc::socket_path_in(&run);
     for _ in 0..200 {
         if socket.exists() {
             return Daemon { child, socket, _dir: dir };

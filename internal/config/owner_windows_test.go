@@ -18,20 +18,23 @@ func TestOwnerCheckAcceptsAdministratorsAndRejectsOthers(t *testing.T) {
 	if err := checkOwner(dir, nil); err != nil {
 		t.Fatalf("own temp dir: %v", err)
 	}
-	for sidType, want := range map[windows.WELL_KNOWN_SID_TYPE]bool{
-		windows.WinBuiltinAdministratorsSid: true,
-		windows.WinLocalSystemSid:           true,
-		windows.WinBuiltinUsersSid:          false,
+	for _, tc := range []struct {
+		sidType windows.WELL_KNOWN_SID_TYPE
+		want    bool
+	}{
+		{windows.WinBuiltinAdministratorsSid, true},
+		{windows.WinLocalSystemSid, true},
+		{windows.WinBuiltinUsersSid, false},
 	} {
-		sid, err := windows.CreateWellKnownSid(sidType)
+		sid, err := windows.CreateWellKnownSid(tc.sidType)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if err := windows.SetNamedSecurityInfo(dir, windows.SE_FILE_OBJECT, windows.OWNER_SECURITY_INFORMATION, sid, nil, nil, nil); err != nil {
 			t.Skipf("cannot change the owner here: %v", err)
 		}
-		if got := checkOwner(dir, nil) == nil; got != want {
-			t.Fatalf("owner %s accepted=%v want %v", sid, got, want)
+		if got := checkOwner(dir, nil) == nil; got != tc.want {
+			t.Fatalf("owner %s accepted=%v want %v", sid, got, tc.want)
 		}
 	}
 }

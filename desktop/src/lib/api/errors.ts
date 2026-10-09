@@ -2,7 +2,7 @@ import { isUiError } from "./types";
 
 const copy: Record<string, string> = {
   FLAVOR_ERROR_CODE_NETWORK_NOT_FOUND: "This network no longer exists.",
-  FLAVOR_ERROR_CODE_INVALID_CONTROL_URL: "Enter a control server address starting with https:// or http://, without a username or password.",
+  FLAVOR_ERROR_CODE_INVALID_CONTROL_URL: "Enter a control server address such as vpn.example.com or https://vpn.example.com, without a username or password.",
   FLAVOR_ERROR_CODE_CONTROL_SERVER_UNREACHABLE: "The control server could not be reached.",
   FLAVOR_ERROR_CODE_AUTHENTICATION_REQUIRED: "Sign-in is required for this network.",
   FLAVOR_ERROR_CODE_AUTHENTICATION_FAILED: "Sign-in failed. Try again.",

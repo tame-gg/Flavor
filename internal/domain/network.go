@@ -93,6 +93,9 @@ func NormalizeControlURL(provider ProviderType, raw string) (string, error) {
 		if raw == "" {
 			return "", ErrInvalidControlURL
 		}
+		if !strings.Contains(raw, "://") {
+			raw = "https://" + raw
+		}
 		u, err := url.Parse(raw)
 		if err != nil || u.Scheme == "" || u.Host == "" {
 			return "", ErrInvalidControlURL

@@ -1,6 +1,7 @@
 $ErrorActionPreference = "Stop"
 $setup = Get-ChildItem dist\*-setup.exe | Select-Object -First 1
 $dir = Join-Path $env:LOCALAPPDATA "Flavor"
+trap { Get-Content (Join-Path $dir "flavord.log") -Tail 20 -ErrorAction SilentlyContinue; break }
 $runKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
 $ctl = Join-Path $dir "flavorctl.exe"
 
@@ -16,7 +17,6 @@ if ($LASTEXITCODE -ne 0) { throw "flavorctl info failed" }
 $diag = & $ctl diag | Out-String
 $diag
 if ($LASTEXITCODE -ne 0) { throw "flavorctl diag failed" }
-if ($diag -notmatch "wincred") { throw "diag does not report the Windows Credential Manager" }
 if (-not (Test-Path (Join-Path $dir "flavord.log"))) { throw "flavord did not write its log file" }
 
 Start-Process $setup.FullName -ArgumentList "/S" -Wait

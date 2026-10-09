@@ -15,3 +15,10 @@ http = "1"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "process", "time"] }
 tempfile = "3"
 serde_json = "1"
+
+[target.'cfg(windows)'.dependencies]
+tokio = { version = "1", features = ["net", "time"] }
+hyper-util = { version = "0.1", features = ["tokio"] }
+tower = { version = "0.5", features = ["util"] }
+sha2 = "0.10"
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Security", "Win32_System_Pipes", "Win32_System_Threading"] }

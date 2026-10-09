@@ -83,8 +83,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-24.04, macos-15]
+        runner: [ubuntu-24.04, macos-15, windows-2025, windows-11-arm]
     runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: bash
     env:
       GOENV: ${{ github.workspace }}/go.env
       TMPDIR: ${{ matrix.runner == 'macos-15' && '/tmp' || '' }}

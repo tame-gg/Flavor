@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
-	"strings"
 
 	"git.lunarlabs.dev/flavor/flavor/internal/winsid"
 	"golang.org/x/sys/windows"
@@ -31,6 +30,6 @@ func checkOwner(path string, _ os.FileInfo) error {
 }
 
 func socketPath(runtime string) string {
-	sum := sha256.Sum256([]byte(strings.ToLower(runtime)))
+	sum := sha256.Sum256([]byte(runtime))
 	return `\\.\pipe\flavor-` + hex.EncodeToString(sum[:16])
 }

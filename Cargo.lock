@@ -1130,9 +1130,13 @@ dependencies = [
  "connectrpc",
  "flavor-proto",
  "http",
+ "hyper-util",
  "serde_json",
+ "sha2",
  "tempfile",
  "tokio",
+ "tower",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

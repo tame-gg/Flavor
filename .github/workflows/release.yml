@@ -167,6 +167,9 @@ jobs:
           VERSION: ${{ needs.version.outputs.version }}
           ARCH: ${{ matrix.arch }}
         run: ./scripts/release-windows.sh "$VERSION" "$ARCH"
+      - name: installer smoke test
+        shell: pwsh
+        run: ./scripts/smoke-windows-installer.ps1
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: tarball-windows-${{ matrix.arch }}

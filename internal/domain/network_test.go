@@ -117,6 +117,20 @@ func TestNormalizeControlURL(t *testing.T) {
 	if got != "" {
 		t.Fatalf("tailscale control url must be empty, got %q", got)
 	}
+	for raw, want := range map[string]string{
+		"vpn.example.com":          "https://vpn.example.com",
+		"vpn.example.com:8443/hs/": "https://vpn.example.com:8443/hs",
+		"localhost:8080":           "https://localhost:8080",
+		"http://vpn.example.com":   "http://vpn.example.com",
+	} {
+		got, err := domain.NormalizeControlURL(domain.ProviderHeadscale, raw)
+		if err != nil || got != want {
+			t.Fatalf("%q: got %q %v, want %q", raw, got, err, want)
+		}
+	}
+	if _, err := domain.NormalizeControlURL(domain.ProviderHeadscale, "user:pw@vpn.example.com"); err == nil {
+		t.Fatal("credentials must be rejected without a scheme too")
+	}
 	if _, err := domain.NormalizeControlURL(domain.ProviderHeadscale, "ftp://bad"); err == nil {
 		t.Fatal("expected scheme error")
 	}

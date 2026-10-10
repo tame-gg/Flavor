@@ -12,6 +12,7 @@ All notable changes to Flavor are listed here. The format follows [Keep a Change
   - The desktop app runs on Windows, with a tray icon in the notification area ([#35](https://github.com/tame-gg/Flavor/pull/35), [#39](https://github.com/tame-gg/Flavor/pull/39)).
   - Releases include a per-user installer and a zip for each architecture, covered by the same SBOMs, checksums, signatures and attestations as the other downloads. The installer needs no administrator rights, starts `flavord` at sign-in, and is not code-signed yet ([#36](https://github.com/tame-gg/Flavor/pull/36)). The [Windows guide](https://github.com/tame-gg/Flavor/wiki/Windows) covers installing, upgrading and uninstalling.
   - On Windows, Flavor keeps its data and settings in `%LOCALAPPDATA%\flavor`, and `flavorctl diag` reports Windows Credential Manager as the secret store.
+- `flavord --log-file PATH` appends the daemon log to a file instead of standard error, on every platform.
 - CI runs the Go and Rust test suites on Windows (x64 and ARM64), and every release build installs, upgrades and uninstalls the Windows installer before publishing ([#37](https://github.com/tame-gg/Flavor/pull/37), [#40](https://github.com/tame-gg/Flavor/pull/40)).
 
 ### Fixed

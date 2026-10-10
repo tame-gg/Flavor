@@ -18,7 +18,7 @@ Flavor is in beta. Security fixes go into the next release; older releases, incl
 
 | Version | Supported |
 | --- | --- |
-| 0.1.0-beta.5 (latest) | yes |
+| 0.1.0-beta.6 (latest) | yes |
 | older releases | no |
 
 ## Scope

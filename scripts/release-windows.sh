@@ -27,7 +27,7 @@ cp "$stage/bin/flavord.exe" "desktop/src-tauri/binaries/flavord-$triple.exe"
 cp "$stage/bin/flavorctl.exe" "desktop/src-tauri/binaries/flavorctl-$triple.exe"
 
 (cd desktop && npm ci && npm run tauri build -- --runner "$ROOT/scripts/cargo-auditable.cmd" --bundles nsis \
-	--config '{"bundle":{"active":true,"externalBin":["binaries/flavord","binaries/flavorctl"],"windows":{"nsis":{"installMode":"currentUser","installerHooks":"../../packaging/windows/hooks.nsh"}}}}')
+	--config '{"bundle":{"active":true,"publisher":"tame-gg","externalBin":["binaries/flavord","binaries/flavorctl"],"windows":{"nsis":{"installMode":"currentUser","installerHooks":"../../packaging/windows/hooks.nsh"}}}}')
 cp target/release/flavor-desktop.exe "$stage/Flavor.exe"
 cp target/release/bundle/nsis/*-setup.exe "dist/$name-setup.exe"
 cp LICENSE README.md "$stage/"

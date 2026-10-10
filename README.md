@@ -250,6 +250,17 @@ The desktop app and `flavorctl` talk to `flavord` with [Connect-RPC](https://con
 
 Flavor has not had an independent security audit. Read the [security model](https://github.com/tame-gg/Flavor/wiki/Security-Model), and report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+
+- **Committers and reviewers:** [members of tame-gg](https://github.com/orgs/tame-gg/people)
+- **Approvers:** [ohemilyy](https://github.com/ohemilyy)
+
+Windows files are signed only when they are built by the [release workflow](.github/workflows/release.yml) from a signed tag in this repository, and an approver confirms each release by hand. Releases up to v0.1.0-beta.6 are not signed.
+
+**Privacy:** this program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it. Each network you add connects to its own control server, Tailscale's or your Headscale server, because that is how the network works.
+
 ## Platform support
 
 | | Status |

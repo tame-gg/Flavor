@@ -163,7 +163,7 @@ brew install --cask tame-gg/tap/flavor-desktop
 
 The app is not notarized yet, so macOS blocks its first launch until you click **Open Anyway** in **System Settings › Privacy & Security**. Without Homebrew, install the `darwin-arm64` or `darwin-amd64` tarball from the [release](https://github.com/tame-gg/Flavor/releases) into your home directory. Both are covered in [macOS](https://github.com/tame-gg/Flavor/wiki/macOS).
 
-**Windows 11,** on x64 and ARM64: download `flavor-<version>-windows-amd64-setup.exe` (or `arm64`) from the [release](https://github.com/tame-gg/Flavor/releases) and run it. It installs for your user without administrator rights and starts the daemon at sign-in. The installer is not code-signed yet, so SmartScreen may ask you to click **More info**, then **Run anyway**. Checking the download, the zip and uninstalling are covered in [Windows](https://github.com/tame-gg/Flavor/wiki/Windows).
+**Windows 11,** on x64 and ARM64: download `flavor-<version>-windows-amd64-setup.exe` (or `arm64`) from the [release](https://github.com/tame-gg/Flavor/releases) and run it. It installs for your user without administrator rights and starts the daemon at sign-in. The installer is not code-signed yet, so SmartScreen may ask you to click **More info**, then **Run anyway**. With [Scoop](https://scoop.sh), run `scoop bucket add tame-gg https://github.com/tame-gg/scoop-bucket`, then `scoop install tame-gg/flavor`. Checking the download, the zip, Scoop and uninstalling are covered in [Windows](https://github.com/tame-gg/Flavor/wiki/Windows).
 
 **From source:** [build Flavor yourself](https://github.com/tame-gg/Flavor/wiki/Install#from-source), optionally into your home directory without root.
 

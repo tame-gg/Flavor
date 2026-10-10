@@ -5,8 +5,8 @@
 !macro NSIS_HOOK_POSTINSTALL
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "Flavor daemon" '"$INSTDIR\flavord.exe"'
   Exec '"$INSTDIR\flavord.exe"'
-  DeleteRegKey HKCU "Software\lunarlabs\Flavor"
-  DeleteRegKey /ifempty HKCU "Software\lunarlabs"
+  DeleteRegKey HKCU "Software\lunarlabs\Flavor\"
+  DeleteRegKey /ifempty HKCU "Software\lunarlabs\"
 !macroend
 
 !macro NSIS_HOOK_PREUNINSTALL

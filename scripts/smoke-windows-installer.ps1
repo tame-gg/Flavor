@@ -23,6 +23,7 @@ if ($LASTEXITCODE -ne 0) { throw "flavorctl info failed" }
 $diag = & $ctl diag | Out-String
 $diag
 if ($LASTEXITCODE -ne 0) { throw "flavorctl diag failed" }
+if ($diag -notmatch "backend wincred, state available") { throw "diag does not report an available Windows Credential Manager" }
 if (-not (Test-Path (Join-Path $dir "flavord.log"))) { throw "flavord did not write its log file" }
 
 Invoke-Setup $setup.FullName

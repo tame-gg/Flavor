@@ -2,7 +2,7 @@
 
 All notable changes to Flavor are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.0-beta.7] - 2026-10-10
 
 ### Fixed
 
@@ -101,7 +101,7 @@ First public beta, released as Lattice.
 - Experimental system-wide names through the optional `flavor-netd` helper, confined by systemd sandboxing, polkit, AppArmor and SELinux.
 - Release tarballs for x86_64 and arm64 with an installer and uninstaller, SBOMs, and `SHA256SUMS` signed with Sigstore and GPG, plus GitHub build-provenance attestations.
 
-[Unreleased]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.6...HEAD
+[0.1.0-beta.7]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.6...v0.1.0-beta.7
 [0.1.0-beta.6]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.5...v0.1.0-beta.6
 [0.1.0-beta.5]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.4...v0.1.0-beta.5
 [0.1.0-beta.4]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.3...v0.1.0-beta.4

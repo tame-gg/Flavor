@@ -113,7 +113,7 @@ See [test/integration/headscale/README.md](test/integration/headscale/README.md)
 ### Release builds
 
 ```bash
-./scripts/release.sh 0.1.0-beta.6 amd64
+./scripts/release.sh 0.1.0-beta.7 amd64
 ```
 
 builds a release tarball. It needs `jq` and cargo-auditable; the release workflow also passes `SELINUX_PP` with the SELinux module it builds on Fedora. With the same toolchain versions, two clean builds of a commit produce identical files; if you change the build, check that this still holds.

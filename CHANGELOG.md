@@ -2,6 +2,22 @@
 
 All notable changes to Flavor are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0-beta.6] - 2026-10-09
+
+### Added
+
+- Windows support on x64 and ARM64 ([#32](https://github.com/tame-gg/Flavor/issues/32)):
+  - `flavord` and `flavorctl` run on Windows. They talk over a named pipe that only your user account can open, and each side checks that the other runs as you. Port forwarding and the SOCKS5 proxy accept only connections from your own user, as on Linux ([#33](https://github.com/tame-gg/Flavor/pull/33)).
+  - `flavord` runs without a console window and logs to `%LOCALAPPDATA%\flavor\flavord.log` ([#34](https://github.com/tame-gg/Flavor/pull/34)).
+  - The desktop app runs on Windows, with a tray icon in the notification area ([#35](https://github.com/tame-gg/Flavor/pull/35), [#39](https://github.com/tame-gg/Flavor/pull/39)).
+  - Releases include a per-user installer and a zip for each architecture, covered by the same SBOMs, checksums, signatures and attestations as the other downloads. The installer needs no administrator rights, starts `flavord` at sign-in, and is not code-signed yet ([#36](https://github.com/tame-gg/Flavor/pull/36)). The [Windows guide](https://github.com/tame-gg/Flavor/wiki/Windows) covers installing, upgrading and uninstalling.
+  - On Windows, Flavor keeps its data and settings in `%LOCALAPPDATA%\flavor`, and `flavorctl diag` reports Windows Credential Manager as the secret store.
+- CI runs the Go and Rust test suites on Windows (x64 and ARM64), and every release build installs, upgrades and uninstalls the Windows installer before publishing ([#37](https://github.com/tame-gg/Flavor/pull/37), [#40](https://github.com/tame-gg/Flavor/pull/40)).
+
+### Fixed
+
+- `flavord` on Windows accepts data folders owned by the Administrators group or SYSTEM instead of refusing to start with `unexpected owner` ([#38](https://github.com/tame-gg/Flavor/pull/38)).
+
 ## [0.1.0-beta.5] - 2026-10-09
 
 ### Added
@@ -78,6 +94,7 @@ First public beta, released as Lattice.
 - Experimental system-wide names through the optional `flavor-netd` helper, confined by systemd sandboxing, polkit, AppArmor and SELinux.
 - Release tarballs for x86_64 and arm64 with an installer and uninstaller, SBOMs, and `SHA256SUMS` signed with Sigstore and GPG, plus GitHub build-provenance attestations.
 
+[0.1.0-beta.6]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.5...v0.1.0-beta.6
 [0.1.0-beta.5]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.4...v0.1.0-beta.5
 [0.1.0-beta.4]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.3...v0.1.0-beta.4
 [0.1.0-beta.3]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.2...v0.1.0-beta.3

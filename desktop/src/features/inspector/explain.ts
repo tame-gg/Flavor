@@ -16,6 +16,7 @@ export const matchLabel: Record<MatchKind, string> = {
   [MatchKind.SUBNET_ROUTE]: "Subnet route",
   [MatchKind.QUALIFIED_NAME]: "Flavor name",
   [MatchKind.DNS_RECORD]: "DNS record from the network",
+  [MatchKind.EXIT_NODE]: "Exit node",
 };
 
 export const statusLabel: Record<CandidateStatus, string> = {
@@ -39,6 +40,7 @@ const basis: Record<MatchKind, string> = {
   [MatchKind.SUBNET_ROUTE]: "a subnet route",
   [MatchKind.QUALIFIED_NAME]: "its Flavor name, which names the network explicitly",
   [MatchKind.DNS_RECORD]: "a DNS record the network publishes",
+  [MatchKind.EXIT_NODE]: "an exit node on the network",
 };
 
 const what = (r: InspectDestinationResponse) => (r.kind === DestinationKind.ADDRESS ? "address" : "name");
@@ -59,6 +61,12 @@ export function explain(r: InspectDestinationResponse): { title: string; detail:
           detail:
             `Chosen by your Flavor preference for ${network}.` +
             (others > 0 ? ` Without it, ${r.normalized} would match on ${others + 1} networks.` : ""),
+        };
+      }
+      if (r.reason === DecisionReason.EXIT_NODE) {
+        return {
+          title: `${device} on ${network}`,
+          detail: `${r.normalized} is not on any of your networks, so it goes through the exit node chosen for ${network}.`,
         };
       }
       if (r.reason === DecisionReason.SUBNET_ROUTE || r.reason === DecisionReason.LONGEST_PREFIX) {
@@ -91,6 +99,12 @@ export function explain(r: InspectDestinationResponse): { title: string; detail:
         return {
           title: `${r.normalized} is routed by ${count} networks`,
           detail: `Each one advertises a route of the same length that covers this address, so Flavor will not pick one on its own.`,
+        };
+      }
+      if (r.decidedBy === MatchKind.EXIT_NODE) {
+        return {
+          title: `${r.normalized} could leave through ${count} exit nodes`,
+          detail: `Each of those networks has an exit node selected, so Flavor will not pick one on its own.`,
         };
       }
       const where = count > 1 ? `${count} networks` : "one network, on more than one device";

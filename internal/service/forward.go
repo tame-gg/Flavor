@@ -96,7 +96,7 @@ func logForward(log *slog.Logger, emit func(ForwardEvent)) (func(ForwardEvent), 
 				route = append(route, "destination", e.Destination)
 			}
 			if e.Route.Network.ID != "" {
-				route = append(route, "network_id", e.Route.Network.ID, "target", e.Route.Target)
+				route = append(route, "network_id", e.Route.Network.ID, "target", e.Route.DialAddress())
 			}
 			conn := append([]any{"conn", e.ConnID, "client", e.Client}, route...)
 			switch e.Kind {

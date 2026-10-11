@@ -53,6 +53,12 @@ func (s *Service) liveNetworks(ctx context.Context) ([]inspect.Network, uint64, 
 		in := inspect.Network{Network: n, State: v.State, Live: live}
 		if live {
 			in.Devices = s.devices(n.ID)
+			in.Records = s.dnsRecords(n.ID)
+			for _, d := range in.Devices {
+				if d.ExitNode {
+					in.ExitNode = d
+				}
+			}
 		}
 		nets = append(nets, in)
 	}

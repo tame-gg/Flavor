@@ -2,6 +2,7 @@ package session_test
 
 import (
 	"context"
+	"net/netip"
 	"os"
 	"path/filepath"
 	"testing"
@@ -69,8 +70,12 @@ func TestIntegrationHeadscale(t *testing.T) {
 	if ln.NodeID == "" || len(ln.Addresses) == 0 {
 		t.Fatalf("local node incomplete: %+v", ln)
 	}
+	waitDNSRecords(t, s)
 	if err := s.Stop(ctx); err != nil {
 		t.Fatal(err)
+	}
+	if len(s.DNSRecords()) != 0 {
+		t.Fatalf("dns records not cleared after stop: %+v", s.DNSRecords())
 	}
 	s2, err := session.NewSession(cfg, bus, nil)
 	if err != nil {
@@ -89,5 +94,41 @@ func TestIntegrationHeadscale(t *testing.T) {
 	if s2.State() != domain.StateConnected && s2.State() != domain.StateDegraded {
 		t.Fatalf("restart without auth key failed: state=%s", s2.State())
 	}
+	waitDNSRecords(t, s2)
 	_ = s2.Stop(ctx)
+}
+
+const dnsRecordsTimeout = 30 * time.Second
+
+var expectedDNSRecords = map[string]netip.Addr{
+	"git.intra.flavor-a.test":  netip.MustParseAddr("100.64.0.99"),
+	"docs.intra.flavor-a.test": netip.MustParseAddr("100.64.0.99"),
+	"app.intra.flavor-a.test":  netip.MustParseAddr("100.64.0.98"),
+}
+
+func hasExpectedDNSRecords(records []domain.DNSRecord) bool {
+	found := 0
+	for _, r := range records {
+		want, ok := expectedDNSRecords[r.Name]
+		if !ok {
+			continue
+		}
+		if len(r.Addresses) != 1 || r.Addresses[0] != want {
+			return false
+		}
+		found++
+	}
+	return found == len(expectedDNSRecords)
+}
+
+func waitDNSRecords(t *testing.T, s *session.Session) {
+	t.Helper()
+	deadline := time.Now().Add(dnsRecordsTimeout)
+	for time.Now().Before(deadline) {
+		if hasExpectedDNSRecords(s.DNSRecords()) {
+			return
+		}
+		time.Sleep(250 * time.Millisecond)
+	}
+	t.Fatalf("dns records: %+v", s.DNSRecords())
 }

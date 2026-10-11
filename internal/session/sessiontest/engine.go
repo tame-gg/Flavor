@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net"
 	"net/netip"
+	"slices"
 	"sync"
 	"time"
 
@@ -31,6 +32,11 @@ type Engine struct {
 	activeWatchers int
 	tracker        *tracker
 	dial           func(ctx context.Context, network, address string) (net.Conn, error)
+	exitNode       domain.NodeID
+	exitNodeCalls  []domain.NodeID
+	advertised     []netip.Prefix
+	approved       []netip.Prefix
+	routeCalls     [][]netip.Prefix
 }
 
 func NewEngine() *Engine {
@@ -91,7 +97,67 @@ func (e *Engine) Status(ctx context.Context) (session.EngineStatus, error) {
 	}
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	return e.status, nil
+	st := e.status
+	st.ExitNode = e.exitNode
+	st.AdvertisedRoutes = slices.Clone(e.advertised)
+	st.ApprovedRoutes = slices.Clone(e.approved)
+	return st, nil
+}
+
+func (e *Engine) SetAdvertisedRoutes(_ context.Context, routes []netip.Prefix) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.advertised = slices.Clone(routes)
+	e.routeCalls = append(e.routeCalls, slices.Clone(routes))
+	return nil
+}
+
+func (e *Engine) AdvertisedRoutes() []netip.Prefix {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return slices.Clone(e.advertised)
+}
+
+func (e *Engine) AdvertisedRoutesCalls() [][]netip.Prefix {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return slices.Clone(e.routeCalls)
+}
+
+func (e *Engine) ApproveRoutes(routes ...netip.Prefix) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.approved = slices.Clone(routes)
+}
+
+func (e *Engine) ApproveExitNode(approved bool) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.status.Self != nil {
+		self := *e.status.Self
+		self.ExitNodeOption = approved
+		e.status.Self = &self
+	}
+}
+
+func (e *Engine) SetExitNode(_ context.Context, id domain.NodeID) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.exitNode = id
+	e.exitNodeCalls = append(e.exitNodeCalls, id)
+	return nil
+}
+
+func (e *Engine) ExitNode() domain.NodeID {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return e.exitNode
+}
+
+func (e *Engine) ExitNodeCalls() []domain.NodeID {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return slices.Clone(e.exitNodeCalls)
 }
 
 func (e *Engine) Watch(ctx context.Context, emit func(session.EngineNotify)) error {

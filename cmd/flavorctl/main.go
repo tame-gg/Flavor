@@ -52,8 +52,16 @@ commands:
   preference list
   preference set <destination> --network <network>
   preference remove <destination>      <network> is an id or an exact name
+  exit-node list [network]             devices that can be an exit node
+  exit-node set <network> <device>     <device> is a hostname, DNS name or node id
+  exit-node clear <network>            <network> is an id or an exact name
+  routes list [network]                subnet routes and exit node this machine advertises
+  routes advertise <network> <cidr>...
+  routes withdraw <network> <cidr>...
+  routes exit-node <network> on|off    offer this machine as an exit node
+                                       advertised routes need approval on the control server
 
---json prints the daemon response as JSON for info, list, devices, diag, explain, conflicts, workspace list and preference list.
+--json prints the daemon response as JSON for info, list, devices, diag, explain, conflicts, workspace list, preference list, exit-node and routes.
 `
 
 func main() {
@@ -170,9 +178,9 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSO
 			return emit(out, res.Msg)
 		}
 		w := tabwriter.NewWriter(out, 0, 4, 2, ' ', 0)
-		fmt.Fprintln(w, "NETWORK\tNODE\tHOSTNAME\tADDRESSES\tONLINE")
+		fmt.Fprintln(w, "NETWORK\tNODE\tHOSTNAME\tADDRESSES\tONLINE\tEXIT")
 		for _, d := range res.Msg.Devices {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%t\n", d.Id.GetNetworkId(), d.Id.GetNodeId(), d.Hostname, strings.Join(d.Addresses, ","), d.Online)
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%t\t%s\n", d.Id.GetNetworkId(), d.Id.GetNodeId(), d.Hostname, strings.Join(d.Addresses, ","), d.Online, exitNodeState(d))
 		}
 		return w.Flush()
 	case "add":
@@ -280,6 +288,10 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSO
 		return runWorkspace(ctx, c, args, asJSON, out)
 	case "preference", "preferences", "prefer":
 		return runPreference(ctx, c, args, asJSON, out)
+	case "exit-node", "exit-nodes":
+		return runExitNode(ctx, c, args, asJSON, out)
+	case "routes", "route":
+		return runRoutes(ctx, c, args, asJSON, out)
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", cmd, usage)
 	}
@@ -310,7 +322,7 @@ func printExplain(out io.Writer, r *v1.InspectDestinationResponse) error {
 	case v1.ResolutionDecision_RESOLUTION_DECISION_UNIQUE:
 		for _, c := range r.Candidates {
 			if c.Status == v1.CandidateStatus_CANDIDATE_STATUS_SELECTED {
-				decision += fmt.Sprintf(": %s on %s", c.Device.GetHostname(), c.Network.GetDisplayName())
+				decision += fmt.Sprintf(": %s on %s", deviceLabel(c), c.Network.GetDisplayName())
 			}
 		}
 	}
@@ -330,7 +342,7 @@ func printExplain(out io.Writer, r *v1.InspectDestinationResponse) error {
 		fmt.Fprintln(w, "NETWORK\tDEVICE\tMATCH\tSTATUS\tADDRESSES")
 		for _, c := range r.Candidates {
 			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
-				c.Network.GetDisplayName(), c.Device.GetHostname(),
+				c.Network.GetDisplayName(), deviceLabel(c),
 				matchText(c),
 				enumName(c.Status.String(), "CANDIDATE_STATUS_"),
 				strings.Join(c.Device.GetAddresses(), ","))
@@ -602,6 +614,16 @@ func runPreference(ctx context.Context, c *client.Client, args []string, asJSON 
 		return fmt.Errorf("unknown preference command %q\n\n%s", sub, usage)
 	}
 	return nil
+}
+
+func deviceLabel(c *v1.ResolutionCandidate) string {
+	if h := c.Device.GetHostname(); h != "" {
+		return h
+	}
+	if c.Match == v1.MatchKind_MATCH_KIND_DNS_RECORD {
+		return c.MatchedValue
+	}
+	return ""
 }
 
 func matchText(c *v1.ResolutionCandidate) string {

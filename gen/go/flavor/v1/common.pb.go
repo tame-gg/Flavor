@@ -167,6 +167,7 @@ const (
 	FlavorErrorCode_FLAVOR_ERROR_CODE_DESTINATION_AMBIGUOUS      FlavorErrorCode = 18
 	FlavorErrorCode_FLAVOR_ERROR_CODE_DESTINATION_NOT_FOUND      FlavorErrorCode = 19
 	FlavorErrorCode_FLAVOR_ERROR_CODE_DESTINATION_UNREACHABLE    FlavorErrorCode = 20
+	FlavorErrorCode_FLAVOR_ERROR_CODE_NOT_AN_EXIT_NODE           FlavorErrorCode = 21
 )
 
 // Enum value maps for FlavorErrorCode.
@@ -193,6 +194,7 @@ var (
 		18: "FLAVOR_ERROR_CODE_DESTINATION_AMBIGUOUS",
 		19: "FLAVOR_ERROR_CODE_DESTINATION_NOT_FOUND",
 		20: "FLAVOR_ERROR_CODE_DESTINATION_UNREACHABLE",
+		21: "FLAVOR_ERROR_CODE_NOT_AN_EXIT_NODE",
 	}
 	FlavorErrorCode_value = map[string]int32{
 		"FLAVOR_ERROR_CODE_UNSPECIFIED":                0,
@@ -216,6 +218,7 @@ var (
 		"FLAVOR_ERROR_CODE_DESTINATION_AMBIGUOUS":      18,
 		"FLAVOR_ERROR_CODE_DESTINATION_NOT_FOUND":      19,
 		"FLAVOR_ERROR_CODE_DESTINATION_UNREACHABLE":    20,
+		"FLAVOR_ERROR_CODE_NOT_AN_EXIT_NODE":           21,
 	}
 )
 
@@ -258,20 +261,24 @@ const (
 	Capability_CAPABILITY_DESTINATION_PREFERENCES Capability = 6
 	Capability_CAPABILITY_FORWARDING              Capability = 7
 	Capability_CAPABILITY_SOCKS_PROXY             Capability = 8
+	Capability_CAPABILITY_EXIT_NODES              Capability = 9
+	Capability_CAPABILITY_ROUTES                  Capability = 10
 )
 
 // Enum value maps for Capability.
 var (
 	Capability_name = map[int32]string{
-		0: "CAPABILITY_UNSPECIFIED",
-		1: "CAPABILITY_HEADSCALE",
-		2: "CAPABILITY_DEVICE_SNAPSHOTS",
-		3: "CAPABILITY_CONNECTION_INSPECTOR",
-		4: "CAPABILITY_CONFLICT_CENTER",
-		5: "CAPABILITY_WORKSPACES",
-		6: "CAPABILITY_DESTINATION_PREFERENCES",
-		7: "CAPABILITY_FORWARDING",
-		8: "CAPABILITY_SOCKS_PROXY",
+		0:  "CAPABILITY_UNSPECIFIED",
+		1:  "CAPABILITY_HEADSCALE",
+		2:  "CAPABILITY_DEVICE_SNAPSHOTS",
+		3:  "CAPABILITY_CONNECTION_INSPECTOR",
+		4:  "CAPABILITY_CONFLICT_CENTER",
+		5:  "CAPABILITY_WORKSPACES",
+		6:  "CAPABILITY_DESTINATION_PREFERENCES",
+		7:  "CAPABILITY_FORWARDING",
+		8:  "CAPABILITY_SOCKS_PROXY",
+		9:  "CAPABILITY_EXIT_NODES",
+		10: "CAPABILITY_ROUTES",
 	}
 	Capability_value = map[string]int32{
 		"CAPABILITY_UNSPECIFIED":             0,
@@ -283,6 +290,8 @@ var (
 		"CAPABILITY_DESTINATION_PREFERENCES": 6,
 		"CAPABILITY_FORWARDING":              7,
 		"CAPABILITY_SOCKS_PROXY":             8,
+		"CAPABILITY_EXIT_NODES":              9,
+		"CAPABILITY_ROUTES":                  10,
 	}
 )
 
@@ -398,7 +407,7 @@ const file_flavor_v1_common_proto_rawDesc = "" +
 	"%NETWORK_CONNECTION_STATE_RECONNECTING\x10\b\x12%\n" +
 	"!NETWORK_CONNECTION_STATE_REMOVING\x10\t\x12\"\n" +
 	"\x1eNETWORK_CONNECTION_STATE_ERROR\x10\n" +
-	"*\x98\a\n" +
+	"*\xc0\a\n" +
 	"\x0fFlavorErrorCode\x12!\n" +
 	"\x1dFLAVOR_ERROR_CODE_UNSPECIFIED\x10\x00\x12'\n" +
 	"#FLAVOR_ERROR_CODE_NETWORK_NOT_FOUND\x10\x01\x12)\n" +
@@ -421,7 +430,8 @@ const file_flavor_v1_common_proto_rawDesc = "" +
 	"\"FLAVOR_ERROR_CODE_DEVICE_NOT_FOUND\x10\x11\x12+\n" +
 	"'FLAVOR_ERROR_CODE_DESTINATION_AMBIGUOUS\x10\x12\x12+\n" +
 	"'FLAVOR_ERROR_CODE_DESTINATION_NOT_FOUND\x10\x13\x12-\n" +
-	")FLAVOR_ERROR_CODE_DESTINATION_UNREACHABLE\x10\x14*\xa2\x02\n" +
+	")FLAVOR_ERROR_CODE_DESTINATION_UNREACHABLE\x10\x14\x12&\n" +
+	"\"FLAVOR_ERROR_CODE_NOT_AN_EXIT_NODE\x10\x15*\xd4\x02\n" +
 	"\n" +
 	"Capability\x12\x1a\n" +
 	"\x16CAPABILITY_UNSPECIFIED\x10\x00\x12\x18\n" +
@@ -432,7 +442,10 @@ const file_flavor_v1_common_proto_rawDesc = "" +
 	"\x15CAPABILITY_WORKSPACES\x10\x05\x12&\n" +
 	"\"CAPABILITY_DESTINATION_PREFERENCES\x10\x06\x12\x19\n" +
 	"\x15CAPABILITY_FORWARDING\x10\a\x12\x1a\n" +
-	"\x16CAPABILITY_SOCKS_PROXY\x10\bB\x9c\x01\n" +
+	"\x16CAPABILITY_SOCKS_PROXY\x10\b\x12\x19\n" +
+	"\x15CAPABILITY_EXIT_NODES\x10\t\x12\x15\n" +
+	"\x11CAPABILITY_ROUTES\x10\n" +
+	"B\x9c\x01\n" +
 	"\rcom.flavor.v1B\vCommonProtoP\x01Z9git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1;flavorv1\xa2\x02\x03FXX\xaa\x02\tFlavor.V1\xca\x02\tFlavor\\V1\xe2\x02\x15Flavor\\V1\\GPBMetadata\xea\x02\n" +
 	"Flavor::V1b\x06proto3"
 

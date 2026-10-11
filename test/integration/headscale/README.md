@@ -37,6 +37,8 @@ export FLAVOR_HEADSCALE_AUTHKEY="$(./test/integration/headscale/scripts/create-p
 
 Ordinary `go test ./...` skips this test when `FLAVOR_INTEGRATION` is unset.
 
+Instance a also publishes three `extra_records` under `intra.flavor-a.test`; the integration test checks that they reach `Session.DNSRecords()` and are cleared on stop.
+
 ## Notes
 
 - Development HTTP (`http://`) is explicit for local harness only.

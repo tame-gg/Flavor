@@ -16,7 +16,7 @@ func Info() BuildInfo {
 		ProtocolMajor: 1,
 		ProtocolMinor: 3,
 		BuildCommit:   buildCommit,
-		Capabilities:  []string{"headscale", "device_snapshots", "connection_inspector", "conflict_center", "workspaces", "destination_preferences", "forwarding", "socks_proxy"},
+		Capabilities:  []string{"headscale", "device_snapshots", "connection_inspector", "conflict_center", "workspaces", "destination_preferences", "forwarding", "socks_proxy", "exit_nodes", "routes"},
 	}
 }
 

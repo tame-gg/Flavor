@@ -81,11 +81,12 @@ func startProxy(t *testing.T, c *client.Client) string {
 	if !stream.Receive() {
 		t.Fatal(stream.Err())
 	}
+	addr := stream.Msg().GetStarted().GetListenAddress()
 	go func() {
 		for stream.Receive() {
 		}
 	}()
-	return stream.Msg().GetStarted().GetListenAddress()
+	return addr
 }
 
 func socksBanner(t *testing.T, addr, dest string) string {

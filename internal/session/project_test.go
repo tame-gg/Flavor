@@ -169,27 +169,46 @@ func TestProjectDNSRecords(t *testing.T) {
 	}
 }
 
-func TestProjectApprovedRoutes(t *testing.T) {
-	allowed := []netip.Prefix{
-		netip.MustParsePrefix("100.64.0.1/32"),
-		netip.MustParsePrefix("fd7a:115c:a1e0::1/128"),
+func TestApprovedRoutes(t *testing.T) {
+	addrs := []netip.Prefix{netip.MustParsePrefix("100.64.0.1/32"), netip.MustParsePrefix("fd7a:115c:a1e0::1/128")}
+	allowed := append(slices.Clone(addrs),
 		netip.MustParsePrefix("192.168.1.0/24"),
 		netip.MustParsePrefix("0.0.0.0/0"),
 		netip.MustParsePrefix("::/0"),
 		netip.MustParsePrefix("10.1.2.3/32"),
-	}
-	view := views.SliceOf(allowed)
-	st := projectStatus(&ipnstate.Status{Self: &ipnstate.PeerStatus{
-		ID:           "self",
-		TailscaleIPs: []netip.Addr{netip.MustParseAddr("100.64.0.1"), netip.MustParseAddr("fd7a:115c:a1e0::1")},
-		AllowedIPs:   &view,
-	}})
+	)
+	routes, exit := approvedRoutes(append(allowed, netip.MustParsePrefix("192.168.1.0/24")), addrs)
 	want := []netip.Prefix{netip.MustParsePrefix("192.168.1.0/24"), netip.MustParsePrefix("10.1.2.3/32")}
-	if !slices.Equal(st.ApprovedRoutes, want) {
-		t.Fatalf("%v", st.ApprovedRoutes)
+	if !slices.Equal(routes, want) || !exit {
+		t.Fatalf("%v %v", routes, exit)
 	}
-	if none := projectStatus(&ipnstate.Status{Self: &ipnstate.PeerStatus{ID: "self"}}); len(none.ApprovedRoutes) != 0 {
-		t.Fatalf("%v", none.ApprovedRoutes)
+	if routes, exit := approvedRoutes(addrs, addrs); len(routes) != 0 || exit {
+		t.Fatalf("%v %v", routes, exit)
+	}
+}
+
+func TestForwardable(t *testing.T) {
+	lan := []netip.Prefix{netip.MustParsePrefix("192.168.50.0/24")}
+	exit := append(slices.Clone(lan), domain.ExitRoutes...)
+	for _, c := range []struct {
+		addr       string
+		advertised []netip.Prefix
+		want       bool
+	}{
+		{"192.168.50.7", lan, true},
+		{"192.168.51.7", lan, false},
+		{"192.168.51.7", exit, true},
+		{"2001:db8::1", exit, true},
+		{"100.64.0.9", exit, false},
+		{"127.0.0.1", exit, false},
+		{"::ffff:127.0.0.1", exit, false},
+		{"169.254.169.254", exit, false},
+		{"0.0.0.0", exit, false},
+		{"224.0.0.1", exit, false},
+	} {
+		if got := forwardable(netip.MustParseAddr(c.addr), c.advertised); got != c.want {
+			t.Errorf("%s %v: %v", c.addr, c.advertised, got)
+		}
 	}
 }
 
@@ -208,12 +227,11 @@ func TestProjectAdvertised(t *testing.T) {
 		t.Fatalf("one default route is not an exit node offer: %+v", exit)
 	}
 
-	self := &EnginePeer{ExitNodeOption: true}
-	_, exit = projectAdvertised(EngineStatus{AdvertisedRoutes: []netip.Prefix{v6, v4}, Self: self})
+	_, exit = projectAdvertised(EngineStatus{AdvertisedRoutes: []netip.Prefix{v6, v4}, ExitApproved: true})
 	if !exit.Offered || !exit.Approved {
 		t.Fatalf("%+v", exit)
 	}
-	_, exit = projectAdvertised(EngineStatus{Self: self})
+	_, exit = projectAdvertised(EngineStatus{ExitApproved: true})
 	if exit.Offered || exit.Approved {
 		t.Fatalf("an approved option without an offer is not offered: %+v", exit)
 	}

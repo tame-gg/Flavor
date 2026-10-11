@@ -45,6 +45,7 @@ type EngineStatus struct {
 
 	AdvertisedRoutes []netip.Prefix
 	ApprovedRoutes   []netip.Prefix
+	ExitApproved     bool
 }
 
 type EngineNotify struct {

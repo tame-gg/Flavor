@@ -24,7 +24,6 @@ func projectStatus(st *ipnstate.Status) EngineStatus {
 	if st.Self != nil {
 		self := projectPeer(st.Self)
 		out.Self = &self
-		out.ApprovedRoutes = approvedRoutes(st.Self)
 	}
 	for _, p := range st.Peer {
 		if p == nil {
@@ -85,18 +84,27 @@ func routes(p *ipnstate.PeerStatus) []netip.Prefix {
 	return out
 }
 
-func approvedRoutes(self *ipnstate.PeerStatus) []netip.Prefix {
-	if self.AllowedIPs == nil {
-		return nil
-	}
+func approvedRoutes(allowed []netip.Prefix, addrs []netip.Prefix) ([]netip.Prefix, bool) {
 	var out []netip.Prefix
-	for _, r := range self.AllowedIPs.All() {
-		if !r.IsValid() || r.Bits() == 0 || (r.IsSingleIP() && slices.Contains(self.TailscaleIPs, r.Addr())) {
-			continue
+	exit := false
+	for _, r := range allowed {
+		switch {
+		case !r.IsValid() || slices.Contains(addrs, r):
+		case r.Bits() == 0:
+			exit = true
+		case !slices.Contains(out, r.Masked()):
+			out = append(out, r.Masked())
 		}
-		out = append(out, r.Masked())
 	}
-	return out
+	return out, exit
+}
+
+func forwardable(a netip.Addr, advertised []netip.Prefix) bool {
+	a = a.Unmap()
+	if !a.IsValid() || a.IsLoopback() || a.IsUnspecified() || a.IsMulticast() || a.IsLinkLocalUnicast() || slices.ContainsFunc(domain.TailnetPrefixes, func(p netip.Prefix) bool { return p.Contains(a) }) {
+		return false
+	}
+	return slices.ContainsFunc(advertised, func(p netip.Prefix) bool { return p.Contains(a) })
 }
 
 func projectAdvertised(snap EngineStatus) ([]domain.AdvertisedRoute, domain.AdvertisedExitNode) {
@@ -113,7 +121,7 @@ func projectAdvertised(snap EngineStatus) ([]domain.AdvertisedRoute, domain.Adve
 	}
 	slices.SortFunc(routes, func(a, b domain.AdvertisedRoute) int { return a.Prefix.Compare(b.Prefix) })
 	exit := domain.AdvertisedExitNode{Offered: containsAll(snap.AdvertisedRoutes, domain.ExitRoutes)}
-	exit.Approved = exit.Offered && snap.Self != nil && snap.Self.ExitNodeOption
+	exit.Approved = exit.Offered && snap.ExitApproved
 	return routes, exit
 }
 

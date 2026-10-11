@@ -27,6 +27,7 @@ type NetworkSession interface {
 	State() domain.NetworkConnectionState
 	LocalNode() domain.LocalNode
 	Devices() []domain.Device
+	DNSRecords() []domain.DNSRecord
 	AuthPrompt() *domain.AuthPrompt
 	Diagnostics(ctx context.Context) domain.SessionDiagnostics
 }
@@ -44,6 +45,7 @@ type Session struct {
 	state   domain.NetworkConnectionState
 	local   domain.LocalNode
 	devices map[domain.NodeID]domain.Device
+	records []domain.DNSRecord
 	prompt  *domain.AuthPrompt
 	lastErr string
 }
@@ -231,6 +233,7 @@ func (s *Session) retire(g *generation) {
 
 	s.stateMu.Lock()
 	s.devices = make(map[domain.NodeID]domain.Device)
+	s.records = nil
 	s.local = domain.LocalNode{NetworkID: s.cfg.NetworkID}
 	s.prompt = nil
 	s.lastErr = msg
@@ -357,6 +360,7 @@ func (s *Session) applyStatus(snap EngineStatus) {
 	s.stateMu.Lock()
 	old := s.devices
 	s.devices = newDevices
+	s.records = domain.CloneDNSRecords(snap.DNSRecords)
 	s.local = local
 	s.stateMu.Unlock()
 
@@ -504,6 +508,12 @@ func (s *Session) Devices() []domain.Device {
 		out = append(out, cloneDevice(d))
 	}
 	return out
+}
+
+func (s *Session) DNSRecords() []domain.DNSRecord {
+	s.stateMu.RLock()
+	defer s.stateMu.RUnlock()
+	return domain.CloneDNSRecords(s.records)
 }
 
 func (s *Session) AuthPrompt() *domain.AuthPrompt {

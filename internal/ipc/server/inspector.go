@@ -20,6 +20,7 @@ var (
 		inspect.MatchDeviceHostname: v1.MatchKind_MATCH_KIND_DEVICE_HOSTNAME,
 		inspect.MatchSubnetRoute:    v1.MatchKind_MATCH_KIND_SUBNET_ROUTE,
 		inspect.MatchQualifiedName:  v1.MatchKind_MATCH_KIND_QUALIFIED_NAME,
+		inspect.MatchDNSRecord:      v1.MatchKind_MATCH_KIND_DNS_RECORD,
 	}
 	decisions = map[inspect.Decision]v1.ResolutionDecision{
 		inspect.DecisionUnique:    v1.ResolutionDecision_RESOLUTION_DECISION_UNIQUE,
@@ -38,6 +39,7 @@ var (
 		inspect.ReasonNetworkQualifiedName:  v1.DecisionReason_DECISION_REASON_NETWORK_QUALIFIED_NAME,
 		inspect.ReasonExplicitNetwork:       v1.DecisionReason_DECISION_REASON_EXPLICIT_NETWORK,
 		inspect.ReasonAmbiguousNetworkLabel: v1.DecisionReason_DECISION_REASON_AMBIGUOUS_NETWORK_LABEL,
+		inspect.ReasonDNSRecord:             v1.DecisionReason_DECISION_REASON_DNS_RECORD,
 	}
 	candidateStatuses = map[inspect.CandidateStatus]v1.CandidateStatus{
 		inspect.StatusSelected:  v1.CandidateStatus_CANDIDATE_STATUS_SELECTED,

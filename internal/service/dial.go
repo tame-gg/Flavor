@@ -121,6 +121,9 @@ func targetAddress(q inspect.Query, c inspect.Candidate) (netip.Addr, bool) {
 	if c.Match == inspect.MatchDeviceAddress || c.Match == inspect.MatchSubnetRoute {
 		return q.Address, true
 	}
+	if c.Match == inspect.MatchDNSRecord {
+		return domain.DNSRecord{Addresses: c.Addresses}.Target()
+	}
 	for _, a := range c.Device.Addresses {
 		if a.Is4() {
 			return a, true

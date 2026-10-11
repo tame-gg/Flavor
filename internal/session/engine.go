@@ -39,6 +39,7 @@ type EngineStatus struct {
 	Self         *EnginePeer
 	Peers        []EnginePeer
 	Health       []string
+	DNSRecords   []domain.DNSRecord
 }
 
 type EngineNotify struct {

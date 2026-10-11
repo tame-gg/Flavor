@@ -6,6 +6,7 @@ All notable changes to Flavor are listed here. The format follows [Keep a Change
 
 ### Added
 
+- You can pick an exit node per network with `flavorctl exit-node list`, `set <network> <device>` and `clear <network>`. Destinations that match no device or route on any network, such as `203.0.113.7` or `example.com`, now leave through the exit node in `flavorctl forward` and the SOCKS5 proxy. Tailnet addresses and Flavor names never do. When two networks have an exit node, such destinations are ambiguous until `--network` or a preference picks one. `flavorctl devices` shows an `EXIT` column. Advertising routes and running an exit node are not covered yet ([#43](https://github.com/tame-gg/Flavor/issues/43)).
 - Names that a network's DNS settings publish, such as Headscale `extra_records`, now resolve in `flavorctl explain`, `flavorctl forward`, the SOCKS5 proxy and the Connection Inspector, and they point at the network that published them. A name that two networks both publish is ambiguous, as for devices, and `--network` or a preference picks one. Split DNS and search domains are not covered yet ([#47](https://github.com/tame-gg/Flavor/issues/47)).
 
 ## [0.1.0-beta.7] - 2026-10-10

@@ -52,8 +52,11 @@ commands:
   preference list
   preference set <destination> --network <network>
   preference remove <destination>      <network> is an id or an exact name
+  exit-node list [network]             devices that can be an exit node
+  exit-node set <network> <device>     <device> is a hostname, DNS name or node id
+  exit-node clear <network>            <network> is an id or an exact name
 
---json prints the daemon response as JSON for info, list, devices, diag, explain, conflicts, workspace list and preference list.
+--json prints the daemon response as JSON for info, list, devices, diag, explain, conflicts, workspace list, preference list and exit-node.
 `
 
 func main() {
@@ -170,9 +173,9 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSO
 			return emit(out, res.Msg)
 		}
 		w := tabwriter.NewWriter(out, 0, 4, 2, ' ', 0)
-		fmt.Fprintln(w, "NETWORK\tNODE\tHOSTNAME\tADDRESSES\tONLINE")
+		fmt.Fprintln(w, "NETWORK\tNODE\tHOSTNAME\tADDRESSES\tONLINE\tEXIT")
 		for _, d := range res.Msg.Devices {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%t\n", d.Id.GetNetworkId(), d.Id.GetNodeId(), d.Hostname, strings.Join(d.Addresses, ","), d.Online)
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%t\t%s\n", d.Id.GetNetworkId(), d.Id.GetNodeId(), d.Hostname, strings.Join(d.Addresses, ","), d.Online, exitNodeState(d))
 		}
 		return w.Flush()
 	case "add":
@@ -280,6 +283,8 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSO
 		return runWorkspace(ctx, c, args, asJSON, out)
 	case "preference", "preferences", "prefer":
 		return runPreference(ctx, c, args, asJSON, out)
+	case "exit-node", "exit-nodes":
+		return runExitNode(ctx, c, args, asJSON, out)
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", cmd, usage)
 	}

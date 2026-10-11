@@ -44,7 +44,7 @@ An address alone cannot tell those two machines apart. Flavor identifies every d
 | **Choose it** | Name the device together with its network (`pi-hole.home-lab.flavor.internal`), pass `--network` to `flavorctl forward`, or set a preference. Flavor never picks one at random. |
 | **Connect to it** | `flavorctl forward` and `flavorctl socks` connect through the right network without changing system routing. They also accept names that a network's DNS settings publish, such as Headscale `extra_records`. |
 | **Leave through it** | Pick an exit node per network with `flavorctl exit-node set <network> <device>` (`list` shows the candidates, `clear <network>` removes it). `flavorctl forward` and `flavorctl socks` send destinations that are on no tailnet, such as `203.0.113.7` or `example.com`, out through it. |
-| **Offer routes** | Advertise subnet routes, or offer this machine as an exit node, per network with `flavorctl routes advertise <network> <cidr>` and `flavorctl routes exit-node <network> on`. `flavorctl routes list` shows each one as approved or waiting for approval on the control server. Flavor forwards TCP for them; UDP is not forwarded. |
+| **Offer routes** | Advertise subnet routes per network with `flavorctl routes advertise <network> <cidr>`, so devices on the network reach your LAN through this machine. Flavor forwards TCP for them; UDP is not forwarded. `flavorctl routes list` shows which ones the control server reports as approved. Headscale does not report subnet route approvals to the advertising machine, so they can show as not approved while they already work. |
 | **Use it anywhere** | With the experimental helper, any program can resolve and connect to Flavor names. |
 
 Everything except the last row runs as your user, with no extra privileges. The last row needs an optional helper that runs as root.
@@ -276,6 +276,7 @@ Flavor embeds version 1.90.9 of Tailscale's client library. Headscale supports a
 
 - System-wide names on multi-user machines
 - An HTTP proxy
+- Offering this machine as an exit node, which needs UDP forwarding
 - Signed and notarized macOS builds ([#15](https://github.com/tame-gg/Flavor/issues/15))
 - Removing machines from the control server
 

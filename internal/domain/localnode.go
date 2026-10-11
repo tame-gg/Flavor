@@ -12,7 +12,6 @@ type LocalNode struct {
 	DNSName   string
 	Addresses []netip.Addr
 	Routes    []AdvertisedRoute
-	ExitNode  AdvertisedExitNode
 }
 
 type AuthPrompt struct {

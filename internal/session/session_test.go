@@ -612,32 +612,27 @@ func TestAdvertisedRoutesFollowTheEngine(t *testing.T) {
 		t.Fatal(err)
 	}
 	waitState(t, s, domain.StateConnected)
-	if n := s.LocalNode(); len(n.Routes) != 0 || n.ExitNode.Offered {
+	if n := s.LocalNode(); len(n.Routes) != 0 {
 		t.Fatalf("%+v", n)
 	}
 
-	exit := []netip.Prefix{netip.MustParsePrefix("::/0"), netip.MustParsePrefix("0.0.0.0/0")}
-	if err := s.SetAdvertisedRoutes(context.Background(), append([]netip.Prefix{wide, lan}, exit...)); err != nil {
+	if err := s.SetAdvertisedRoutes(context.Background(), []netip.Prefix{lan, wide}); err != nil {
 		t.Fatal(err)
 	}
 	n := s.LocalNode()
 	if len(n.Routes) != 2 || n.Routes[0].Prefix != wide || n.Routes[1].Prefix != lan || n.Routes[0].Approved || n.Routes[1].Approved {
-		t.Fatalf("routes must be sorted, without default routes and unapproved: %+v", n.Routes)
+		t.Fatalf("routes must be sorted and unapproved: %+v", n.Routes)
 	}
-	if !n.ExitNode.Offered || n.ExitNode.Approved {
-		t.Fatalf("%+v", n.ExitNode)
-	}
-	if calls := eng.AdvertisedRoutesCalls(); len(calls) != 1 || len(calls[0]) != 4 {
+	if calls := eng.AdvertisedRoutesCalls(); len(calls) != 1 || len(calls[0]) != 2 {
 		t.Fatalf("%v", calls)
 	}
 
 	eng.ApproveRoutes(lan, netip.MustParsePrefix("172.16.0.0/12"))
-	eng.ApproveExitNode(true)
 	eng.PushNetMap()
 	deadline := time.After(2 * time.Second)
 	for {
 		n = s.LocalNode()
-		if n.ExitNode.Approved && len(n.Routes) == 2 && n.Routes[1].Approved {
+		if len(n.Routes) == 2 && n.Routes[1].Approved {
 			break
 		}
 		select {
@@ -657,7 +652,7 @@ func TestAdvertisedRoutesFollowTheEngine(t *testing.T) {
 	if err := s.SetAdvertisedRoutes(context.Background(), nil); err != nil {
 		t.Fatal(err)
 	}
-	if n := s.LocalNode(); len(n.Routes) != 0 || n.ExitNode.Offered || n.ExitNode.Approved {
+	if n := s.LocalNode(); len(n.Routes) != 0 {
 		t.Fatalf("%+v", n)
 	}
 }

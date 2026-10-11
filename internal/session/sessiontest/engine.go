@@ -36,7 +36,6 @@ type Engine struct {
 	exitNodeCalls  []domain.NodeID
 	advertised     []netip.Prefix
 	approved       []netip.Prefix
-	exitApproved   bool
 	routeCalls     [][]netip.Prefix
 }
 
@@ -102,7 +101,6 @@ func (e *Engine) Status(ctx context.Context) (session.EngineStatus, error) {
 	st.ExitNode = e.exitNode
 	st.AdvertisedRoutes = slices.Clone(e.advertised)
 	st.ApprovedRoutes = slices.Clone(e.approved)
-	st.ExitApproved = e.exitApproved
 	return st, nil
 }
 
@@ -130,12 +128,6 @@ func (e *Engine) ApproveRoutes(routes ...netip.Prefix) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	e.approved = slices.Clone(routes)
-}
-
-func (e *Engine) ApproveExitNode(approved bool) {
-	e.mu.Lock()
-	defer e.mu.Unlock()
-	e.exitApproved = approved
 }
 
 func (e *Engine) SetExitNode(_ context.Context, id domain.NodeID) error {

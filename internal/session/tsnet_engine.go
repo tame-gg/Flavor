@@ -26,11 +26,10 @@ type tsnetEngine struct {
 	srv *tsnet.Server
 	lc  *local.Client
 
-	mu           sync.Mutex
-	records      []domain.DNSRecord
-	approved     []netip.Prefix
-	exitApproved bool
-	advertised   []netip.Prefix
+	mu         sync.Mutex
+	records    []domain.DNSRecord
+	approved   []netip.Prefix
+	advertised []netip.Prefix
 }
 
 func newTsnetEngine(cfg provider.ResolvedSessionConfig, authKey string, log *slog.Logger) (Engine, error) {
@@ -129,7 +128,7 @@ func (e *tsnetEngine) SetAdvertisedRoutes(ctx context.Context, routes []netip.Pr
 	})
 	if err == nil {
 		e.mu.Lock()
-		e.advertised = prefs.AdvertiseRoutes().AsSlice()
+		e.advertised = slices.Clone(prefs.AdvertiseRoutes)
 		e.mu.Unlock()
 	}
 	return err
@@ -156,7 +155,6 @@ func (e *tsnetEngine) Status(ctx context.Context) (EngineStatus, error) {
 	}
 	out.DNSRecords = domain.CloneDNSRecords(e.records)
 	out.ApprovedRoutes = slices.Clone(e.approved)
-	out.ExitApproved = e.exitApproved
 	e.mu.Unlock()
 	return out, nil
 }
@@ -178,12 +176,11 @@ func (e *tsnetEngine) Watch(ctx context.Context, emit func(EngineNotify)) error 
 		if n.NetMap != nil {
 			records := projectDNSRecords(&n.NetMap.DNS)
 			var approved []netip.Prefix
-			exit := false
 			if self := n.NetMap.SelfNode; self.Valid() {
-				approved, exit = approvedRoutes(append(self.AllowedIPs().AsSlice(), self.PrimaryRoutes().AsSlice()...), self.Addresses().AsSlice())
+				approved = approvedRoutes(append(self.AllowedIPs().AsSlice(), self.PrimaryRoutes().AsSlice()...), self.Addresses().AsSlice())
 			}
 			e.mu.Lock()
-			e.records, e.approved, e.exitApproved = records, approved, exit
+			e.records, e.approved = records, approved
 			e.mu.Unlock()
 		}
 		ev := EngineNotify{LoginFinished: n.LoginFinished != nil, NetMapChanged: n.NetMap != nil}

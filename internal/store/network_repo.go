@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/netip"
+	"strings"
 	"time"
 
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
@@ -38,7 +40,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 
 func (r *NetworkRepository) Get(ctx context.Context, id domain.NetworkID) (domain.Network, error) {
 	row := r.db.sql.QueryRowContext(ctx, `
-SELECT id, display_name, provider, control_url, auto_connect, node_hostname, created_at, updated_at
+SELECT id, display_name, provider, control_url, auto_connect, node_hostname, created_at, updated_at, exit_node_id, advertised_routes
 FROM networks WHERE id = ?`, string(id))
 	n, err := scanNetwork(row)
 	if err == sql.ErrNoRows {
@@ -49,7 +51,7 @@ FROM networks WHERE id = ?`, string(id))
 
 func (r *NetworkRepository) List(ctx context.Context) ([]domain.Network, error) {
 	rows, err := r.db.sql.QueryContext(ctx, `
-SELECT id, display_name, provider, control_url, auto_connect, node_hostname, created_at, updated_at
+SELECT id, display_name, provider, control_url, auto_connect, node_hostname, created_at, updated_at, exit_node_id, advertised_routes
 FROM networks ORDER BY created_at ASC, id ASC`)
 	if err != nil {
 		return nil, err
@@ -94,6 +96,45 @@ WHERE id = ?`,
 	return nil
 }
 
+func (r *NetworkRepository) SetExitNode(ctx context.Context, id domain.NetworkID, node domain.NodeID) error {
+	return r.setColumn(ctx, id, "exit_node_id", string(node))
+}
+
+func (r *NetworkRepository) SetAdvertisedRoutes(ctx context.Context, id domain.NetworkID, routes []netip.Prefix) error {
+	parts := make([]string, len(routes))
+	for i, p := range routes {
+		parts[i] = p.String()
+	}
+	return r.setColumn(ctx, id, "advertised_routes", strings.Join(parts, " "))
+}
+
+func (r *NetworkRepository) setColumn(ctx context.Context, id domain.NetworkID, column, value string) error {
+	res, err := r.db.sql.ExecContext(ctx, `UPDATE networks SET `+column+` = ? WHERE id = ?`, value, string(id))
+	if err != nil {
+		return err
+	}
+	aff, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if aff == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func parseRoutes(raw string) ([]netip.Prefix, error) {
+	var out []netip.Prefix
+	for _, f := range strings.Fields(raw) {
+		p, err := netip.ParsePrefix(f)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	return out, nil
+}
+
 func (r *NetworkRepository) Delete(ctx context.Context, id domain.NetworkID) error {
 	res, err := r.db.sql.ExecContext(ctx, `DELETE FROM networks WHERE id = ?`, string(id))
 	if err != nil {
@@ -115,10 +156,10 @@ type rowScanner interface {
 
 func scanNetwork(row rowScanner) (domain.Network, error) {
 	var (
-		id, display, provider, control, hostname, created, updated string
-		auto                                                       int
+		id, display, provider, control, hostname, created, updated, exit, routes string
+		auto                                                                     int
 	)
-	if err := row.Scan(&id, &display, &provider, &control, &auto, &hostname, &created, &updated); err != nil {
+	if err := row.Scan(&id, &display, &provider, &control, &auto, &hostname, &created, &updated, &exit, &routes); err != nil {
 		return domain.Network{}, err
 	}
 	nid, err := domain.ParseNetworkID(id)
@@ -143,15 +184,21 @@ func scanNetwork(row rowScanner) (domain.Network, error) {
 			return domain.Network{}, fmt.Errorf("%w: updated_at", ErrCorruptDB)
 		}
 	}
+	advertised, err := parseRoutes(routes)
+	if err != nil {
+		return domain.Network{}, fmt.Errorf("%w: advertised_routes", ErrCorruptDB)
+	}
 	n := domain.Network{
-		ID:           nid,
-		DisplayName:  display,
-		Provider:     p,
-		ControlURL:   control,
-		AutoConnect:  auto != 0,
-		NodeHostname: hostname,
-		CreatedAt:    createdAt.UTC(),
-		UpdatedAt:    updatedAt.UTC(),
+		ID:               nid,
+		DisplayName:      display,
+		Provider:         p,
+		ControlURL:       control,
+		AutoConnect:      auto != 0,
+		NodeHostname:     hostname,
+		CreatedAt:        createdAt.UTC(),
+		UpdatedAt:        updatedAt.UTC(),
+		ExitNode:         domain.NodeID(exit),
+		AdvertisedRoutes: advertised,
 	}
 	if err := n.Validate(); err != nil {
 		return domain.Network{}, fmt.Errorf("%w: %v", ErrCorruptDB, err)

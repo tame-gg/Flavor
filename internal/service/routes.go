@@ -26,7 +26,7 @@ func (s *Service) GetRoutes(ctx context.Context, rawNetwork string) (domain.Loca
 	return sess.LocalNode(), nil
 }
 
-func (s *Service) UpdateRoutes(ctx context.Context, rawNetwork string, add, remove []string, exitNode *bool) (domain.LocalNode, error) {
+func (s *Service) UpdateRoutes(ctx context.Context, rawNetwork string, add, remove []string) (domain.LocalNode, error) {
 	id, err := parseID(rawNetwork)
 	if err != nil {
 		return domain.LocalNode{}, err
@@ -48,26 +48,18 @@ func (s *Service) UpdateRoutes(ctx context.Context, rawNetwork string, add, remo
 	if err != nil {
 		return domain.LocalNode{}, err
 	}
-	local := sess.LocalNode()
-	current := advertisedPrefixes(local)
-	offered := local.ExitNode.Offered
-	if exitNode != nil {
-		offered = *exitNode
-	}
-	if offered && !local.ExitNode.Offered && slices.ContainsFunc(sess.Devices(), func(d domain.Device) bool { return d.ExitNode }) {
-		return domain.LocalNode{}, fail(CodeInvalidArgument, "stop using an exit node before offering this machine as one", false)
-	}
-	next := mergeRoutes(routePrefixes(local), toAdd, toRemove)
+	current := routePrefixes(sess.LocalNode())
+	next := mergeRoutes(current, toAdd, toRemove)
 	if len(next) > maxAdvertisedRoutes {
 		return domain.LocalNode{}, fail(CodeInvalidArgument, "too many advertised routes", false)
-	}
-	if offered {
-		next = append(next, domain.ExitRoutes...)
 	}
 	if !slices.Equal(current, next) {
 		err := sess.SetAdvertisedRoutes(ctx, next)
 		if err = s.sessionError(sess, err, "setting advertised routes failed", "could not change the advertised routes"); err != nil {
 			return domain.LocalNode{}, err
+		}
+		if err := s.cfg.Store.Networks().SetAdvertisedRoutes(ctx, id, next); err != nil {
+			return domain.LocalNode{}, s.storeErr(err)
 		}
 	}
 	return sess.LocalNode(), nil
@@ -108,14 +100,6 @@ func routePrefixes(n domain.LocalNode) []netip.Prefix {
 	out := make([]netip.Prefix, 0, len(n.Routes))
 	for _, r := range n.Routes {
 		out = append(out, r.Prefix)
-	}
-	return out
-}
-
-func advertisedPrefixes(n domain.LocalNode) []netip.Prefix {
-	out := routePrefixes(n)
-	if n.ExitNode.Offered {
-		out = append(out, domain.ExitRoutes...)
 	}
 	return out
 }

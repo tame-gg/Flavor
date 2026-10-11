@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"net/netip"
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"testing"
 	"time"
 
@@ -48,7 +50,7 @@ func TestMigrateFreshDB(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if ver != 4 {
+	if ver != 5 {
 		t.Fatalf("version=%d", ver)
 	}
 }
@@ -402,5 +404,37 @@ func TestHardDeleteFSFailureLeavesSweepableTombstone(t *testing.T) {
 	}
 	if _, err := os.Stat(tomb); !os.IsNotExist(err) {
 		t.Fatal("tombstone not swept")
+	}
+}
+
+func TestNetworkNodePrefs(t *testing.T) {
+	ctx := context.Background()
+	db := openTestDB(t)
+	n := sampleNetwork(domain.ProviderHeadscale, "LunarLabs", "luna-desktop", "https://headscale.example.com/")
+	if err := db.Networks().Create(ctx, n); err != nil {
+		t.Fatal(err)
+	}
+	routes := []netip.Prefix{netip.MustParsePrefix("192.168.50.0/24"), netip.MustParsePrefix("0.0.0.0/0"), netip.MustParsePrefix("::/0")}
+	if err := db.Networks().SetExitNode(ctx, n.ID, "node-7"); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Networks().SetAdvertisedRoutes(ctx, n.ID, routes); err != nil {
+		t.Fatal(err)
+	}
+	got, err := db.Networks().Get(ctx, n.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.ExitNode != "node-7" || !slices.Equal(got.AdvertisedRoutes, routes) {
+		t.Fatalf("%+v", got)
+	}
+	if err := db.Networks().SetAdvertisedRoutes(ctx, n.ID, nil); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := db.Networks().Get(ctx, n.ID); len(got.AdvertisedRoutes) != 0 {
+		t.Fatalf("%+v", got.AdvertisedRoutes)
+	}
+	if err := db.Networks().SetExitNode(ctx, "01M4NYZEAWKW0JM28RR7R946YV", ""); !errors.Is(err, store.ErrNotFound) {
+		t.Fatalf("%v", err)
 	}
 }

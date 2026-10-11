@@ -1,0 +1,2 @@
+ALTER TABLE networks ADD COLUMN exit_node_id TEXT NOT NULL DEFAULT '';
+ALTER TABLE networks ADD COLUMN advertised_routes TEXT NOT NULL DEFAULT '';

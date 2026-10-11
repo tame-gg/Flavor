@@ -121,7 +121,11 @@ func (s *Session) run(g *generation, enrollment *EnrollmentInput) error {
 
 	s.transition(domain.StateConnecting, "")
 
-	eng, err := s.newEng(s.cfg, authKey, s.log)
+	s.lifeMu.Lock()
+	cfg := s.cfg
+	cfg.AdvertisedRoutes = slices.Clone(cfg.AdvertisedRoutes)
+	s.lifeMu.Unlock()
+	eng, err := s.newEng(cfg, authKey, s.log)
 	if err != nil {
 		return s.abortStart(g, err)
 	}
@@ -132,6 +136,16 @@ func (s *Session) run(g *generation, enrollment *EnrollmentInput) error {
 		return s.abortStart(g, err)
 	}
 	eng.ClearAuthKey()
+	if cfg.ExitNode != "" {
+		if err := eng.SetExitNode(g.ctx, cfg.ExitNode); err != nil {
+			s.log.Warn("restoring the exit node failed", "network_id", cfg.NetworkID, "err", err.Error())
+		}
+	}
+	if len(cfg.AdvertisedRoutes) > 0 {
+		if err := eng.SetAdvertisedRoutes(g.ctx, cfg.AdvertisedRoutes); err != nil {
+			s.log.Warn("restoring advertised routes failed", "network_id", cfg.NetworkID, "err", err.Error())
+		}
+	}
 
 	s.lifeMu.Lock()
 	if g.phase != backendStarting {
@@ -325,7 +339,7 @@ func (s *Session) applyStatus(snap EngineStatus) {
 	} else if len(snap.TailscaleIPs) > 0 {
 		local.Addresses = append([]netip.Addr(nil), snap.TailscaleIPs...)
 	}
-	local.Routes, local.ExitNode = projectAdvertised(snap)
+	local.Routes = projectAdvertised(snap)
 
 	newDevices := make(map[domain.NodeID]domain.Device, len(snap.Peers)+1)
 	for _, p := range snap.Peers {
@@ -503,6 +517,9 @@ func (s *Session) SetExitNode(ctx context.Context, id domain.NodeID) error {
 	if err := eng.SetExitNode(ctx, id); err != nil {
 		return err
 	}
+	s.lifeMu.Lock()
+	s.cfg.ExitNode = id
+	s.lifeMu.Unlock()
 	snap, err := eng.Status(ctx)
 	if err != nil {
 		return err
@@ -523,6 +540,9 @@ func (s *Session) SetAdvertisedRoutes(ctx context.Context, routes []netip.Prefix
 	if err := eng.SetAdvertisedRoutes(ctx, routes); err != nil {
 		return err
 	}
+	s.lifeMu.Lock()
+	s.cfg.AdvertisedRoutes = slices.Clone(routes)
+	s.lifeMu.Unlock()
 	snap, err := eng.Status(ctx)
 	if err != nil {
 		return err

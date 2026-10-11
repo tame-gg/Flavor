@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file flavor/v1/routes.proto.
  */
 export const file_flavor_v1_routes: GenFile = /*@__PURE__*/
-  fileDesc("ChZmbGF2b3IvdjEvcm91dGVzLnByb3RvEglmbGF2b3IudjEiMwoPQWR2ZXJ0aXNlZFJvdXRlEg4KBnByZWZpeBgBIAEoCRIQCghhcHByb3ZlZBgCIAEoCCImChBHZXRSb3V0ZXNSZXF1ZXN0EhIKCm5ldHdvcmtfaWQYASABKAkidgoRR2V0Um91dGVzUmVzcG9uc2USKgoGcm91dGVzGAEgAygLMhouZmxhdm9yLnYxLkFkdmVydGlzZWRSb3V0ZRIZChFleGl0X25vZGVfb2ZmZXJlZBgCIAEoCBIaChJleGl0X25vZGVfYXBwcm92ZWQYAyABKAgibAoTVXBkYXRlUm91dGVzUmVxdWVzdBISCgpuZXR3b3JrX2lkGAEgASgJEgsKA2FkZBgCIAMoCRIOCgZyZW1vdmUYAyADKAkSFgoJZXhpdF9ub2RlGAQgASgISACIAQFCDAoKX2V4aXRfbm9kZSJ5ChRVcGRhdGVSb3V0ZXNSZXNwb25zZRIqCgZyb3V0ZXMYASADKAsyGi5mbGF2b3IudjEuQWR2ZXJ0aXNlZFJvdXRlEhkKEWV4aXRfbm9kZV9vZmZlcmVkGAIgASgIEhoKEmV4aXRfbm9kZV9hcHByb3ZlZBgDIAEoCDKnAQoMUm91dGVTZXJ2aWNlEkYKCUdldFJvdXRlcxIbLmZsYXZvci52MS5HZXRSb3V0ZXNSZXF1ZXN0GhwuZmxhdm9yLnYxLkdldFJvdXRlc1Jlc3BvbnNlEk8KDFVwZGF0ZVJvdXRlcxIeLmZsYXZvci52MS5VcGRhdGVSb3V0ZXNSZXF1ZXN0Gh8uZmxhdm9yLnYxLlVwZGF0ZVJvdXRlc1Jlc3BvbnNlQpwBCg1jb20uZmxhdm9yLnYxQgtSb3V0ZXNQcm90b1ABWjlnaXQubHVuYXJsYWJzLmRldi9mbGF2b3IvZmxhdm9yL2dlbi9nby9mbGF2b3IvdjE7Zmxhdm9ydjGiAgNGWFiqAglGbGF2b3IuVjHKAglGbGF2b3JcVjHiAhVGbGF2b3JcVjFcR1BCTWV0YWRhdGHqAgpGbGF2b3I6OlYxYgZwcm90bzM");
+  fileDesc("ChZmbGF2b3IvdjEvcm91dGVzLnByb3RvEglmbGF2b3IudjEiMwoPQWR2ZXJ0aXNlZFJvdXRlEg4KBnByZWZpeBgBIAEoCRIQCghhcHByb3ZlZBgCIAEoCCImChBHZXRSb3V0ZXNSZXF1ZXN0EhIKCm5ldHdvcmtfaWQYASABKAkiPwoRR2V0Um91dGVzUmVzcG9uc2USKgoGcm91dGVzGAEgAygLMhouZmxhdm9yLnYxLkFkdmVydGlzZWRSb3V0ZSJGChNVcGRhdGVSb3V0ZXNSZXF1ZXN0EhIKCm5ldHdvcmtfaWQYASABKAkSCwoDYWRkGAIgAygJEg4KBnJlbW92ZRgDIAMoCSJCChRVcGRhdGVSb3V0ZXNSZXNwb25zZRIqCgZyb3V0ZXMYASADKAsyGi5mbGF2b3IudjEuQWR2ZXJ0aXNlZFJvdXRlMqcBCgxSb3V0ZVNlcnZpY2USRgoJR2V0Um91dGVzEhsuZmxhdm9yLnYxLkdldFJvdXRlc1JlcXVlc3QaHC5mbGF2b3IudjEuR2V0Um91dGVzUmVzcG9uc2USTwoMVXBkYXRlUm91dGVzEh4uZmxhdm9yLnYxLlVwZGF0ZVJvdXRlc1JlcXVlc3QaHy5mbGF2b3IudjEuVXBkYXRlUm91dGVzUmVzcG9uc2VCnAEKDWNvbS5mbGF2b3IudjFCC1JvdXRlc1Byb3RvUAFaOWdpdC5sdW5hcmxhYnMuZGV2L2ZsYXZvci9mbGF2b3IvZ2VuL2dvL2ZsYXZvci92MTtmbGF2b3J2MaICA0ZYWKoCCUZsYXZvci5WMcoCCUZsYXZvclxWMeICFUZsYXZvclxWMVxHUEJNZXRhZGF0YeoCCkZsYXZvcjo6VjFiBnByb3RvMw");
 
 /**
  * @generated from message flavor.v1.AdvertisedRoute
@@ -59,16 +59,6 @@ export type GetRoutesResponse = Message<"flavor.v1.GetRoutesResponse"> & {
    * @generated from field: repeated flavor.v1.AdvertisedRoute routes = 1;
    */
   routes: AdvertisedRoute[];
-
-  /**
-   * @generated from field: bool exit_node_offered = 2;
-   */
-  exitNodeOffered: boolean;
-
-  /**
-   * @generated from field: bool exit_node_approved = 3;
-   */
-  exitNodeApproved: boolean;
 };
 
 /**
@@ -96,11 +86,6 @@ export type UpdateRoutesRequest = Message<"flavor.v1.UpdateRoutesRequest"> & {
    * @generated from field: repeated string remove = 3;
    */
   remove: string[];
-
-  /**
-   * @generated from field: optional bool exit_node = 4;
-   */
-  exitNode?: boolean | undefined;
 };
 
 /**
@@ -118,16 +103,6 @@ export type UpdateRoutesResponse = Message<"flavor.v1.UpdateRoutesResponse"> & {
    * @generated from field: repeated flavor.v1.AdvertisedRoute routes = 1;
    */
   routes: AdvertisedRoute[];
-
-  /**
-   * @generated from field: bool exit_node_offered = 2;
-   */
-  exitNodeOffered: boolean;
-
-  /**
-   * @generated from field: bool exit_node_approved = 3;
-   */
-  exitNodeApproved: boolean;
 };
 
 /**

@@ -2,6 +2,8 @@ package provider
 
 import (
 	"fmt"
+	"net/netip"
+	"slices"
 
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
 )
@@ -13,6 +15,9 @@ type ResolvedSessionConfig struct {
 	NodeHostname string
 	StateDir     string
 	ControlPlane domain.ControlPlaneID
+
+	ExitNode         domain.NodeID
+	AdvertisedRoutes []netip.Prefix
 }
 
 func Resolve(n domain.Network, stateDir string) (ResolvedSessionConfig, error) {
@@ -33,6 +38,9 @@ func Resolve(n domain.Network, stateDir string) (ResolvedSessionConfig, error) {
 		NodeHostname: n.NodeHostname,
 		StateDir:     stateDir,
 		ControlPlane: domain.ControlPlaneIDFor(n.Provider, control),
+
+		ExitNode:         n.ExitNode,
+		AdvertisedRoutes: slices.Clone(n.AdvertisedRoutes),
 	}
 	return cfg, nil
 }

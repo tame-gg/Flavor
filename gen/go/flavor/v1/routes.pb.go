@@ -118,12 +118,10 @@ func (x *GetRoutesRequest) GetNetworkId() string {
 }
 
 type GetRoutesResponse struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	Routes           []*AdvertisedRoute     `protobuf:"bytes,1,rep,name=routes,proto3" json:"routes,omitempty"`
-	ExitNodeOffered  bool                   `protobuf:"varint,2,opt,name=exit_node_offered,json=exitNodeOffered,proto3" json:"exit_node_offered,omitempty"`
-	ExitNodeApproved bool                   `protobuf:"varint,3,opt,name=exit_node_approved,json=exitNodeApproved,proto3" json:"exit_node_approved,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Routes        []*AdvertisedRoute     `protobuf:"bytes,1,rep,name=routes,proto3" json:"routes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetRoutesResponse) Reset() {
@@ -163,26 +161,11 @@ func (x *GetRoutesResponse) GetRoutes() []*AdvertisedRoute {
 	return nil
 }
 
-func (x *GetRoutesResponse) GetExitNodeOffered() bool {
-	if x != nil {
-		return x.ExitNodeOffered
-	}
-	return false
-}
-
-func (x *GetRoutesResponse) GetExitNodeApproved() bool {
-	if x != nil {
-		return x.ExitNodeApproved
-	}
-	return false
-}
-
 type UpdateRoutesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	NetworkId     string                 `protobuf:"bytes,1,opt,name=network_id,json=networkId,proto3" json:"network_id,omitempty"`
 	Add           []string               `protobuf:"bytes,2,rep,name=add,proto3" json:"add,omitempty"`
 	Remove        []string               `protobuf:"bytes,3,rep,name=remove,proto3" json:"remove,omitempty"`
-	ExitNode      *bool                  `protobuf:"varint,4,opt,name=exit_node,json=exitNode,proto3,oneof" json:"exit_node,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -238,20 +221,11 @@ func (x *UpdateRoutesRequest) GetRemove() []string {
 	return nil
 }
 
-func (x *UpdateRoutesRequest) GetExitNode() bool {
-	if x != nil && x.ExitNode != nil {
-		return *x.ExitNode
-	}
-	return false
-}
-
 type UpdateRoutesResponse struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	Routes           []*AdvertisedRoute     `protobuf:"bytes,1,rep,name=routes,proto3" json:"routes,omitempty"`
-	ExitNodeOffered  bool                   `protobuf:"varint,2,opt,name=exit_node_offered,json=exitNodeOffered,proto3" json:"exit_node_offered,omitempty"`
-	ExitNodeApproved bool                   `protobuf:"varint,3,opt,name=exit_node_approved,json=exitNodeApproved,proto3" json:"exit_node_approved,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Routes        []*AdvertisedRoute     `protobuf:"bytes,1,rep,name=routes,proto3" json:"routes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UpdateRoutesResponse) Reset() {
@@ -291,20 +265,6 @@ func (x *UpdateRoutesResponse) GetRoutes() []*AdvertisedRoute {
 	return nil
 }
 
-func (x *UpdateRoutesResponse) GetExitNodeOffered() bool {
-	if x != nil {
-		return x.ExitNodeOffered
-	}
-	return false
-}
-
-func (x *UpdateRoutesResponse) GetExitNodeApproved() bool {
-	if x != nil {
-		return x.ExitNodeApproved
-	}
-	return false
-}
-
 var File_flavor_v1_routes_proto protoreflect.FileDescriptor
 
 const file_flavor_v1_routes_proto_rawDesc = "" +
@@ -315,23 +275,16 @@ const file_flavor_v1_routes_proto_rawDesc = "" +
 	"\bapproved\x18\x02 \x01(\bR\bapproved\"1\n" +
 	"\x10GetRoutesRequest\x12\x1d\n" +
 	"\n" +
-	"network_id\x18\x01 \x01(\tR\tnetworkId\"\xa1\x01\n" +
+	"network_id\x18\x01 \x01(\tR\tnetworkId\"G\n" +
 	"\x11GetRoutesResponse\x122\n" +
-	"\x06routes\x18\x01 \x03(\v2\x1a.flavor.v1.AdvertisedRouteR\x06routes\x12*\n" +
-	"\x11exit_node_offered\x18\x02 \x01(\bR\x0fexitNodeOffered\x12,\n" +
-	"\x12exit_node_approved\x18\x03 \x01(\bR\x10exitNodeApproved\"\x8e\x01\n" +
+	"\x06routes\x18\x01 \x03(\v2\x1a.flavor.v1.AdvertisedRouteR\x06routes\"^\n" +
 	"\x13UpdateRoutesRequest\x12\x1d\n" +
 	"\n" +
 	"network_id\x18\x01 \x01(\tR\tnetworkId\x12\x10\n" +
 	"\x03add\x18\x02 \x03(\tR\x03add\x12\x16\n" +
-	"\x06remove\x18\x03 \x03(\tR\x06remove\x12 \n" +
-	"\texit_node\x18\x04 \x01(\bH\x00R\bexitNode\x88\x01\x01B\f\n" +
-	"\n" +
-	"_exit_node\"\xa4\x01\n" +
+	"\x06remove\x18\x03 \x03(\tR\x06remove\"J\n" +
 	"\x14UpdateRoutesResponse\x122\n" +
-	"\x06routes\x18\x01 \x03(\v2\x1a.flavor.v1.AdvertisedRouteR\x06routes\x12*\n" +
-	"\x11exit_node_offered\x18\x02 \x01(\bR\x0fexitNodeOffered\x12,\n" +
-	"\x12exit_node_approved\x18\x03 \x01(\bR\x10exitNodeApproved2\xa7\x01\n" +
+	"\x06routes\x18\x01 \x03(\v2\x1a.flavor.v1.AdvertisedRouteR\x06routes2\xa7\x01\n" +
 	"\fRouteService\x12F\n" +
 	"\tGetRoutes\x12\x1b.flavor.v1.GetRoutesRequest\x1a\x1c.flavor.v1.GetRoutesResponse\x12O\n" +
 	"\fUpdateRoutes\x12\x1e.flavor.v1.UpdateRoutesRequest\x1a\x1f.flavor.v1.UpdateRoutesResponseB\x9c\x01\n" +
@@ -377,7 +330,6 @@ func file_flavor_v1_routes_proto_init() {
 	if File_flavor_v1_routes_proto != nil {
 		return
 	}
-	file_flavor_v1_routes_proto_msgTypes[3].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

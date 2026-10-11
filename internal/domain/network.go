@@ -3,6 +3,7 @@ package domain
 import (
 	"errors"
 	"fmt"
+	"net/netip"
 	"net/url"
 	"strings"
 	"time"
@@ -18,6 +19,9 @@ type Network struct {
 	NodeHostname string
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
+
+	ExitNode         NodeID
+	AdvertisedRoutes []netip.Prefix
 }
 
 var (

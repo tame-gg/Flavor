@@ -84,19 +84,14 @@ func routes(p *ipnstate.PeerStatus) []netip.Prefix {
 	return out
 }
 
-func approvedRoutes(allowed []netip.Prefix, addrs []netip.Prefix) ([]netip.Prefix, bool) {
+func approvedRoutes(allowed []netip.Prefix, addrs []netip.Prefix) []netip.Prefix {
 	var out []netip.Prefix
-	exit := false
 	for _, r := range allowed {
-		switch {
-		case !r.IsValid() || slices.Contains(addrs, r):
-		case r.Bits() == 0:
-			exit = true
-		case !slices.Contains(out, r.Masked()):
+		if r.IsValid() && r.Bits() != 0 && !slices.Contains(addrs, r) && !slices.Contains(out, r.Masked()) {
 			out = append(out, r.Masked())
 		}
 	}
-	return out, exit
+	return out
 }
 
 func forwardable(a netip.Addr, advertised []netip.Prefix) bool {
@@ -107,7 +102,7 @@ func forwardable(a netip.Addr, advertised []netip.Prefix) bool {
 	return slices.ContainsFunc(advertised, func(p netip.Prefix) bool { return p.Contains(a) })
 }
 
-func projectAdvertised(snap EngineStatus) ([]domain.AdvertisedRoute, domain.AdvertisedExitNode) {
+func projectAdvertised(snap EngineStatus) []domain.AdvertisedRoute {
 	var routes []domain.AdvertisedRoute
 	for _, r := range snap.AdvertisedRoutes {
 		if !r.IsValid() || r.Bits() == 0 {
@@ -120,18 +115,7 @@ func projectAdvertised(snap EngineStatus) ([]domain.AdvertisedRoute, domain.Adve
 		routes = append(routes, domain.AdvertisedRoute{Prefix: r, Approved: slices.Contains(snap.ApprovedRoutes, r)})
 	}
 	slices.SortFunc(routes, func(a, b domain.AdvertisedRoute) int { return a.Prefix.Compare(b.Prefix) })
-	exit := domain.AdvertisedExitNode{Offered: containsAll(snap.AdvertisedRoutes, domain.ExitRoutes)}
-	exit.Approved = exit.Offered && snap.ExitApproved
-	return routes, exit
-}
-
-func containsAll(have, want []netip.Prefix) bool {
-	for _, w := range want {
-		if !slices.Contains(have, w) {
-			return false
-		}
-	}
-	return true
+	return routes
 }
 
 func tags(p *ipnstate.PeerStatus) []string {

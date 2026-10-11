@@ -49,7 +49,7 @@ func runRoutes(ctx context.Context, c *client.Client, args []string, asJSON bool
 			if err != nil {
 				return err
 			}
-			rows = append(rows, routeRows(n.DisplayName, res.Msg.Routes, res.Msg.ExitNodeOffered, res.Msg.ExitNodeApproved)...)
+			rows = append(rows, routeRows(n.DisplayName, res.Msg.Routes)...)
 			all = append(all, networkRoutes{NetworkID: n.Id, Response: res.Msg})
 		}
 		if asJSON {
@@ -84,26 +84,6 @@ func runRoutes(ctx context.Context, c *client.Client, args []string, asJSON bool
 				fmt.Fprintf(out, "no longer advertising %s on %s\n", cidr, n.DisplayName)
 			}
 		}
-	case "exit-node", "exit":
-		if len(rest) != 2 {
-			return fmt.Errorf("routes exit-node: expected a network and on or off\n\n%s", usage)
-		}
-		on, err := parseSwitch(rest[1])
-		if err != nil {
-			return err
-		}
-		n, err := findNetwork(nets.Msg.Networks, rest[0])
-		if err != nil {
-			return err
-		}
-		res, err := c.Routes.UpdateRoutes(ctx, connect.NewRequest(&v1.UpdateRoutesRequest{NetworkId: n.Id, ExitNode: &on}))
-		if err != nil {
-			return err
-		}
-		if asJSON {
-			return emit(out, res.Msg)
-		}
-		fmt.Fprintln(out, exitNodeSummary(n.DisplayName, res.Msg.ExitNodeOffered, res.Msg.ExitNodeApproved))
 	default:
 		return fmt.Errorf("unknown routes command %q\n\n%s", sub, usage)
 	}
@@ -146,30 +126,17 @@ func connectedNetworks(nets []*v1.Network) []*v1.Network {
 	return out
 }
 
-func parseSwitch(s string) (bool, error) {
-	switch s {
-	case "on":
-		return true, nil
-	case "off":
-		return false, nil
-	}
-	return false, fmt.Errorf("expected on or off, got %q\n\n%s", s, usage)
-}
-
 func approvalText(approved bool) string {
 	if approved {
 		return "approved"
 	}
-	return "waiting for approval"
+	return "not approved yet"
 }
 
-func routeRows(network string, routes []*v1.AdvertisedRoute, exitOffered, exitApproved bool) []routeRow {
+func routeRows(network string, routes []*v1.AdvertisedRoute) []routeRow {
 	var rows []routeRow
 	for _, r := range routes {
 		rows = append(rows, routeRow{network, r.Prefix, r.Approved})
-	}
-	if exitOffered {
-		rows = append(rows, routeRow{network, "exit node", exitApproved})
 	}
 	return rows
 }
@@ -199,17 +166,7 @@ func advertiseSummary(cidr, network string, routes []*v1.AdvertisedRoute) string
 		if r.Approved {
 			return fmt.Sprintf("advertising %s on %s; it is already approved", cidr, network)
 		}
-		return fmt.Sprintf("advertising %s on %s; it is waiting for approval on the control server", cidr, network)
+		return fmt.Sprintf("advertising %s on %s; approve it on the control server", cidr, network)
 	}
 	return fmt.Sprintf("advertising %s on %s", cidr, network)
-}
-
-func exitNodeSummary(network string, offered, approved bool) string {
-	switch {
-	case !offered:
-		return fmt.Sprintf("%s no longer offers this machine as an exit node", network)
-	case approved:
-		return fmt.Sprintf("this machine is an approved exit node on %s", network)
-	}
-	return fmt.Sprintf("offering this machine as an exit node on %s; it is waiting for approval on the control server", network)
 }

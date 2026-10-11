@@ -177,19 +177,19 @@ func TestApprovedRoutes(t *testing.T) {
 		netip.MustParsePrefix("::/0"),
 		netip.MustParsePrefix("10.1.2.3/32"),
 	)
-	routes, exit := approvedRoutes(append(allowed, netip.MustParsePrefix("192.168.1.0/24")), addrs)
+	routes := approvedRoutes(append(allowed, netip.MustParsePrefix("192.168.1.0/24")), addrs)
 	want := []netip.Prefix{netip.MustParsePrefix("192.168.1.0/24"), netip.MustParsePrefix("10.1.2.3/32")}
-	if !slices.Equal(routes, want) || !exit {
-		t.Fatalf("%v %v", routes, exit)
+	if !slices.Equal(routes, want) {
+		t.Fatalf("%v", routes)
 	}
-	if routes, exit := approvedRoutes(addrs, addrs); len(routes) != 0 || exit {
-		t.Fatalf("%v %v", routes, exit)
+	if routes := approvedRoutes(addrs, addrs); len(routes) != 0 {
+		t.Fatalf("%v", routes)
 	}
 }
 
 func TestForwardable(t *testing.T) {
 	lan := []netip.Prefix{netip.MustParsePrefix("192.168.50.0/24")}
-	exit := append(slices.Clone(lan), domain.ExitRoutes...)
+	exit := append(slices.Clone(lan), netip.MustParsePrefix("0.0.0.0/0"), netip.MustParsePrefix("::/0"))
 	for _, c := range []struct {
 		addr       string
 		advertised []netip.Prefix
@@ -216,23 +216,14 @@ func TestProjectAdvertised(t *testing.T) {
 	lan := netip.MustParsePrefix("192.168.1.0/24")
 	wide := netip.MustParsePrefix("10.0.0.0/8")
 	v4, v6 := netip.MustParsePrefix("0.0.0.0/0"), netip.MustParsePrefix("::/0")
-	routes, exit := projectAdvertised(EngineStatus{
+	routes := projectAdvertised(EngineStatus{
 		AdvertisedRoutes: []netip.Prefix{lan, v4, wide, lan, netip.MustParsePrefix("10.9.9.9/16")},
 		ApprovedRoutes:   []netip.Prefix{wide, netip.MustParsePrefix("172.16.0.0/12")},
 	})
 	if len(routes) != 3 || routes[0].Prefix != wide || !routes[0].Approved || routes[1].Prefix != netip.MustParsePrefix("10.9.0.0/16") || routes[2].Prefix != lan || routes[2].Approved {
 		t.Fatalf("%+v", routes)
 	}
-	if exit.Offered || exit.Approved {
-		t.Fatalf("one default route is not an exit node offer: %+v", exit)
-	}
-
-	_, exit = projectAdvertised(EngineStatus{AdvertisedRoutes: []netip.Prefix{v6, v4}, ExitApproved: true})
-	if !exit.Offered || !exit.Approved {
-		t.Fatalf("%+v", exit)
-	}
-	_, exit = projectAdvertised(EngineStatus{ExitApproved: true})
-	if exit.Offered || exit.Approved {
-		t.Fatalf("an approved option without an offer is not offered: %+v", exit)
+	if routes := projectAdvertised(EngineStatus{AdvertisedRoutes: []netip.Prefix{v6, v4}}); len(routes) != 0 {
+		t.Fatalf("default routes are not subnet routes: %+v", routes)
 	}
 }

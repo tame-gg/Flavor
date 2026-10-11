@@ -15,13 +15,11 @@ import (
 )
 
 type routesView struct {
-	routes   map[string]bool
-	offered  bool
-	approved bool
+	routes map[string]bool
 }
 
-func viewOf(routes []*v1.AdvertisedRoute, offered, approved bool) routesView {
-	v := routesView{routes: map[string]bool{}, offered: offered, approved: approved}
+func viewOf(routes []*v1.AdvertisedRoute) routesView {
+	v := routesView{routes: map[string]bool{}}
 	for _, r := range routes {
 		v.routes[r.Prefix] = r.Approved
 	}
@@ -34,24 +32,24 @@ func getRoutes(t *testing.T, c *client.Client, network string) routesView {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return viewOf(res.Msg.Routes, res.Msg.ExitNodeOffered, res.Msg.ExitNodeApproved)
+	return viewOf(res.Msg.Routes)
 }
 
-func updateRoutes(c *client.Client, network string, add, remove []string, exitNode *bool) (*v1.UpdateRoutesResponse, error) {
-	res, err := c.Routes.UpdateRoutes(context.Background(), connect.NewRequest(&v1.UpdateRoutesRequest{NetworkId: network, Add: add, Remove: remove, ExitNode: exitNode}))
+func updateRoutes(c *client.Client, network string, add, remove []string) (*v1.UpdateRoutesResponse, error) {
+	res, err := c.Routes.UpdateRoutes(context.Background(), connect.NewRequest(&v1.UpdateRoutesRequest{NetworkId: network, Add: add, Remove: remove}))
 	if err != nil {
 		return nil, err
 	}
 	return res.Msg, nil
 }
 
-func mustUpdateRoutes(t *testing.T, c *client.Client, network string, add, remove []string, exitNode *bool) routesView {
+func mustUpdateRoutes(t *testing.T, c *client.Client, network string, add, remove []string) routesView {
 	t.Helper()
-	res, err := updateRoutes(c, network, add, remove, exitNode)
+	res, err := updateRoutes(c, network, add, remove)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return viewOf(res.Routes, res.ExitNodeOffered, res.ExitNodeApproved)
+	return viewOf(res.Routes)
 }
 
 func waitRoutes(t *testing.T, c *client.Client, network string, ok func(routesView) bool) routesView {
@@ -73,11 +71,11 @@ func TestAdvertiseRoutesOverIPC(t *testing.T) {
 	c, seq, a, b := exitNodeDaemon(t)
 	engine := seq.Engine(0)
 
-	if v := getRoutes(t, c, a.Id); len(v.routes) != 0 || v.offered || v.approved {
+	if v := getRoutes(t, c, a.Id); len(v.routes) != 0 {
 		t.Fatalf("nothing advertised yet: %+v", v)
 	}
 
-	v := mustUpdateRoutes(t, c, a.Id, []string{"192.168.50.0/24"}, nil, nil)
+	v := mustUpdateRoutes(t, c, a.Id, []string{"192.168.50.0/24"}, nil)
 	if approved, ok := v.routes["192.168.50.0/24"]; !ok || approved || len(v.routes) != 1 {
 		t.Fatalf("%+v", v)
 	}
@@ -92,40 +90,23 @@ func TestAdvertiseRoutesOverIPC(t *testing.T) {
 	engine.PushNetMap()
 	waitRoutes(t, c, a.Id, func(v routesView) bool { return v.routes["192.168.50.0/24"] })
 
-	v = mustUpdateRoutes(t, c, a.Id, []string{"10.9.0.0/16", "192.168.50.7/24"}, nil, nil)
+	v = mustUpdateRoutes(t, c, a.Id, []string{"10.9.0.0/16", "192.168.50.7/24"}, nil)
 	if len(v.routes) != 2 || !v.routes["192.168.50.0/24"] || v.routes["10.9.0.0/16"] {
 		t.Fatalf("%+v", v)
 	}
 	calls := len(engine.AdvertisedRoutesCalls())
-	mustUpdateRoutes(t, c, a.Id, []string{"10.9.0.0/16"}, []string{"172.16.0.0/12"}, nil)
+	mustUpdateRoutes(t, c, a.Id, []string{"10.9.0.0/16"}, []string{"172.16.0.0/12"})
 	if got := len(engine.AdvertisedRoutesCalls()); got != calls {
 		t.Fatalf("repeating an add reached the engine: %d calls, want %d", got, calls)
 	}
 
-	v = mustUpdateRoutes(t, c, a.Id, nil, []string{"10.9.0.0/16"}, nil)
+	v = mustUpdateRoutes(t, c, a.Id, nil, []string{"10.9.0.0/16"})
 	if _, ok := v.routes["10.9.0.0/16"]; ok || len(v.routes) != 1 {
 		t.Fatalf("%+v", v)
 	}
 
-	on, off := true, false
-	v = mustUpdateRoutes(t, c, a.Id, nil, nil, &on)
-	if !v.offered || v.approved || len(v.routes) != 1 {
-		t.Fatalf("%+v", v)
-	}
-	if got := engine.AdvertisedRoutes(); !slices.Contains(got, netip.MustParsePrefix("0.0.0.0/0")) || !slices.Contains(got, netip.MustParsePrefix("::/0")) || len(got) != 3 {
-		t.Fatalf("engine routes %v", got)
-	}
-	engine.ApproveExitNode(true)
-	engine.PushNetMap()
-	waitRoutes(t, c, a.Id, func(v routesView) bool { return v.offered && v.approved })
-
-	v = mustUpdateRoutes(t, c, a.Id, []string{"10.9.0.0/16"}, nil, nil)
-	if !v.offered || len(v.routes) != 2 {
-		t.Fatalf("subnet changes must keep the exit node offer: %+v", v)
-	}
-
-	v = mustUpdateRoutes(t, c, a.Id, nil, []string{"10.9.0.0/16", "192.168.50.0/24"}, &off)
-	if v.offered || v.approved || len(v.routes) != 0 {
+	v = mustUpdateRoutes(t, c, a.Id, nil, []string{"192.168.50.0/24"})
+	if len(v.routes) != 0 {
 		t.Fatalf("%+v", v)
 	}
 	if got := engine.AdvertisedRoutes(); len(got) != 0 {
@@ -148,17 +129,17 @@ func TestAdvertiseRoutesRejectsInvalidInput(t *testing.T) {
 		"valid then bad":    {"10.1.0.0/16", "bad"},
 	}
 	for name, add := range cases {
-		if _, err := updateRoutes(c, a.Id, add, nil, nil); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_ARGUMENT {
+		if _, err := updateRoutes(c, a.Id, add, nil); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_ARGUMENT {
 			t.Fatalf("%s: %v", name, err)
 		}
 	}
-	if _, err := updateRoutes(c, a.Id, nil, []string{"0.0.0.0/0"}, nil); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_ARGUMENT {
+	if _, err := updateRoutes(c, a.Id, nil, []string{"0.0.0.0/0"}); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_ARGUMENT {
 		t.Fatalf("removing a default route: %v", err)
 	}
-	if _, err := updateRoutes(c, a.Id, nil, []string{"bad"}, nil); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_ARGUMENT {
+	if _, err := updateRoutes(c, a.Id, nil, []string{"bad"}); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_ARGUMENT {
 		t.Fatalf("removing garbage: %v", err)
 	}
-	if _, err := updateRoutes(c, string(domain.NewNetworkID()), []string{"10.0.0.0/8"}, nil, nil); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_NETWORK_NOT_FOUND {
+	if _, err := updateRoutes(c, string(domain.NewNetworkID()), []string{"10.0.0.0/8"}, nil); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_NETWORK_NOT_FOUND {
 		t.Fatalf("unknown network: %v", err)
 	}
 
@@ -166,13 +147,13 @@ func TestAdvertiseRoutesRejectsInvalidInput(t *testing.T) {
 	for i := range 65 {
 		many = append(many, fmt.Sprintf("10.%d.0.0/16", i))
 	}
-	if _, err := updateRoutes(c, a.Id, many, nil, nil); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_ARGUMENT {
+	if _, err := updateRoutes(c, a.Id, many, nil); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_ARGUMENT {
 		t.Fatalf("65 routes: %v", err)
 	}
-	if _, err := updateRoutes(c, a.Id, many[:64], nil, nil); err != nil {
+	if _, err := updateRoutes(c, a.Id, many[:64], nil); err != nil {
 		t.Fatalf("64 routes: %v", err)
 	}
-	if _, err := updateRoutes(c, a.Id, []string{"172.16.0.0/16"}, nil, nil); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_ARGUMENT {
+	if _, err := updateRoutes(c, a.Id, []string{"172.16.0.0/16"}, nil); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_ARGUMENT {
 		t.Fatalf("65th route: %v", err)
 	}
 
@@ -189,7 +170,7 @@ func TestAdvertiseRoutesNeedsAConnectedNetwork(t *testing.T) {
 	if _, err := c.Networks.DisconnectNetwork(context.Background(), connect.NewRequest(&v1.DisconnectNetworkRequest{NetworkId: a.Id})); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := updateRoutes(c, a.Id, []string{"10.0.0.0/8"}, nil, nil); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_DESTINATION_UNREACHABLE {
+	if _, err := updateRoutes(c, a.Id, []string{"10.0.0.0/8"}, nil); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_DESTINATION_UNREACHABLE {
 		t.Fatalf("disconnected network: %v", err)
 	}
 	if _, err := c.Routes.GetRoutes(context.Background(), connect.NewRequest(&v1.GetRoutesRequest{NetworkId: a.Id})); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_DESTINATION_UNREACHABLE {
@@ -200,19 +181,31 @@ func TestAdvertiseRoutesNeedsAConnectedNetwork(t *testing.T) {
 	}
 }
 
-func TestExitNodeOfferAndSelectionAreExclusive(t *testing.T) {
-	c, _, a, _ := exitNodeDaemon(t)
-	on := true
+func TestRoutesAndExitNodeSurviveReconnect(t *testing.T) {
+	c, seq, a, b := exitNodeDaemon(t)
+	mustUpdateRoutes(t, c, a.Id, []string{"192.168.50.0/24"}, nil)
+	setExitNode(t, c, b)
 
-	setExitNode(t, c, a)
-	if _, err := updateRoutes(c, a.Id, nil, nil, &on); flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_ARGUMENT {
-		t.Fatalf("offering while using an exit node: %v", err)
+	for _, n := range []*v1.Network{a, b} {
+		if _, err := c.Networks.DisconnectNetwork(context.Background(), connect.NewRequest(&v1.DisconnectNetworkRequest{NetworkId: n.Id})); err != nil {
+			t.Fatal(err)
+		}
 	}
-	clearExitNode(t, c, a)
-
-	mustUpdateRoutes(t, c, a.Id, nil, nil, &on)
-	_, err := c.ExitNodes.SetExitNode(context.Background(), connect.NewRequest(&v1.SetExitNodeRequest{NetworkId: a.Id, NodeId: exitNodeID(a.Id)}))
-	if flavorCode(err) != v1.FlavorErrorCode_FLAVOR_ERROR_CODE_INVALID_ARGUMENT {
-		t.Fatalf("using an exit node while offering one: %v", err)
+	before := seq.Count()
+	connectNetworks(t, c, a, b)
+	if seq.Count() != before+2 {
+		t.Fatalf("expected two new engines, have %d after %d", seq.Count(), before)
+	}
+	var routes []netip.Prefix
+	var exit domain.NodeID
+	for i := before; i < seq.Count(); i++ {
+		e := seq.Engine(i)
+		routes = append(routes, e.AdvertisedRoutes()...)
+		if id := e.ExitNode(); id != "" {
+			exit = id
+		}
+	}
+	if !slices.Equal(routes, []netip.Prefix{netip.MustParsePrefix("192.168.50.0/24")}) || exit != domain.NodeID(exitNodeID(b.Id)) {
+		t.Fatalf("routes %v exit %q", routes, exit)
 	}
 }

@@ -131,18 +131,6 @@ func TestExplainExitNode(t *testing.T) {
 	}
 }
 
-func TestParseSwitch(t *testing.T) {
-	if on, err := parseSwitch("on"); err != nil || !on {
-		t.Fatalf("on: %v %v", on, err)
-	}
-	if on, err := parseSwitch("off"); err != nil || on {
-		t.Fatalf("off: %v %v", on, err)
-	}
-	if _, err := parseSwitch("yes"); err == nil {
-		t.Fatal("yes accepted")
-	}
-}
-
 func TestConnectedNetworks(t *testing.T) {
 	nets := []*v1.Network{
 		{Id: "n1", State: v1.NetworkConnectionState_NETWORK_CONNECTION_STATE_CONNECTED},
@@ -159,7 +147,7 @@ func TestApprovalText(t *testing.T) {
 	if got := approvalText(true); got != "approved" {
 		t.Fatalf("approved: %q", got)
 	}
-	if got := approvalText(false); got != "waiting for approval" {
+	if got := approvalText(false); got != "not approved yet" {
 		t.Fatalf("pending: %q", got)
 	}
 }
@@ -170,43 +158,28 @@ func TestPrintRoutes(t *testing.T) {
 		t.Fatalf("empty: %q %v", out.String(), err)
 	}
 	out.Reset()
-	rows := routeRows("Home", []*v1.AdvertisedRoute{{Prefix: "192.168.1.0/24", Approved: true}, {Prefix: "10.0.0.0/8"}}, true, false)
+	rows := routeRows("Home", []*v1.AdvertisedRoute{{Prefix: "192.168.1.0/24", Approved: true}, {Prefix: "10.0.0.0/8"}})
 	if err := printRoutes(&out, rows); err != nil {
 		t.Fatal(err)
 	}
 	lines := strings.Split(strings.TrimSpace(out.String()), "\n")
-	if len(lines) != 4 || strings.Fields(lines[0])[0] != "NETWORK" {
+	if len(lines) != 3 || strings.Fields(lines[0])[0] != "NETWORK" {
 		t.Fatalf("table: %q", out.String())
 	}
 	if f := strings.Fields(lines[1]); f[0] != "Home" || f[1] != "192.168.1.0/24" || f[2] != "approved" {
 		t.Fatalf("approved row: %q", lines[1])
 	}
-	if !strings.HasSuffix(lines[2], "waiting for approval") {
+	if !strings.HasSuffix(lines[2], "not approved yet") {
 		t.Fatalf("pending row: %q", lines[2])
-	}
-	if f := strings.Fields(lines[3]); f[1] != "exit" || f[2] != "node" || !strings.HasSuffix(lines[3], "waiting for approval") {
-		t.Fatalf("exit node row: %q", lines[3])
 	}
 }
 
 func TestAdvertiseSummary(t *testing.T) {
 	routes := []*v1.AdvertisedRoute{{Prefix: "192.168.1.0/24"}, {Prefix: "10.0.0.0/8", Approved: true}}
-	if got := advertiseSummary("192.168.1.7/24", "Home", routes); !strings.Contains(got, "192.168.1.7/24 on Home") || !strings.Contains(got, "waiting for approval on the control server") {
+	if got := advertiseSummary("192.168.1.7/24", "Home", routes); !strings.Contains(got, "192.168.1.7/24 on Home") || !strings.Contains(got, "approve it on the control server") {
 		t.Fatalf("masked pending: %q", got)
 	}
 	if got := advertiseSummary("10.0.0.0/8", "Home", routes); !strings.Contains(got, "already approved") {
 		t.Fatalf("approved: %q", got)
-	}
-}
-
-func TestExitNodeSummary(t *testing.T) {
-	if got := exitNodeSummary("Home", true, false); !strings.Contains(got, "waiting for approval on the control server") {
-		t.Fatalf("pending: %q", got)
-	}
-	if got := exitNodeSummary("Home", true, true); !strings.Contains(got, "approved exit node on Home") {
-		t.Fatalf("approved: %q", got)
-	}
-	if got := exitNodeSummary("Home", false, false); !strings.Contains(got, "no longer offers") {
-		t.Fatalf("off: %q", got)
 	}
 }

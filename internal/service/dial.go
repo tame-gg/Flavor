@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
+	"strconv"
 
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
 	"git.lunarlabs.dev/flavor/flavor/internal/inspect"
@@ -22,6 +23,17 @@ type Route struct {
 	Result  inspect.Result
 	Network domain.Network
 	Target  netip.AddrPort
+	Address string
+}
+
+func (r Route) DialAddress() string {
+	if r.Address != "" {
+		return r.Address
+	}
+	if r.Target.IsValid() {
+		return r.Target.String()
+	}
+	return ""
 }
 
 func (s *Service) Route(ctx context.Context, destination, rawNetwork string, defaultPort uint16) (Route, error) {
@@ -73,6 +85,13 @@ func (s *Service) Route(ctx context.Context, destination, rawNetwork string, def
 			continue
 		}
 		r.Network = c.Network
+		if c.Match == inspect.MatchExitNode {
+			r.Address = net.JoinHostPort(q.Normalized(), strconv.Itoa(int(q.Port)))
+			if q.Kind == inspect.KindAddress {
+				r.Target = netip.AddrPortFrom(q.Address, q.Port)
+			}
+			continue
+		}
 		addr, ok := targetAddress(q, c)
 		if !ok {
 			return r, fail(CodeDestinationUnreachable, "the selected device has no address", false)
@@ -87,9 +106,10 @@ func (s *Service) Dial(ctx context.Context, r Route) (net.Conn, error) {
 	if !ok {
 		return nil, fail(CodeDestinationUnreachable, "network "+r.Network.DisplayName+" is not connected", true)
 	}
-	conn, err := sess.Dial(ctx, "tcp", r.Target.String())
+	address := r.DialAddress()
+	conn, err := sess.Dial(ctx, "tcp", address)
 	if err != nil {
-		return nil, fail(CodeDestinationUnreachable, "could not connect to "+r.Target.String()+" on "+r.Network.DisplayName, true)
+		return nil, fail(CodeDestinationUnreachable, "could not connect to "+address+" on "+r.Network.DisplayName, true)
 	}
 	return conn, nil
 }
@@ -120,6 +140,9 @@ func (s *Service) resolveNetworkRef(ctx context.Context, raw string) (domain.Net
 func targetAddress(q inspect.Query, c inspect.Candidate) (netip.Addr, bool) {
 	if c.Match == inspect.MatchDeviceAddress || c.Match == inspect.MatchSubnetRoute {
 		return q.Address, true
+	}
+	if c.Match == inspect.MatchDNSRecord {
+		return domain.DNSRecord{Addresses: c.Addresses}.Target()
 	}
 	for _, a := range c.Device.Addresses {
 		if a.Is4() {

@@ -6,11 +6,14 @@ import (
 	"log/slog"
 	"net"
 	"regexp"
+	"sync"
 
+	"git.lunarlabs.dev/flavor/flavor/internal/domain"
 	"git.lunarlabs.dev/flavor/flavor/internal/logging"
 	"git.lunarlabs.dev/flavor/flavor/internal/provider"
 	"tailscale.com/client/local"
 	"tailscale.com/ipn"
+	"tailscale.com/tailcfg"
 	"tailscale.com/tsnet"
 	"tailscale.com/types/logger"
 )
@@ -18,6 +21,9 @@ import (
 type tsnetEngine struct {
 	srv *tsnet.Server
 	lc  *local.Client
+
+	mu      sync.Mutex
+	records []domain.DNSRecord
 }
 
 func newTsnetEngine(cfg provider.ResolvedSessionConfig, authKey string, log *slog.Logger) (Engine, error) {
@@ -70,6 +76,19 @@ func (e *tsnetEngine) Dial(ctx context.Context, network, address string) (net.Co
 	return e.srv.Dial(ctx, network, address)
 }
 
+func (e *tsnetEngine) SetExitNode(ctx context.Context, id domain.NodeID) error {
+	if e.lc == nil {
+		return fmt.Errorf("local client unavailable")
+	}
+	_, err := e.lc.EditPrefs(ctx, &ipn.MaskedPrefs{
+		Prefs:           ipn.Prefs{ExitNodeID: tailcfg.StableNodeID(id)},
+		ExitNodeIDSet:   true,
+		ExitNodeIPSet:   true,
+		AutoExitNodeSet: true,
+	})
+	return err
+}
+
 func (e *tsnetEngine) ClearAuthKey() {
 	e.srv.AuthKey = ""
 }
@@ -82,14 +101,18 @@ func (e *tsnetEngine) Status(ctx context.Context) (EngineStatus, error) {
 	if err != nil {
 		return EngineStatus{}, err
 	}
-	return projectStatus(st), nil
+	out := projectStatus(st)
+	e.mu.Lock()
+	out.DNSRecords = domain.CloneDNSRecords(e.records)
+	e.mu.Unlock()
+	return out, nil
 }
 
 func (e *tsnetEngine) Watch(ctx context.Context, emit func(EngineNotify)) error {
 	if e.lc == nil {
 		return fmt.Errorf("local client unavailable")
 	}
-	w, err := e.lc.WatchIPNBus(ctx, ipn.NotifyInitialState|ipn.NotifyNoPrivateKeys)
+	w, err := e.lc.WatchIPNBus(ctx, ipn.NotifyInitialState|ipn.NotifyInitialNetMap|ipn.NotifyNoPrivateKeys)
 	if err != nil {
 		return err
 	}
@@ -98,6 +121,12 @@ func (e *tsnetEngine) Watch(ctx context.Context, emit func(EngineNotify)) error 
 		n, err := w.Next()
 		if err != nil {
 			return err
+		}
+		if n.NetMap != nil {
+			records := projectDNSRecords(&n.NetMap.DNS)
+			e.mu.Lock()
+			e.records = records
+			e.mu.Unlock()
 		}
 		ev := EngineNotify{LoginFinished: n.LoginFinished != nil, NetMapChanged: n.NetMap != nil}
 		if n.State != nil {

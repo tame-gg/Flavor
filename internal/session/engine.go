@@ -21,15 +21,16 @@ const (
 )
 
 type EnginePeer struct {
-	NodeID    domain.NodeID
-	Hostname  string
-	DNSName   string
-	Addresses []netip.Addr
-	Online    bool
-	LastSeen  time.Time
-	OS        string
-	Tags      []string
-	Routes    []netip.Prefix
+	NodeID         domain.NodeID
+	Hostname       string
+	DNSName        string
+	Addresses      []netip.Addr
+	Online         bool
+	LastSeen       time.Time
+	OS             string
+	Tags           []string
+	Routes         []netip.Prefix
+	ExitNodeOption bool
 }
 
 type EngineStatus struct {
@@ -39,6 +40,8 @@ type EngineStatus struct {
 	Self         *EnginePeer
 	Peers        []EnginePeer
 	Health       []string
+	DNSRecords   []domain.DNSRecord
+	ExitNode     domain.NodeID
 }
 
 type EngineNotify struct {
@@ -55,6 +58,7 @@ type Engine interface {
 	Watch(ctx context.Context, emit func(EngineNotify)) error
 	ClearAuthKey()
 	Dial(ctx context.Context, network, address string) (net.Conn, error)
+	SetExitNode(ctx context.Context, id domain.NodeID) error
 }
 
 type EngineFactory func(cfg provider.ResolvedSessionConfig, authKey string, log *slog.Logger) (Engine, error)

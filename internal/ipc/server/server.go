@@ -35,6 +35,7 @@ func New(svc *service.Service) *http.Server {
 	mux.Handle(flavorv1connect.NewWorkspaceServiceHandler(h, opts...))
 	mux.Handle(flavorv1connect.NewPreferenceServiceHandler(h, opts...))
 	mux.Handle(flavorv1connect.NewForwardServiceHandler(h, opts...))
+	mux.Handle(flavorv1connect.NewExitNodeServiceHandler(h, opts...))
 	var p http.Protocols
 	p.SetUnencryptedHTTP2(true)
 	return &http.Server{
@@ -241,6 +242,7 @@ var connectCodes = map[service.Code]connect.Code{
 	service.CodeDestinationAmbiguous:   connect.CodeFailedPrecondition,
 	service.CodeDestinationNotFound:    connect.CodeNotFound,
 	service.CodeDestinationUnreachable: connect.CodeUnavailable,
+	service.CodeNotAnExitNode:          connect.CodeFailedPrecondition,
 }
 
 func toConnect(err error) error {

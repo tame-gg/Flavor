@@ -27,6 +27,7 @@ type NetworkSession interface {
 	State() domain.NetworkConnectionState
 	LocalNode() domain.LocalNode
 	Devices() []domain.Device
+	DNSRecords() []domain.DNSRecord
 	AuthPrompt() *domain.AuthPrompt
 	Diagnostics(ctx context.Context) domain.SessionDiagnostics
 }
@@ -44,6 +45,7 @@ type Session struct {
 	state   domain.NetworkConnectionState
 	local   domain.LocalNode
 	devices map[domain.NodeID]domain.Device
+	records []domain.DNSRecord
 	prompt  *domain.AuthPrompt
 	lastErr string
 }
@@ -231,6 +233,7 @@ func (s *Session) retire(g *generation) {
 
 	s.stateMu.Lock()
 	s.devices = make(map[domain.NodeID]domain.Device)
+	s.records = nil
 	s.local = domain.LocalNode{NetworkID: s.cfg.NetworkID}
 	s.prompt = nil
 	s.lastErr = msg
@@ -329,15 +332,17 @@ func (s *Session) applyStatus(snap EngineStatus) {
 			continue
 		}
 		newDevices[p.NodeID] = domain.Device{
-			ID:        domain.DeviceIdentity{NetworkID: s.cfg.NetworkID, NodeID: p.NodeID},
-			Hostname:  p.Hostname,
-			DNSName:   p.DNSName,
-			Addresses: append([]netip.Addr(nil), p.Addresses...),
-			Online:    p.Online,
-			LastSeen:  p.LastSeen,
-			OS:        p.OS,
-			Tags:      slices.Clone(p.Tags),
-			Routes:    slices.Clone(p.Routes),
+			ID:             domain.DeviceIdentity{NetworkID: s.cfg.NetworkID, NodeID: p.NodeID},
+			Hostname:       p.Hostname,
+			DNSName:        p.DNSName,
+			Addresses:      append([]netip.Addr(nil), p.Addresses...),
+			Online:         p.Online,
+			LastSeen:       p.LastSeen,
+			OS:             p.OS,
+			Tags:           slices.Clone(p.Tags),
+			Routes:         slices.Clone(p.Routes),
+			ExitNodeOption: p.ExitNodeOption,
+			ExitNode:       snap.ExitNode != "" && p.NodeID == snap.ExitNode,
 		}
 	}
 	if snap.Self != nil && snap.Self.NodeID != "" {
@@ -357,6 +362,7 @@ func (s *Session) applyStatus(snap EngineStatus) {
 	s.stateMu.Lock()
 	old := s.devices
 	s.devices = newDevices
+	s.records = domain.CloneDNSRecords(snap.DNSRecords)
 	s.local = local
 	s.stateMu.Unlock()
 
@@ -484,6 +490,26 @@ func (s *Session) Dial(ctx context.Context, network, address string) (net.Conn, 
 	return eng.Dial(ctx, network, address)
 }
 
+func (s *Session) SetExitNode(ctx context.Context, id domain.NodeID) error {
+	s.lifeMu.Lock()
+	g := s.gen
+	if g == nil || g.phase != backendStarted {
+		s.lifeMu.Unlock()
+		return ErrNotRunning
+	}
+	eng := g.eng
+	s.lifeMu.Unlock()
+	if err := eng.SetExitNode(ctx, id); err != nil {
+		return err
+	}
+	snap, err := eng.Status(ctx)
+	if err != nil {
+		return err
+	}
+	s.ifCurrent(g, func() { s.applyStatus(snap) })
+	return nil
+}
+
 func (s *Session) State() domain.NetworkConnectionState {
 	s.stateMu.RLock()
 	defer s.stateMu.RUnlock()
@@ -504,6 +530,12 @@ func (s *Session) Devices() []domain.Device {
 		out = append(out, cloneDevice(d))
 	}
 	return out
+}
+
+func (s *Session) DNSRecords() []domain.DNSRecord {
+	s.stateMu.RLock()
+	defer s.stateMu.RUnlock()
+	return domain.CloneDNSRecords(s.records)
 }
 
 func (s *Session) AuthPrompt() *domain.AuthPrompt {

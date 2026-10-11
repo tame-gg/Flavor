@@ -8,6 +8,7 @@ import (
 
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
 	"tailscale.com/ipn/ipnstate"
+	"tailscale.com/tailcfg"
 )
 
 func projectStatus(st *ipnstate.Status) EngineStatus {
@@ -30,22 +31,44 @@ func projectStatus(st *ipnstate.Status) EngineStatus {
 		}
 		out.Peers = append(out.Peers, projectPeer(p))
 	}
+	if st.ExitNodeStatus != nil {
+		out.ExitNode = domain.NodeID(strings.TrimSpace(string(st.ExitNodeStatus.ID)))
+	}
 	return out
 }
 
 func projectPeer(p *ipnstate.PeerStatus) EnginePeer {
 	id := domain.NodeID(strings.TrimSpace(string(p.ID)))
 	return EnginePeer{
-		NodeID:    id,
-		Hostname:  p.HostName,
-		DNSName:   strings.TrimSuffix(p.DNSName, "."),
-		Addresses: append([]netip.Addr(nil), p.TailscaleIPs...),
-		Online:    p.Online,
-		LastSeen:  p.LastSeen.UTC(),
-		OS:        p.OS,
-		Tags:      tags(p),
-		Routes:    routes(p),
+		NodeID:         id,
+		Hostname:       p.HostName,
+		DNSName:        strings.TrimSuffix(p.DNSName, "."),
+		Addresses:      append([]netip.Addr(nil), p.TailscaleIPs...),
+		Online:         p.Online,
+		LastSeen:       p.LastSeen.UTC(),
+		OS:             p.OS,
+		Tags:           tags(p),
+		Routes:         routes(p),
+		ExitNodeOption: p.ExitNodeOption,
 	}
+}
+
+func projectDNSRecords(cfg *tailcfg.DNSConfig) []domain.DNSRecord {
+	if cfg == nil {
+		return nil
+	}
+	var records []domain.DNSRecord
+	for _, r := range cfg.ExtraRecords {
+		if r.Type != "" && r.Type != "A" && r.Type != "AAAA" {
+			continue
+		}
+		addr, err := netip.ParseAddr(strings.TrimSpace(r.Value))
+		if err != nil {
+			continue
+		}
+		records = append(records, domain.DNSRecord{Name: r.Name, Addresses: []netip.Addr{addr}})
+	}
+	return domain.MergeDNSRecords(records)
 }
 
 func routes(p *ipnstate.PeerStatus) []netip.Prefix {
@@ -110,7 +133,7 @@ func mapConnectionState(snap EngineStatus, hadAuthPrompt bool) domain.NetworkCon
 }
 
 func deviceEqual(a, b domain.Device) bool {
-	if a.ID != b.ID || a.Hostname != b.Hostname || a.DNSName != b.DNSName || a.Online != b.Online || a.Local != b.Local || a.OS != b.OS || !slices.Equal(a.Tags, b.Tags) || !slices.Equal(a.Routes, b.Routes) {
+	if a.ID != b.ID || a.Hostname != b.Hostname || a.DNSName != b.DNSName || a.Online != b.Online || a.Local != b.Local || a.OS != b.OS || !slices.Equal(a.Tags, b.Tags) || !slices.Equal(a.Routes, b.Routes) || a.ExitNodeOption != b.ExitNodeOption || a.ExitNode != b.ExitNode {
 		return false
 	}
 	if !a.LastSeen.Equal(b.LastSeen) {

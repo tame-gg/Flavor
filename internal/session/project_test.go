@@ -2,10 +2,13 @@ package session
 
 import (
 	"net/netip"
+	"slices"
 	"testing"
 
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
 	"tailscale.com/ipn/ipnstate"
+	"tailscale.com/tailcfg"
+	"tailscale.com/types/key"
 	"tailscale.com/types/views"
 )
 
@@ -101,5 +104,67 @@ func TestProjectPeerCarriesOSAndTags(t *testing.T) {
 	b.OS = "windows"
 	if deviceEqual(a, b) {
 		t.Fatal("os change not detected")
+	}
+}
+
+func TestProjectExitNode(t *testing.T) {
+	st := projectStatus(&ipnstate.Status{
+		Peer: map[key.NodePublic]*ipnstate.PeerStatus{
+			key.NewNode().Public(): {ID: "gw", ExitNodeOption: true},
+			key.NewNode().Public(): {ID: "plain"},
+		},
+		ExitNodeStatus: &ipnstate.ExitNodeStatus{ID: " gw "},
+	})
+	if st.ExitNode != "gw" {
+		t.Fatalf("%q", st.ExitNode)
+	}
+	options := map[domain.NodeID]bool{}
+	for _, p := range st.Peers {
+		options[p.NodeID] = p.ExitNodeOption
+	}
+	if !options["gw"] || options["plain"] {
+		t.Fatalf("%v", options)
+	}
+	if none := projectStatus(&ipnstate.Status{}); none.ExitNode != "" {
+		t.Fatalf("%q", none.ExitNode)
+	}
+	a := domain.Device{ID: domain.DeviceIdentity{NodeID: "gw"}}
+	b := a
+	b.ExitNodeOption = true
+	if deviceEqual(a, b) {
+		t.Fatal("exit node option change not detected")
+	}
+	b = a
+	b.ExitNode = true
+	if deviceEqual(a, b) || !cloneDevice(b).ExitNode {
+		t.Fatal("exit node selection change not detected")
+	}
+}
+
+func TestProjectDNSRecords(t *testing.T) {
+	if projectDNSRecords(nil) != nil {
+		t.Fatal("nil config")
+	}
+	cfg := &tailcfg.DNSConfig{ExtraRecords: []tailcfg.DNSRecord{
+		{Name: "Git.Intra.Example.Internal.", Value: "100.64.0.13"},
+		{Name: "git.intra.example.internal", Type: "AAAA", Value: "fd7a:115c:a1e0::d"},
+		{Name: "git.intra.example.internal", Type: "A", Value: "100.64.0.13"},
+		{Name: "mail.example.internal", Type: "TXT", Value: "v=spf1"},
+		{Name: "broken.example.internal", Value: "not an address"},
+		{Name: "", Value: "100.64.0.1"},
+		{Name: "app.example.internal", Value: " 100.64.0.3 "},
+	}}
+	got := projectDNSRecords(cfg)
+	want := []domain.DNSRecord{
+		{Name: "app.example.internal", Addresses: []netip.Addr{netip.MustParseAddr("100.64.0.3")}},
+		{Name: "git.intra.example.internal", Addresses: []netip.Addr{netip.MustParseAddr("100.64.0.13"), netip.MustParseAddr("fd7a:115c:a1e0::d")}},
+	}
+	if len(got) != len(want) {
+		t.Fatalf("%+v", got)
+	}
+	for i := range want {
+		if got[i].Name != want[i].Name || !slices.Equal(got[i].Addresses, want[i].Addresses) {
+			t.Fatalf("record %d: %+v want %+v", i, got[i], want[i])
+		}
 	}
 }

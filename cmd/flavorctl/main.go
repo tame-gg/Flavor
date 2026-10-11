@@ -55,8 +55,13 @@ commands:
   exit-node list [network]             devices that can be an exit node
   exit-node set <network> <device>     <device> is a hostname, DNS name or node id
   exit-node clear <network>            <network> is an id or an exact name
+  routes list [network]                subnet routes and exit node this machine advertises
+  routes advertise <network> <cidr>...
+  routes withdraw <network> <cidr>...
+  routes exit-node <network> on|off    offer this machine as an exit node
+                                       advertised routes need approval on the control server
 
---json prints the daemon response as JSON for info, list, devices, diag, explain, conflicts, workspace list, preference list and exit-node.
+--json prints the daemon response as JSON for info, list, devices, diag, explain, conflicts, workspace list, preference list, exit-node and routes.
 `
 
 func main() {
@@ -285,6 +290,8 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSO
 		return runPreference(ctx, c, args, asJSON, out)
 	case "exit-node", "exit-nodes":
 		return runExitNode(ctx, c, args, asJSON, out)
+	case "routes", "route":
+		return runRoutes(ctx, c, args, asJSON, out)
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", cmd, usage)
 	}

@@ -3,10 +3,12 @@ package app_test
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/netip"
+	"strings"
 	"testing"
 	"time"
 
@@ -39,6 +41,9 @@ func dnsRecordEngines(records map[int][]domain.DNSRecord) *sessiontest.Sequence 
 		e.SetStatus(st)
 		network := cfg.NetworkID
 		e.SetDial(func(_ context.Context, _, address string) (net.Conn, error) {
+			if strings.HasPrefix(address, "192.0.2.66:") {
+				return nil, errors.New("unreachable")
+			}
 			ours, theirs := net.Pipe()
 			go func() {
 				defer theirs.Close()
@@ -209,7 +214,7 @@ func TestDNSRecordForwardAmbiguousNeedsNetwork(t *testing.T) {
 
 func TestDNSRecordSocks(t *testing.T) {
 	c, a, _ := twoNetworkDaemon(t, map[int][]domain.DNSRecord{
-		0: {dnsRecord(dnsRecordName, "100.64.0.9"), dnsRecord("db.intra.example.internal", "192.0.2.10")},
+		0: {dnsRecord(dnsRecordName, "100.64.0.9"), dnsRecord("db.intra.example.internal", "192.0.2.10"), dnsRecord("ha.intra.example.internal", "192.0.2.66", "192.0.2.67")},
 	})
 
 	sctx, cancel := context.WithCancel(context.Background())
@@ -250,6 +255,9 @@ func TestDNSRecordSocks(t *testing.T) {
 	}
 	if got := read("db.intra.example.internal:5432"); got != "network="+a.Id+" target=192.0.2.10:5432" {
 		t.Fatalf("record without owner device: %q", got)
+	}
+	if got := read("ha.intra.example.internal:443"); got != "network="+a.Id+" target=192.0.2.67:443" {
+		t.Fatalf("record falls back to its next address: %q", got)
 	}
 }
 

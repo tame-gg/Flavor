@@ -19,9 +19,10 @@ const (
 )
 
 type Route struct {
-	Result  inspect.Result
-	Network domain.Network
-	Target  netip.AddrPort
+	Result     inspect.Result
+	Network    domain.Network
+	Target     netip.AddrPort
+	Alternates []netip.AddrPort
 }
 
 func (s *Service) Route(ctx context.Context, destination, rawNetwork string, defaultPort uint16) (Route, error) {
@@ -78,6 +79,13 @@ func (s *Service) Route(ctx context.Context, destination, rawNetwork string, def
 			return r, fail(CodeDestinationUnreachable, "the selected device has no address", false)
 		}
 		r.Target = netip.AddrPortFrom(addr, q.Port)
+		if c.Match == inspect.MatchDNSRecord {
+			for _, a := range c.Addresses {
+				if a != addr {
+					r.Alternates = append(r.Alternates, netip.AddrPortFrom(a, q.Port))
+				}
+			}
+		}
 	}
 	return r, nil
 }
@@ -87,11 +95,12 @@ func (s *Service) Dial(ctx context.Context, r Route) (net.Conn, error) {
 	if !ok {
 		return nil, fail(CodeDestinationUnreachable, "network "+r.Network.DisplayName+" is not connected", true)
 	}
-	conn, err := sess.Dial(ctx, "tcp", r.Target.String())
-	if err != nil {
-		return nil, fail(CodeDestinationUnreachable, "could not connect to "+r.Target.String()+" on "+r.Network.DisplayName, true)
+	for _, t := range append([]netip.AddrPort{r.Target}, r.Alternates...) {
+		if conn, err := sess.Dial(ctx, "tcp", t.String()); err == nil {
+			return conn, nil
+		}
 	}
-	return conn, nil
+	return nil, fail(CodeDestinationUnreachable, "could not connect to "+r.Target.String()+" on "+r.Network.DisplayName, true)
 }
 
 func (s *Service) resolveNetworkRef(ctx context.Context, raw string) (domain.NetworkID, error) {

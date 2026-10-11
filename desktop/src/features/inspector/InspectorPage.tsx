@@ -164,7 +164,7 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
               <ul className="list candidate-list">
                 {result.candidates.map((c) => (
                   <CandidateRow
-                    key={`${c.device?.id?.networkId}:${c.device?.id?.nodeId}`}
+                    key={`${c.network?.id}:${c.device?.id?.nodeId}:${c.match}:${c.matchedValue}`}
                     candidate={c}
                     label={candidateLabel(result, c.status, c.match)}
                     onOpenNetwork={onOpenNetwork}
@@ -250,7 +250,7 @@ function CandidateRow({
   if (!d || !n) return null;
   const recordOnly = c.match === MatchKind.DNS_RECORD && !d.hostname && !d.dnsName;
   const name = d.hostname || d.dnsName || (recordOnly ? c.matchedValue : "");
-  const address = c.match === MatchKind.DEVICE_ADDRESS || recordOnly ? c.matchedValue : d.addresses[0];
+  const address = c.match === MatchKind.DEVICE_ADDRESS || c.match === MatchKind.DNS_RECORD ? c.matchedValue : d.addresses[0];
   return (
     <li className={`card candidate ${c.status === CandidateStatus.OUTRANKED ? "candidate-outranked" : ""}`}>
       <div className="row">

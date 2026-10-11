@@ -151,3 +151,113 @@ func TestMalformedDestinations(t *testing.T) {
 		}
 	}
 }
+
+func record(name string, addrs ...string) domain.DNSRecord {
+	r := domain.DNSRecord{Name: name}
+	for _, a := range addrs {
+		r.Addresses = append(r.Addresses, netip.MustParseAddr(a))
+	}
+	return r
+}
+
+func withRecords(n inspect.Network, records ...domain.DNSRecord) inspect.Network {
+	n.Records = records
+	return n
+}
+
+func TestDNSRecordResolvesToItsNetworkAndOwner(t *testing.T) {
+	proxy := withRecords(lunar, record("git.intra.lunar.internal", "100.64.0.2"))
+	r := resolve(t, "git.intra.lunar.internal:443", proxy, home)
+	if r.Decision != inspect.DecisionUnique || r.Reason != inspect.ReasonDNSRecord || r.DecidedBy != inspect.MatchDNSRecord {
+		t.Fatalf("%+v", r)
+	}
+	c := r.Candidates[0]
+	if c.Network.ID != "A" || c.MatchedValue != "100.64.0.2" || c.Device.Hostname != "postgres" || c.Status != inspect.StatusSelected {
+		t.Fatalf("%+v", c)
+	}
+	if c.Name == "" || c.StableName == "" {
+		t.Fatalf("owner names missing: %+v", c)
+	}
+}
+
+func TestDNSRecordPointingOutsideTheTailnetHasNoOwner(t *testing.T) {
+	r := resolve(t, "legacy.lunar.internal", withRecords(lunar, record("legacy.lunar.internal", "192.168.1.10")), home)
+	if r.Decision != inspect.DecisionUnique || r.Candidates[0].Device.ID.NodeID != "" || r.Candidates[0].MatchedValue != "192.168.1.10" {
+		t.Fatalf("%+v", r)
+	}
+}
+
+func TestDNSRecordPrefersIPv4(t *testing.T) {
+	r := resolve(t, "svc.lunar.internal", withRecords(lunar, record("svc.lunar.internal", "fd7a:115c:a1e0::1", "100.64.0.2")))
+	if c := r.Candidates[0]; c.MatchedValue != "100.64.0.2" || len(c.Addresses) != 2 {
+		t.Fatalf("%+v", c)
+	}
+}
+
+func TestSameDNSRecordOnTwoNetworksIsAmbiguous(t *testing.T) {
+	a := withRecords(lunar, record("git.intra.internal", "100.64.0.2"))
+	b := withRecords(home, record("git.intra.internal", "100.64.0.9"))
+	r := resolve(t, "git.intra.internal", a, b)
+	if r.Decision != inspect.DecisionAmbiguous || r.Reason != inspect.ReasonMultipleMatches || r.DecidedBy != inspect.MatchDNSRecord {
+		t.Fatalf("%+v", r)
+	}
+	for _, c := range r.Candidates {
+		if c.Status != inspect.StatusTied {
+			t.Fatalf("%+v", c)
+		}
+	}
+	q, err := inspect.ParseQuery("git.intra.internal")
+	if err != nil {
+		t.Fatal(err)
+	}
+	q.Context = "B"
+	if r := inspect.Resolve(q, []inspect.Network{a, b}, nil); r.Decision != inspect.DecisionUnique || r.Candidates[0].Network.ID != "B" || r.Reason != inspect.ReasonExplicitNetwork {
+		t.Fatalf("explicit network must pick one: %+v", r)
+	}
+	pref := domain.DestinationPreference{Destination: "git.intra.internal", Kind: domain.DestinationName, NetworkID: "A"}
+	q.Context = ""
+	r = inspect.Resolve(q, []inspect.Network{a, b}, &pref)
+	if r.Decision != inspect.DecisionUnique || r.Reason != inspect.ReasonDestinationPreference {
+		t.Fatalf("preference must pick one: %+v", r)
+	}
+	for _, c := range r.Candidates {
+		if (c.Network.ID == "A") != (c.Status == inspect.StatusSelected) {
+			t.Fatalf("%+v", c)
+		}
+	}
+}
+
+func TestDeviceDNSNameWinsOverRecordOnTheSameNetwork(t *testing.T) {
+	n := withRecords(lunar, record("postgres.lunar.ts.net", "100.64.0.1"))
+	r := resolve(t, "postgres.lunar.ts.net", n)
+	if r.Decision != inspect.DecisionUnique || r.Reason != inspect.ReasonDeviceDNSName || len(r.Candidates) != 1 {
+		t.Fatalf("%+v", r)
+	}
+}
+
+func TestDNSRecordTiesWithDeviceDNSNameOnAnotherNetwork(t *testing.T) {
+	other := withRecords(home, record("postgres.lunar.ts.net", "100.64.0.9"))
+	r := resolve(t, "postgres.lunar.ts.net", lunar, other)
+	if r.Decision != inspect.DecisionAmbiguous || len(r.Candidates) != 2 {
+		t.Fatalf("%+v", r)
+	}
+}
+
+func TestDNSRecordIsIgnoredOnDisconnectedNetworks(t *testing.T) {
+	n := withRecords(lunar, record("git.intra.lunar.internal", "100.64.0.2"))
+	n.Live, n.State = false, domain.StateDisconnected
+	r := resolve(t, "git.intra.lunar.internal", n)
+	if r.Decision != inspect.DecisionNoMatch || len(r.NotInspected) != 1 {
+		t.Fatalf("%+v", r)
+	}
+}
+
+func TestDNSRecordDoesNotMatchBareOrQualifiedNames(t *testing.T) {
+	n := withRecords(lunar, record("git", "100.64.0.2"), record("x.y.flavor.internal", "100.64.0.2"))
+	if r := resolve(t, "git", n); r.Decision != inspect.DecisionUnique || r.Reason != inspect.ReasonDNSRecord {
+		t.Fatalf("a record named git is a full name and must match: %+v", r)
+	}
+	if r := resolve(t, "x.y.flavor.internal", n); r.Decision != inspect.DecisionNoMatch {
+		t.Fatalf("flavor names never come from records: %+v", r)
+	}
+}

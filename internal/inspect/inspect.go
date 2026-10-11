@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net"
 	"net/netip"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -56,7 +57,15 @@ const (
 	MatchDeviceHostname
 	MatchSubnetRoute
 	MatchQualifiedName
+	MatchDNSRecord
 )
+
+func (m MatchKind) rank() MatchKind {
+	if m == MatchDNSRecord {
+		return MatchDeviceDNSName
+	}
+	return m
+}
 
 type Decision int
 
@@ -80,6 +89,7 @@ const (
 	ReasonNetworkQualifiedName
 	ReasonExplicitNetwork
 	ReasonAmbiguousNetworkLabel
+	ReasonDNSRecord
 )
 
 type PreferenceState int
@@ -108,6 +118,7 @@ type Network struct {
 	Network domain.Network
 	State   domain.NetworkConnectionState
 	Devices []domain.Device
+	Records []domain.DNSRecord
 	Live    bool
 }
 
@@ -118,6 +129,7 @@ type Candidate struct {
 	Match        MatchKind
 	MatchedValue string
 	Prefix       netip.Prefix
+	Addresses    []netip.Addr
 	Status       CandidateStatus
 	Name         string
 	StableName   string
@@ -295,11 +307,14 @@ func resolveMatches(q Query, networks []Network) Result {
 			c.Name, c.StableName = naming.Name(dl.Published(), nl.Published()), naming.Name(dl.Stable, nl.Stable)
 			res.Candidates = append(res.Candidates, c)
 		}
+		if !q.Qualified() {
+			res.Candidates = append(res.Candidates, recordMatches(q, n, devices, devLabels, netLabels[n.Network.ID])...)
+		}
 	}
 	sort.SliceStable(res.Candidates, func(i, j int) bool {
 		a, b := res.Candidates[i], res.Candidates[j]
-		if a.Match != b.Match {
-			return a.Match < b.Match
+		if a.Match.rank() != b.Match.rank() {
+			return a.Match.rank() < b.Match.rank()
 		}
 		if a.Prefix.Bits() != b.Prefix.Bits() {
 			return a.Prefix.Bits() > b.Prefix.Bits()
@@ -331,7 +346,7 @@ func resolveMatches(q Query, networks []Network) Result {
 	tied := 0
 	for i := range res.Candidates {
 		c := res.Candidates[i]
-		if c.Match == best.Match && c.Prefix.Bits() == best.Prefix.Bits() {
+		if c.Match.rank() == best.Match.rank() && c.Prefix.Bits() == best.Prefix.Bits() {
 			tied++
 		} else {
 			res.Candidates[i].Status = StatusOutranked
@@ -363,9 +378,57 @@ func reasonFor(m MatchKind) Reason {
 		return ReasonSubnetRoute
 	case MatchQualifiedName:
 		return ReasonNetworkQualifiedName
+	case MatchDNSRecord:
+		return ReasonDNSRecord
 	default:
 		return ReasonDeviceHostname
 	}
+}
+
+func recordMatches(q Query, n Network, devices []domain.Device, devLabels map[domain.NodeID]naming.Labels, nl naming.Labels) []Candidate {
+	if q.Kind != KindName {
+		return nil
+	}
+	for _, d := range devices {
+		if dnsName(d) == q.Name {
+			return nil
+		}
+	}
+	var out []Candidate
+	for _, r := range n.Records {
+		if r.Name != q.Name {
+			continue
+		}
+		target, ok := r.Target()
+		if !ok {
+			continue
+		}
+		c := Candidate{
+			Match:        MatchDNSRecord,
+			MatchedValue: target.String(),
+			Addresses:    slices.Clone(r.Addresses),
+			Network:      n.Network,
+			State:        n.State,
+		}
+		if owner, ok := ownerOf(devices, target); ok {
+			dl := devLabels[owner.ID.NodeID]
+			c.Device = owner
+			c.Name, c.StableName = naming.Name(dl.Published(), nl.Published()), naming.Name(dl.Stable, nl.Stable)
+		}
+		out = append(out, c)
+	}
+	return out
+}
+
+func ownerOf(devices []domain.Device, addr netip.Addr) (domain.Device, bool) {
+	for _, d := range devices {
+		for _, a := range d.Addresses {
+			if a.Unmap() == addr {
+				return d, true
+			}
+		}
+	}
+	return domain.Device{}, false
 }
 
 func ownDevices(n Network, seen map[string]bool) []domain.Device {

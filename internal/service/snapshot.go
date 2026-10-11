@@ -54,6 +54,14 @@ func (s *Service) devices(id domain.NetworkID) []domain.Device {
 	return out
 }
 
+func (s *Service) dnsRecords(id domain.NetworkID) []domain.DNSRecord {
+	sess, ok := s.cfg.Sessions.Get(id)
+	if !ok {
+		return nil
+	}
+	return sess.DNSRecords()
+}
+
 func (s *Service) ListDevices(ctx context.Context, rawID string) ([]domain.Device, uint64, error) {
 	seq := s.cfg.Bus.Sequence()
 	if rawID == "" {

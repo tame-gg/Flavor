@@ -2,6 +2,12 @@
 
 All notable changes to Flavor are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Names that a network's DNS settings publish, such as Headscale `extra_records`, now resolve in `flavorctl explain`, `flavorctl forward`, the SOCKS5 proxy and the Connection Inspector, and they point at the network that published them. A name that two networks both publish is ambiguous, as for devices, and `--network` or a preference picks one. Split DNS and search domains are not covered yet ([#47](https://github.com/tame-gg/Flavor/issues/47)).
+
 ## [0.1.0-beta.7] - 2026-10-10
 
 ### Fixed

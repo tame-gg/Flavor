@@ -8,6 +8,7 @@ import (
 
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
 	"tailscale.com/ipn/ipnstate"
+	"tailscale.com/tailcfg"
 )
 
 func projectStatus(st *ipnstate.Status) EngineStatus {
@@ -46,6 +47,24 @@ func projectPeer(p *ipnstate.PeerStatus) EnginePeer {
 		Tags:      tags(p),
 		Routes:    routes(p),
 	}
+}
+
+func projectDNSRecords(cfg *tailcfg.DNSConfig) []domain.DNSRecord {
+	if cfg == nil {
+		return nil
+	}
+	var records []domain.DNSRecord
+	for _, r := range cfg.ExtraRecords {
+		if r.Type != "" && r.Type != "A" && r.Type != "AAAA" {
+			continue
+		}
+		addr, err := netip.ParseAddr(strings.TrimSpace(r.Value))
+		if err != nil {
+			continue
+		}
+		records = append(records, domain.DNSRecord{Name: r.Name, Addresses: []netip.Addr{addr}})
+	}
+	return domain.MergeDNSRecords(records)
 }
 
 func routes(p *ipnstate.PeerStatus) []netip.Prefix {

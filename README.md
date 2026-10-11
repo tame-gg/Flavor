@@ -42,7 +42,7 @@ An address alone cannot tell those two machines apart. Flavor identifies every d
 | **See it** | The device list shows both machines, each with its network. The Conflict Center lists every address, name and subnet route that exists more than once. |
 | **Explain it** | The Connection Inspector and `flavorctl explain` show every network a destination exists on, what matched and whether the answer is unique. Overlapping subnet routes resolve to the most specific one. |
 | **Choose it** | Name the device together with its network (`pi-hole.home-lab.flavor.internal`), pass `--network` to `flavorctl forward`, or set a preference. Flavor never picks one at random. |
-| **Connect to it** | `flavorctl forward` and `flavorctl socks` connect through the right network without changing system routing. |
+| **Connect to it** | `flavorctl forward` and `flavorctl socks` connect through the right network without changing system routing. They also accept names that a network's DNS settings publish, such as Headscale `extra_records`. |
 | **Use it anywhere** | With the experimental helper, any program can resolve and connect to Flavor names. |
 
 Everything except the last row runs as your user, with no extra privileges. The last row needs an optional helper that runs as root.

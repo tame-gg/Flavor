@@ -15,6 +15,7 @@ export const matchLabel: Record<MatchKind, string> = {
   [MatchKind.DEVICE_HOSTNAME]: "Device name",
   [MatchKind.SUBNET_ROUTE]: "Subnet route",
   [MatchKind.QUALIFIED_NAME]: "Flavor name",
+  [MatchKind.DNS_RECORD]: "DNS record from the network",
 };
 
 export const statusLabel: Record<CandidateStatus, string> = {
@@ -37,6 +38,7 @@ const basis: Record<MatchKind, string> = {
   [MatchKind.DEVICE_HOSTNAME]: "a device name",
   [MatchKind.SUBNET_ROUTE]: "a subnet route",
   [MatchKind.QUALIFIED_NAME]: "its Flavor name, which names the network explicitly",
+  [MatchKind.DNS_RECORD]: "a DNS record the network publishes",
 };
 
 const what = (r: InspectDestinationResponse) => (r.kind === DestinationKind.ADDRESS ? "address" : "name");
@@ -47,7 +49,8 @@ export function explain(r: InspectDestinationResponse): { title: string; detail:
   const outranked = r.candidates.filter((c) => c.status === CandidateStatus.OUTRANKED);
   switch (r.decision) {
     case ResolutionDecision.UNIQUE: {
-      const device = selected?.device?.hostname || selected?.device?.dnsName || "one device";
+      const recordLabel = r.decidedBy === MatchKind.DNS_RECORD ? selected?.matchedValue : undefined;
+      const device = selected?.device?.hostname || selected?.device?.dnsName || recordLabel || "one device";
       const network = selected?.network?.displayName ?? "one network";
       if (r.reason === DecisionReason.DESTINATION_PREFERENCE) {
         const others = new Set(outranked.map((c) => c.network?.id)).size;

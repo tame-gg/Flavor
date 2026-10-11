@@ -310,7 +310,7 @@ func printExplain(out io.Writer, r *v1.InspectDestinationResponse) error {
 	case v1.ResolutionDecision_RESOLUTION_DECISION_UNIQUE:
 		for _, c := range r.Candidates {
 			if c.Status == v1.CandidateStatus_CANDIDATE_STATUS_SELECTED {
-				decision += fmt.Sprintf(": %s on %s", c.Device.GetHostname(), c.Network.GetDisplayName())
+				decision += fmt.Sprintf(": %s on %s", deviceLabel(c), c.Network.GetDisplayName())
 			}
 		}
 	}
@@ -330,7 +330,7 @@ func printExplain(out io.Writer, r *v1.InspectDestinationResponse) error {
 		fmt.Fprintln(w, "NETWORK\tDEVICE\tMATCH\tSTATUS\tADDRESSES")
 		for _, c := range r.Candidates {
 			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
-				c.Network.GetDisplayName(), c.Device.GetHostname(),
+				c.Network.GetDisplayName(), deviceLabel(c),
 				matchText(c),
 				enumName(c.Status.String(), "CANDIDATE_STATUS_"),
 				strings.Join(c.Device.GetAddresses(), ","))
@@ -602,6 +602,16 @@ func runPreference(ctx context.Context, c *client.Client, args []string, asJSON 
 		return fmt.Errorf("unknown preference command %q\n\n%s", sub, usage)
 	}
 	return nil
+}
+
+func deviceLabel(c *v1.ResolutionCandidate) string {
+	if h := c.Device.GetHostname(); h != "" {
+		return h
+	}
+	if c.Match == v1.MatchKind_MATCH_KIND_DNS_RECORD {
+		return c.MatchedValue
+	}
+	return ""
 }
 
 func matchText(c *v1.ResolutionCandidate) string {

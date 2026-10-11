@@ -332,15 +332,17 @@ func (s *Session) applyStatus(snap EngineStatus) {
 			continue
 		}
 		newDevices[p.NodeID] = domain.Device{
-			ID:        domain.DeviceIdentity{NetworkID: s.cfg.NetworkID, NodeID: p.NodeID},
-			Hostname:  p.Hostname,
-			DNSName:   p.DNSName,
-			Addresses: append([]netip.Addr(nil), p.Addresses...),
-			Online:    p.Online,
-			LastSeen:  p.LastSeen,
-			OS:        p.OS,
-			Tags:      slices.Clone(p.Tags),
-			Routes:    slices.Clone(p.Routes),
+			ID:             domain.DeviceIdentity{NetworkID: s.cfg.NetworkID, NodeID: p.NodeID},
+			Hostname:       p.Hostname,
+			DNSName:        p.DNSName,
+			Addresses:      append([]netip.Addr(nil), p.Addresses...),
+			Online:         p.Online,
+			LastSeen:       p.LastSeen,
+			OS:             p.OS,
+			Tags:           slices.Clone(p.Tags),
+			Routes:         slices.Clone(p.Routes),
+			ExitNodeOption: p.ExitNodeOption,
+			ExitNode:       snap.ExitNode != "" && p.NodeID == snap.ExitNode,
 		}
 	}
 	if snap.Self != nil && snap.Self.NodeID != "" {
@@ -486,6 +488,26 @@ func (s *Session) Dial(ctx context.Context, network, address string) (net.Conn, 
 		return nil, ErrNotRunning
 	}
 	return eng.Dial(ctx, network, address)
+}
+
+func (s *Session) SetExitNode(ctx context.Context, id domain.NodeID) error {
+	s.lifeMu.Lock()
+	g := s.gen
+	if g == nil || g.phase != backendStarted {
+		s.lifeMu.Unlock()
+		return ErrNotRunning
+	}
+	eng := g.eng
+	s.lifeMu.Unlock()
+	if err := eng.SetExitNode(ctx, id); err != nil {
+		return err
+	}
+	snap, err := eng.Status(ctx)
+	if err != nil {
+		return err
+	}
+	s.ifCurrent(g, func() { s.applyStatus(snap) })
+	return nil
 }
 
 func (s *Session) State() domain.NetworkConnectionState {

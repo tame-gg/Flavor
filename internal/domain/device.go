@@ -16,14 +16,16 @@ func (d DeviceIdentity) Key() string {
 }
 
 type Device struct {
-	ID        DeviceIdentity
-	Hostname  string
-	DNSName   string
-	Addresses []netip.Addr
-	Online    bool
-	LastSeen  time.Time
-	Local     bool
-	OS        string
-	Tags      []string
-	Routes    []netip.Prefix
+	ID             DeviceIdentity
+	Hostname       string
+	DNSName        string
+	Addresses      []netip.Addr
+	Online         bool
+	LastSeen       time.Time
+	Local          bool
+	OS             string
+	Tags           []string
+	Routes         []netip.Prefix
+	ExitNodeOption bool
+	ExitNode       bool
 }

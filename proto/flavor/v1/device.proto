@@ -24,6 +24,8 @@ message Device {
   string os = 8;
   repeated string tags = 9;
   repeated string routes = 10;
+  bool exit_node_option = 11;
+  bool exit_node = 12;
 }
 
 message ListDevicesRequest {

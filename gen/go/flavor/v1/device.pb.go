@@ -75,19 +75,21 @@ func (x *DeviceIdentity) GetNodeId() string {
 }
 
 type Device struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            *DeviceIdentity        `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Hostname      string                 `protobuf:"bytes,2,opt,name=hostname,proto3" json:"hostname,omitempty"`
-	DnsName       string                 `protobuf:"bytes,3,opt,name=dns_name,json=dnsName,proto3" json:"dns_name,omitempty"`
-	Addresses     []string               `protobuf:"bytes,4,rep,name=addresses,proto3" json:"addresses,omitempty"`
-	Online        bool                   `protobuf:"varint,5,opt,name=online,proto3" json:"online,omitempty"`
-	LastSeen      *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"`
-	Local         bool                   `protobuf:"varint,7,opt,name=local,proto3" json:"local,omitempty"`
-	Os            string                 `protobuf:"bytes,8,opt,name=os,proto3" json:"os,omitempty"`
-	Tags          []string               `protobuf:"bytes,9,rep,name=tags,proto3" json:"tags,omitempty"`
-	Routes        []string               `protobuf:"bytes,10,rep,name=routes,proto3" json:"routes,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             *DeviceIdentity        `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Hostname       string                 `protobuf:"bytes,2,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	DnsName        string                 `protobuf:"bytes,3,opt,name=dns_name,json=dnsName,proto3" json:"dns_name,omitempty"`
+	Addresses      []string               `protobuf:"bytes,4,rep,name=addresses,proto3" json:"addresses,omitempty"`
+	Online         bool                   `protobuf:"varint,5,opt,name=online,proto3" json:"online,omitempty"`
+	LastSeen       *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=last_seen,json=lastSeen,proto3" json:"last_seen,omitempty"`
+	Local          bool                   `protobuf:"varint,7,opt,name=local,proto3" json:"local,omitempty"`
+	Os             string                 `protobuf:"bytes,8,opt,name=os,proto3" json:"os,omitempty"`
+	Tags           []string               `protobuf:"bytes,9,rep,name=tags,proto3" json:"tags,omitempty"`
+	Routes         []string               `protobuf:"bytes,10,rep,name=routes,proto3" json:"routes,omitempty"`
+	ExitNodeOption bool                   `protobuf:"varint,11,opt,name=exit_node_option,json=exitNodeOption,proto3" json:"exit_node_option,omitempty"`
+	ExitNode       bool                   `protobuf:"varint,12,opt,name=exit_node,json=exitNode,proto3" json:"exit_node,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Device) Reset() {
@@ -188,6 +190,20 @@ func (x *Device) GetRoutes() []string {
 		return x.Routes
 	}
 	return nil
+}
+
+func (x *Device) GetExitNodeOption() bool {
+	if x != nil {
+		return x.ExitNodeOption
+	}
+	return false
+}
+
+func (x *Device) GetExitNode() bool {
+	if x != nil {
+		return x.ExitNode
+	}
+	return false
 }
 
 type ListDevicesRequest struct {
@@ -302,7 +318,7 @@ const file_flavor_v1_device_proto_rawDesc = "" +
 	"\x0eDeviceIdentity\x12\x1d\n" +
 	"\n" +
 	"network_id\x18\x01 \x01(\tR\tnetworkId\x12\x17\n" +
-	"\anode_id\x18\x02 \x01(\tR\x06nodeId\"\xab\x02\n" +
+	"\anode_id\x18\x02 \x01(\tR\x06nodeId\"\xf2\x02\n" +
 	"\x06Device\x12)\n" +
 	"\x02id\x18\x01 \x01(\v2\x19.flavor.v1.DeviceIdentityR\x02id\x12\x1a\n" +
 	"\bhostname\x18\x02 \x01(\tR\bhostname\x12\x19\n" +
@@ -314,7 +330,9 @@ const file_flavor_v1_device_proto_rawDesc = "" +
 	"\x02os\x18\b \x01(\tR\x02os\x12\x12\n" +
 	"\x04tags\x18\t \x03(\tR\x04tags\x12\x16\n" +
 	"\x06routes\x18\n" +
-	" \x03(\tR\x06routes\"3\n" +
+	" \x03(\tR\x06routes\x12(\n" +
+	"\x10exit_node_option\x18\v \x01(\bR\x0eexitNodeOption\x12\x1b\n" +
+	"\texit_node\x18\f \x01(\bR\bexitNode\"3\n" +
 	"\x12ListDevicesRequest\x12\x1d\n" +
 	"\n" +
 	"network_id\x18\x01 \x01(\tR\tnetworkId\"\x9d\x01\n" +

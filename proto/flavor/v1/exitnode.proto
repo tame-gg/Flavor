@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package flavor.v1;
+
+import "flavor/v1/device.proto";
+
+service ExitNodeService {
+  rpc SetExitNode(SetExitNodeRequest) returns (SetExitNodeResponse);
+  rpc ClearExitNode(ClearExitNodeRequest) returns (ClearExitNodeResponse);
+}
+
+message SetExitNodeRequest {
+  string network_id = 1;
+  string node_id = 2;
+}
+
+message SetExitNodeResponse {
+  Device device = 1;
+}
+
+message ClearExitNodeRequest {
+  string network_id = 1;
+}
+
+message ClearExitNodeResponse {}

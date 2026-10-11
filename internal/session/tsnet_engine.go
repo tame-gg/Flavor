@@ -13,6 +13,7 @@ import (
 	"git.lunarlabs.dev/flavor/flavor/internal/provider"
 	"tailscale.com/client/local"
 	"tailscale.com/ipn"
+	"tailscale.com/tailcfg"
 	"tailscale.com/tsnet"
 	"tailscale.com/types/logger"
 )
@@ -73,6 +74,19 @@ func (e *tsnetEngine) Close() error {
 
 func (e *tsnetEngine) Dial(ctx context.Context, network, address string) (net.Conn, error) {
 	return e.srv.Dial(ctx, network, address)
+}
+
+func (e *tsnetEngine) SetExitNode(ctx context.Context, id domain.NodeID) error {
+	if e.lc == nil {
+		return fmt.Errorf("local client unavailable")
+	}
+	_, err := e.lc.EditPrefs(ctx, &ipn.MaskedPrefs{
+		Prefs:           ipn.Prefs{ExitNodeID: tailcfg.StableNodeID(id)},
+		ExitNodeIDSet:   true,
+		ExitNodeIPSet:   true,
+		AutoExitNodeSet: true,
+	})
+	return err
 }
 
 func (e *tsnetEngine) ClearAuthKey() {

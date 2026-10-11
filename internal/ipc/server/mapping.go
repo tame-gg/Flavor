@@ -26,6 +26,7 @@ var capabilities = map[string]v1.Capability{
 	"destination_preferences": v1.Capability_CAPABILITY_DESTINATION_PREFERENCES,
 	"forwarding":              v1.Capability_CAPABILITY_FORWARDING,
 	"socks_proxy":             v1.Capability_CAPABILITY_SOCKS_PROXY,
+	"exit_nodes":              v1.Capability_CAPABILITY_EXIT_NODES,
 }
 
 func daemonInfo(info service.DaemonInfo) *v1.GetDaemonInfoResponse {
@@ -111,14 +112,16 @@ func network(v service.NetworkView) *v1.Network {
 
 func device(d domain.Device) *v1.Device {
 	out := &v1.Device{
-		Id:       &v1.DeviceIdentity{NetworkId: string(d.ID.NetworkID), NodeId: string(d.ID.NodeID)},
-		Hostname: d.Hostname,
-		DnsName:  d.DNSName,
-		Online:   d.Online,
-		LastSeen: timestamp(d.LastSeen),
-		Local:    d.Local,
-		Os:       d.OS,
-		Tags:     append([]string(nil), d.Tags...),
+		Id:             &v1.DeviceIdentity{NetworkId: string(d.ID.NetworkID), NodeId: string(d.ID.NodeID)},
+		Hostname:       d.Hostname,
+		DnsName:        d.DNSName,
+		Online:         d.Online,
+		LastSeen:       timestamp(d.LastSeen),
+		Local:          d.Local,
+		Os:             d.OS,
+		Tags:           append([]string(nil), d.Tags...),
+		ExitNodeOption: d.ExitNodeOption,
+		ExitNode:       d.ExitNode,
 	}
 	for _, r := range d.Routes {
 		out.Routes = append(out.Routes, r.String())

@@ -523,3 +523,74 @@ func TestPeerMetadataChangesAreProjectedAndAnnounced(t *testing.T) {
 		}
 	}
 }
+
+func exitNodeDevice(s *session.Session, node domain.NodeID) domain.Device {
+	for _, d := range s.Devices() {
+		if d.ID.NodeID == node {
+			return d
+		}
+	}
+	return domain.Device{}
+}
+
+func TestSetExitNodeMarksTheDeviceAndSurvivesRefresh(t *testing.T) {
+	bus := events.NewBus(64, 8)
+	defer bus.Close()
+	sub, err := bus.Subscribe(context.Background(), 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer sub.Close()
+	eng := sessiontest.NewEngine()
+	st := sessiontest.StatusWithPeer("gw", "100.64.0.2")
+	st.Peers[0].ExitNodeOption = true
+	eng.SetStatus(st)
+	s, err := session.NewSessionWithFactory(cfgFor(domain.NewNetworkID(), "host-a"), bus, nil, sessiontest.Shared(eng))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.SetExitNode(context.Background(), "gw"); !errors.Is(err, session.ErrNotRunning) {
+		t.Fatalf("got %v", err)
+	}
+	if err := s.Start(context.Background(), nil); err != nil {
+		t.Fatal(err)
+	}
+	waitState(t, s, domain.StateConnected)
+	if d := exitNodeDevice(s, "gw"); !d.ExitNodeOption || d.ExitNode {
+		t.Fatalf("%+v", d)
+	}
+
+	if err := s.SetExitNode(context.Background(), "gw"); err != nil {
+		t.Fatal(err)
+	}
+	if d := exitNodeDevice(s, "gw"); !d.ExitNode {
+		t.Fatalf("selection must be visible right after SetExitNode: %+v", d)
+	}
+	if calls := eng.ExitNodeCalls(); len(calls) != 1 || calls[0] != "gw" {
+		t.Fatalf("%v", calls)
+	}
+	deadline := time.After(2 * time.Second)
+	for updated := false; !updated; {
+		select {
+		case ev := <-sub.Events:
+			if p, ok := ev.Payload.(events.PeerUpdated); ok && p.Device.ExitNode {
+				updated = true
+			}
+		case <-deadline:
+			t.Fatal("exit node selection did not emit PeerUpdated")
+		}
+	}
+
+	eng.PushNetMap()
+	time.Sleep(100 * time.Millisecond)
+	if d := exitNodeDevice(s, "gw"); !d.ExitNode {
+		t.Fatalf("selection lost on status refresh: %+v", d)
+	}
+
+	if err := s.SetExitNode(context.Background(), ""); err != nil {
+		t.Fatal(err)
+	}
+	if d := exitNodeDevice(s, "gw"); d.ExitNode || !d.ExitNodeOption {
+		t.Fatalf("%+v", d)
+	}
+}

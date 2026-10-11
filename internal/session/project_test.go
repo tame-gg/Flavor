@@ -8,6 +8,7 @@ import (
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
 	"tailscale.com/ipn/ipnstate"
 	"tailscale.com/tailcfg"
+	"tailscale.com/types/key"
 	"tailscale.com/types/views"
 )
 
@@ -103,6 +104,40 @@ func TestProjectPeerCarriesOSAndTags(t *testing.T) {
 	b.OS = "windows"
 	if deviceEqual(a, b) {
 		t.Fatal("os change not detected")
+	}
+}
+
+func TestProjectExitNode(t *testing.T) {
+	st := projectStatus(&ipnstate.Status{
+		Peer: map[key.NodePublic]*ipnstate.PeerStatus{
+			key.NewNode().Public(): {ID: "gw", ExitNodeOption: true},
+			key.NewNode().Public(): {ID: "plain"},
+		},
+		ExitNodeStatus: &ipnstate.ExitNodeStatus{ID: " gw "},
+	})
+	if st.ExitNode != "gw" {
+		t.Fatalf("%q", st.ExitNode)
+	}
+	options := map[domain.NodeID]bool{}
+	for _, p := range st.Peers {
+		options[p.NodeID] = p.ExitNodeOption
+	}
+	if !options["gw"] || options["plain"] {
+		t.Fatalf("%v", options)
+	}
+	if none := projectStatus(&ipnstate.Status{}); none.ExitNode != "" {
+		t.Fatalf("%q", none.ExitNode)
+	}
+	a := domain.Device{ID: domain.DeviceIdentity{NodeID: "gw"}}
+	b := a
+	b.ExitNodeOption = true
+	if deviceEqual(a, b) {
+		t.Fatal("exit node option change not detected")
+	}
+	b = a
+	b.ExitNode = true
+	if deviceEqual(a, b) || !cloneDevice(b).ExitNode {
+		t.Fatal("exit node selection change not detected")
 	}
 }
 

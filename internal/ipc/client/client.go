@@ -22,6 +22,7 @@ type Client struct {
 	Workspaces  flavorv1connect.WorkspaceServiceClient
 	Preferences flavorv1connect.PreferenceServiceClient
 	Forwards    flavorv1connect.ForwardServiceClient
+	ExitNodes   flavorv1connect.ExitNodeServiceClient
 }
 
 func HTTPClient(socket string) *http.Client {
@@ -48,5 +49,6 @@ func New(socket string) *Client {
 		Workspaces:  flavorv1connect.NewWorkspaceServiceClient(h, BaseURL),
 		Preferences: flavorv1connect.NewPreferenceServiceClient(h, BaseURL),
 		Forwards:    flavorv1connect.NewForwardServiceClient(h, BaseURL),
+		ExitNodes:   flavorv1connect.NewExitNodeServiceClient(h, BaseURL),
 	}
 }

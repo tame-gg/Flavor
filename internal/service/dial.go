@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
+	"strconv"
 
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
 	"git.lunarlabs.dev/flavor/flavor/internal/inspect"
@@ -23,6 +24,17 @@ type Route struct {
 	Network    domain.Network
 	Target     netip.AddrPort
 	Alternates []netip.AddrPort
+	Address    string
+}
+
+func (r Route) DialAddress() string {
+	if r.Address != "" {
+		return r.Address
+	}
+	if r.Target.IsValid() {
+		return r.Target.String()
+	}
+	return ""
 }
 
 func (s *Service) Route(ctx context.Context, destination, rawNetwork string, defaultPort uint16) (Route, error) {
@@ -74,6 +86,13 @@ func (s *Service) Route(ctx context.Context, destination, rawNetwork string, def
 			continue
 		}
 		r.Network = c.Network
+		if c.Match == inspect.MatchExitNode {
+			r.Address = net.JoinHostPort(q.Normalized(), strconv.Itoa(int(q.Port)))
+			if q.Kind == inspect.KindAddress {
+				r.Target = netip.AddrPortFrom(q.Address, q.Port)
+			}
+			continue
+		}
 		addr, ok := targetAddress(q, c)
 		if !ok {
 			return r, fail(CodeDestinationUnreachable, "the selected device has no address", false)
@@ -95,12 +114,17 @@ func (s *Service) Dial(ctx context.Context, r Route) (net.Conn, error) {
 	if !ok {
 		return nil, fail(CodeDestinationUnreachable, "network "+r.Network.DisplayName+" is not connected", true)
 	}
-	for _, t := range append([]netip.AddrPort{r.Target}, r.Alternates...) {
-		if conn, err := sess.Dial(ctx, "tcp", t.String()); err == nil {
+	address := r.DialAddress()
+	targets := []string{address}
+	for _, t := range r.Alternates {
+		targets = append(targets, t.String())
+	}
+	for _, t := range targets {
+		if conn, err := sess.Dial(ctx, "tcp", t); err == nil {
 			return conn, nil
 		}
 	}
-	return nil, fail(CodeDestinationUnreachable, "could not connect to "+r.Target.String()+" on "+r.Network.DisplayName, true)
+	return nil, fail(CodeDestinationUnreachable, "could not connect to "+address+" on "+r.Network.DisplayName, true)
 }
 
 func (s *Service) resolveNetworkRef(ctx context.Context, raw string) (domain.NetworkID, error) {

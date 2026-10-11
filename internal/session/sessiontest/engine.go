@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net"
 	"net/netip"
+	"slices"
 	"sync"
 	"time"
 
@@ -31,6 +32,8 @@ type Engine struct {
 	activeWatchers int
 	tracker        *tracker
 	dial           func(ctx context.Context, network, address string) (net.Conn, error)
+	exitNode       domain.NodeID
+	exitNodeCalls  []domain.NodeID
 }
 
 func NewEngine() *Engine {
@@ -91,7 +94,29 @@ func (e *Engine) Status(ctx context.Context) (session.EngineStatus, error) {
 	}
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	return e.status, nil
+	st := e.status
+	st.ExitNode = e.exitNode
+	return st, nil
+}
+
+func (e *Engine) SetExitNode(_ context.Context, id domain.NodeID) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.exitNode = id
+	e.exitNodeCalls = append(e.exitNodeCalls, id)
+	return nil
+}
+
+func (e *Engine) ExitNode() domain.NodeID {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return e.exitNode
+}
+
+func (e *Engine) ExitNodeCalls() []domain.NodeID {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return slices.Clone(e.exitNodeCalls)
 }
 
 func (e *Engine) Watch(ctx context.Context, emit func(session.EngineNotify)) error {

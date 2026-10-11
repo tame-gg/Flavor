@@ -12,9 +12,9 @@ import (
 
 func (h *handlers) forwardRoute(r service.Route) *v1.ForwardRoute {
 	out := &v1.ForwardRoute{Decision: inspection(r.Result, 0, h.svc.InstanceID())}
-	if r.Target.IsValid() {
+	if address := r.DialAddress(); address != "" {
 		out.Network = networkRef(r.Network, "")
-		out.Target = r.Target.String()
+		out.Target = address
 	}
 	return out
 }

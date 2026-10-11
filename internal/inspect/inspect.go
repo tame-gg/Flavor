@@ -58,6 +58,7 @@ const (
 	MatchSubnetRoute
 	MatchQualifiedName
 	MatchDNSRecord
+	MatchExitNode
 )
 
 func (m MatchKind) rank() MatchKind {
@@ -90,6 +91,7 @@ const (
 	ReasonExplicitNetwork
 	ReasonAmbiguousNetworkLabel
 	ReasonDNSRecord
+	ReasonExitNode
 )
 
 type PreferenceState int
@@ -120,6 +122,8 @@ type Network struct {
 	Devices []domain.Device
 	Records []domain.DNSRecord
 	Live    bool
+
+	ExitNode domain.Device
 }
 
 type Candidate struct {
@@ -332,7 +336,19 @@ func resolveMatches(q Query, networks []Network) Result {
 	})
 
 	if len(res.Candidates) == 0 {
-		res.Decision, res.Reason = DecisionNoMatch, ReasonNoMatch
+		res.Candidates = exitNodeCandidates(q, networks, netLabels)
+		switch len(res.Candidates) {
+		case 0:
+			res.Decision, res.Reason = DecisionNoMatch, ReasonNoMatch
+		case 1:
+			res.Candidates[0].Status = StatusSelected
+			res.Decision, res.Reason, res.DecidedBy = DecisionUnique, ReasonExitNode, MatchExitNode
+		default:
+			for i := range res.Candidates {
+				res.Candidates[i].Status = StatusTied
+			}
+			res.Decision, res.Reason, res.DecidedBy = DecisionAmbiguous, ReasonMultipleMatches, MatchExitNode
+		}
 		return res
 	}
 	if stableNet == "" && sharedLabel > 1 {
@@ -366,6 +382,49 @@ func resolveMatches(q Query, networks []Network) Result {
 		res.Candidates[i].Status = StatusTied
 	}
 	return res
+}
+
+func exitNodeCandidates(q Query, networks []Network, netLabels map[domain.NetworkID]naming.Labels) []Candidate {
+	if q.Qualified() || tailnetDestination(q) {
+		return nil
+	}
+	var out []Candidate
+	for _, n := range networks {
+		if !n.Live || n.ExitNode.ID.NodeID == "" || (q.Context != "" && n.Network.ID != q.Context) {
+			continue
+		}
+		devLabels := naming.DeviceLabels(ownDevices(n, make(map[string]bool)))
+		dl, nl := devLabels[n.ExitNode.ID.NodeID], netLabels[n.Network.ID]
+		out = append(out, Candidate{
+			Network:      n.Network,
+			State:        n.State,
+			Device:       n.ExitNode,
+			Match:        MatchExitNode,
+			MatchedValue: q.Normalized(),
+			Name:         naming.Name(dl.Published(), nl.Published()),
+			StableName:   naming.Name(dl.Stable, nl.Stable),
+		})
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		a, b := out[i], out[j]
+		if a.Network.DisplayName != b.Network.DisplayName {
+			return a.Network.DisplayName < b.Network.DisplayName
+		}
+		return a.Network.ID < b.Network.ID
+	})
+	return out
+}
+
+var tailnetPrefixes = []netip.Prefix{
+	netip.MustParsePrefix("100.64.0.0/10"),
+	netip.MustParsePrefix("fd7a:115c:a1e0::/48"),
+}
+
+func tailnetDestination(q Query) bool {
+	if q.Kind == KindAddress {
+		return slices.ContainsFunc(tailnetPrefixes, func(p netip.Prefix) bool { return p.Contains(q.Address) })
+	}
+	return q.Name == naming.Suffix || strings.HasSuffix(q.Name, "."+naming.Suffix)
 }
 
 func reasonFor(m MatchKind) Reason {

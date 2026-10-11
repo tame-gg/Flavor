@@ -31,21 +31,25 @@ func projectStatus(st *ipnstate.Status) EngineStatus {
 		}
 		out.Peers = append(out.Peers, projectPeer(p))
 	}
+	if st.ExitNodeStatus != nil {
+		out.ExitNode = domain.NodeID(strings.TrimSpace(string(st.ExitNodeStatus.ID)))
+	}
 	return out
 }
 
 func projectPeer(p *ipnstate.PeerStatus) EnginePeer {
 	id := domain.NodeID(strings.TrimSpace(string(p.ID)))
 	return EnginePeer{
-		NodeID:    id,
-		Hostname:  p.HostName,
-		DNSName:   strings.TrimSuffix(p.DNSName, "."),
-		Addresses: append([]netip.Addr(nil), p.TailscaleIPs...),
-		Online:    p.Online,
-		LastSeen:  p.LastSeen.UTC(),
-		OS:        p.OS,
-		Tags:      tags(p),
-		Routes:    routes(p),
+		NodeID:         id,
+		Hostname:       p.HostName,
+		DNSName:        strings.TrimSuffix(p.DNSName, "."),
+		Addresses:      append([]netip.Addr(nil), p.TailscaleIPs...),
+		Online:         p.Online,
+		LastSeen:       p.LastSeen.UTC(),
+		OS:             p.OS,
+		Tags:           tags(p),
+		Routes:         routes(p),
+		ExitNodeOption: p.ExitNodeOption,
 	}
 }
 
@@ -129,7 +133,7 @@ func mapConnectionState(snap EngineStatus, hadAuthPrompt bool) domain.NetworkCon
 }
 
 func deviceEqual(a, b domain.Device) bool {
-	if a.ID != b.ID || a.Hostname != b.Hostname || a.DNSName != b.DNSName || a.Online != b.Online || a.Local != b.Local || a.OS != b.OS || !slices.Equal(a.Tags, b.Tags) || !slices.Equal(a.Routes, b.Routes) {
+	if a.ID != b.ID || a.Hostname != b.Hostname || a.DNSName != b.DNSName || a.Online != b.Online || a.Local != b.Local || a.OS != b.OS || !slices.Equal(a.Tags, b.Tags) || !slices.Equal(a.Routes, b.Routes) || a.ExitNodeOption != b.ExitNodeOption || a.ExitNode != b.ExitNode {
 		return false
 	}
 	if !a.LastSeen.Equal(b.LastSeen) {

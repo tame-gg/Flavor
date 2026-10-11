@@ -80,6 +80,7 @@ const (
 	MatchKind_MATCH_KIND_SUBNET_ROUTE    MatchKind = 4
 	MatchKind_MATCH_KIND_QUALIFIED_NAME  MatchKind = 5
 	MatchKind_MATCH_KIND_DNS_RECORD      MatchKind = 6
+	MatchKind_MATCH_KIND_EXIT_NODE       MatchKind = 7
 )
 
 // Enum value maps for MatchKind.
@@ -92,6 +93,7 @@ var (
 		4: "MATCH_KIND_SUBNET_ROUTE",
 		5: "MATCH_KIND_QUALIFIED_NAME",
 		6: "MATCH_KIND_DNS_RECORD",
+		7: "MATCH_KIND_EXIT_NODE",
 	}
 	MatchKind_value = map[string]int32{
 		"MATCH_KIND_UNSPECIFIED":     0,
@@ -101,6 +103,7 @@ var (
 		"MATCH_KIND_SUBNET_ROUTE":    4,
 		"MATCH_KIND_QUALIFIED_NAME":  5,
 		"MATCH_KIND_DNS_RECORD":      6,
+		"MATCH_KIND_EXIT_NODE":       7,
 	}
 )
 
@@ -199,6 +202,7 @@ const (
 	DecisionReason_DECISION_REASON_EXPLICIT_NETWORK        DecisionReason = 10
 	DecisionReason_DECISION_REASON_AMBIGUOUS_NETWORK_LABEL DecisionReason = 11
 	DecisionReason_DECISION_REASON_DNS_RECORD              DecisionReason = 12
+	DecisionReason_DECISION_REASON_EXIT_NODE               DecisionReason = 13
 )
 
 // Enum value maps for DecisionReason.
@@ -217,6 +221,7 @@ var (
 		10: "DECISION_REASON_EXPLICIT_NETWORK",
 		11: "DECISION_REASON_AMBIGUOUS_NETWORK_LABEL",
 		12: "DECISION_REASON_DNS_RECORD",
+		13: "DECISION_REASON_EXIT_NODE",
 	}
 	DecisionReason_value = map[string]int32{
 		"DECISION_REASON_UNSPECIFIED":             0,
@@ -232,6 +237,7 @@ var (
 		"DECISION_REASON_EXPLICIT_NETWORK":        10,
 		"DECISION_REASON_AMBIGUOUS_NETWORK_LABEL": 11,
 		"DECISION_REASON_DNS_RECORD":              12,
+		"DECISION_REASON_EXIT_NODE":               13,
 	}
 )
 
@@ -924,7 +930,7 @@ const file_flavor_v1_inspector_proto_rawDesc = "" +
 	"\x0fDestinationKind\x12 \n" +
 	"\x1cDESTINATION_KIND_UNSPECIFIED\x10\x00\x12\x1c\n" +
 	"\x18DESTINATION_KIND_ADDRESS\x10\x01\x12\x19\n" +
-	"\x15DESTINATION_KIND_NAME\x10\x02*\xdd\x01\n" +
+	"\x15DESTINATION_KIND_NAME\x10\x02*\xf7\x01\n" +
 	"\tMatchKind\x12\x1a\n" +
 	"\x16MATCH_KIND_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19MATCH_KIND_DEVICE_ADDRESS\x10\x01\x12\x1e\n" +
@@ -932,12 +938,13 @@ const file_flavor_v1_inspector_proto_rawDesc = "" +
 	"\x1aMATCH_KIND_DEVICE_HOSTNAME\x10\x03\x12\x1b\n" +
 	"\x17MATCH_KIND_SUBNET_ROUTE\x10\x04\x12\x1d\n" +
 	"\x19MATCH_KIND_QUALIFIED_NAME\x10\x05\x12\x19\n" +
-	"\x15MATCH_KIND_DNS_RECORD\x10\x06*\x9e\x01\n" +
+	"\x15MATCH_KIND_DNS_RECORD\x10\x06\x12\x18\n" +
+	"\x14MATCH_KIND_EXIT_NODE\x10\a*\x9e\x01\n" +
 	"\x12ResolutionDecision\x12#\n" +
 	"\x1fRESOLUTION_DECISION_UNSPECIFIED\x10\x00\x12\x1e\n" +
 	"\x1aRESOLUTION_DECISION_UNIQUE\x10\x01\x12!\n" +
 	"\x1dRESOLUTION_DECISION_AMBIGUOUS\x10\x02\x12 \n" +
-	"\x1cRESOLUTION_DECISION_NO_MATCH\x10\x03*\xfa\x03\n" +
+	"\x1cRESOLUTION_DECISION_NO_MATCH\x10\x03*\x99\x04\n" +
 	"\x0eDecisionReason\x12\x1f\n" +
 	"\x1bDECISION_REASON_UNSPECIFIED\x10\x00\x12(\n" +
 	"$DECISION_REASON_EXACT_DEVICE_ADDRESS\x10\x01\x12#\n" +
@@ -952,7 +959,8 @@ const file_flavor_v1_inspector_proto_rawDesc = "" +
 	" DECISION_REASON_EXPLICIT_NETWORK\x10\n" +
 	"\x12+\n" +
 	"'DECISION_REASON_AMBIGUOUS_NETWORK_LABEL\x10\v\x12\x1e\n" +
-	"\x1aDECISION_REASON_DNS_RECORD\x10\f*\x8d\x01\n" +
+	"\x1aDECISION_REASON_DNS_RECORD\x10\f\x12\x1d\n" +
+	"\x19DECISION_REASON_EXIT_NODE\x10\r*\x8d\x01\n" +
 	"\x0fCandidateStatus\x12 \n" +
 	"\x1cCANDIDATE_STATUS_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19CANDIDATE_STATUS_SELECTED\x10\x01\x12\x19\n" +

@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package flavor.v1;
+
+service RouteService {
+  rpc GetRoutes(GetRoutesRequest) returns (GetRoutesResponse);
+  rpc UpdateRoutes(UpdateRoutesRequest) returns (UpdateRoutesResponse);
+}
+
+message AdvertisedRoute {
+  string prefix = 1;
+  bool approved = 2;
+}
+
+message GetRoutesRequest {
+  string network_id = 1;
+}
+
+message GetRoutesResponse {
+  repeated AdvertisedRoute routes = 1;
+  bool exit_node_offered = 2;
+  bool exit_node_approved = 3;
+}
+
+message UpdateRoutesRequest {
+  string network_id = 1;
+  repeated string add = 2;
+  repeated string remove = 3;
+  optional bool exit_node = 4;
+}
+
+message UpdateRoutesResponse {
+  repeated AdvertisedRoute routes = 1;
+  bool exit_node_offered = 2;
+  bool exit_node_approved = 3;
+}

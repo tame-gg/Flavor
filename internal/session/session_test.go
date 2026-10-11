@@ -594,3 +594,70 @@ func TestSetExitNodeMarksTheDeviceAndSurvivesRefresh(t *testing.T) {
 		t.Fatalf("%+v", d)
 	}
 }
+
+func TestAdvertisedRoutesFollowTheEngine(t *testing.T) {
+	bus := events.NewBus(64, 8)
+	defer bus.Close()
+	eng := sessiontest.NewEngine()
+	s, err := session.NewSessionWithFactory(cfgFor(domain.NewNetworkID(), "host-a"), bus, nil, sessiontest.Shared(eng))
+	if err != nil {
+		t.Fatal(err)
+	}
+	lan := netip.MustParsePrefix("192.168.1.0/24")
+	wide := netip.MustParsePrefix("10.0.0.0/8")
+	if err := s.SetAdvertisedRoutes(context.Background(), []netip.Prefix{lan}); !errors.Is(err, session.ErrNotRunning) {
+		t.Fatalf("got %v", err)
+	}
+	if err := s.Start(context.Background(), nil); err != nil {
+		t.Fatal(err)
+	}
+	waitState(t, s, domain.StateConnected)
+	if n := s.LocalNode(); len(n.Routes) != 0 || n.ExitNode.Offered {
+		t.Fatalf("%+v", n)
+	}
+
+	exit := []netip.Prefix{netip.MustParsePrefix("::/0"), netip.MustParsePrefix("0.0.0.0/0")}
+	if err := s.SetAdvertisedRoutes(context.Background(), append([]netip.Prefix{wide, lan}, exit...)); err != nil {
+		t.Fatal(err)
+	}
+	n := s.LocalNode()
+	if len(n.Routes) != 2 || n.Routes[0].Prefix != wide || n.Routes[1].Prefix != lan || n.Routes[0].Approved || n.Routes[1].Approved {
+		t.Fatalf("routes must be sorted, without default routes and unapproved: %+v", n.Routes)
+	}
+	if !n.ExitNode.Offered || n.ExitNode.Approved {
+		t.Fatalf("%+v", n.ExitNode)
+	}
+	if calls := eng.AdvertisedRoutesCalls(); len(calls) != 1 || len(calls[0]) != 4 {
+		t.Fatalf("%v", calls)
+	}
+
+	eng.ApproveRoutes(lan, netip.MustParsePrefix("172.16.0.0/12"))
+	eng.ApproveExitNode(true)
+	eng.PushNetMap()
+	deadline := time.After(2 * time.Second)
+	for {
+		n = s.LocalNode()
+		if n.ExitNode.Approved && len(n.Routes) == 2 && n.Routes[1].Approved {
+			break
+		}
+		select {
+		case <-deadline:
+			t.Fatalf("approval did not reach the local node: %+v", n)
+		case <-time.After(10 * time.Millisecond):
+		}
+	}
+	if n.Routes[0].Approved {
+		t.Fatalf("only advertised and approved routes count as approved: %+v", n.Routes)
+	}
+	n.Routes[0].Approved = true
+	if s.LocalNode().Routes[0].Approved {
+		t.Fatal("local node routes share memory with the session")
+	}
+
+	if err := s.SetAdvertisedRoutes(context.Background(), nil); err != nil {
+		t.Fatal(err)
+	}
+	if n := s.LocalNode(); len(n.Routes) != 0 || n.ExitNode.Offered || n.ExitNode.Approved {
+		t.Fatalf("%+v", n)
+	}
+}

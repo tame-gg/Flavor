@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"net/netip"
 	"regexp"
+	"slices"
 	"sync"
 
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
@@ -89,6 +91,17 @@ func (e *tsnetEngine) SetExitNode(ctx context.Context, id domain.NodeID) error {
 	return err
 }
 
+func (e *tsnetEngine) SetAdvertisedRoutes(ctx context.Context, routes []netip.Prefix) error {
+	if e.lc == nil {
+		return fmt.Errorf("local client unavailable")
+	}
+	_, err := e.lc.EditPrefs(ctx, &ipn.MaskedPrefs{
+		Prefs:              ipn.Prefs{AdvertiseRoutes: routes},
+		AdvertiseRoutesSet: true,
+	})
+	return err
+}
+
 func (e *tsnetEngine) ClearAuthKey() {
 	e.srv.AuthKey = ""
 }
@@ -102,6 +115,9 @@ func (e *tsnetEngine) Status(ctx context.Context) (EngineStatus, error) {
 		return EngineStatus{}, err
 	}
 	out := projectStatus(st)
+	if prefs, err := e.lc.GetPrefs(ctx); err == nil && prefs != nil {
+		out.AdvertisedRoutes = slices.Clone(prefs.AdvertiseRoutes)
+	}
 	e.mu.Lock()
 	out.DNSRecords = domain.CloneDNSRecords(e.records)
 	e.mu.Unlock()

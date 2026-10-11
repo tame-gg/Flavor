@@ -36,6 +36,7 @@ func New(svc *service.Service) *http.Server {
 	mux.Handle(flavorv1connect.NewPreferenceServiceHandler(h, opts...))
 	mux.Handle(flavorv1connect.NewForwardServiceHandler(h, opts...))
 	mux.Handle(flavorv1connect.NewExitNodeServiceHandler(h, opts...))
+	mux.Handle(flavorv1connect.NewRouteServiceHandler(h, opts...))
 	var p http.Protocols
 	p.SetUnencryptedHTTP2(true)
 	return &http.Server{

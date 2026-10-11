@@ -325,6 +325,7 @@ func (s *Session) applyStatus(snap EngineStatus) {
 	} else if len(snap.TailscaleIPs) > 0 {
 		local.Addresses = append([]netip.Addr(nil), snap.TailscaleIPs...)
 	}
+	local.Routes, local.ExitNode = projectAdvertised(snap)
 
 	newDevices := make(map[domain.NodeID]domain.Device, len(snap.Peers)+1)
 	for _, p := range snap.Peers {
@@ -500,6 +501,26 @@ func (s *Session) SetExitNode(ctx context.Context, id domain.NodeID) error {
 	eng := g.eng
 	s.lifeMu.Unlock()
 	if err := eng.SetExitNode(ctx, id); err != nil {
+		return err
+	}
+	snap, err := eng.Status(ctx)
+	if err != nil {
+		return err
+	}
+	s.ifCurrent(g, func() { s.applyStatus(snap) })
+	return nil
+}
+
+func (s *Session) SetAdvertisedRoutes(ctx context.Context, routes []netip.Prefix) error {
+	s.lifeMu.Lock()
+	g := s.gen
+	if g == nil || g.phase != backendStarted {
+		s.lifeMu.Unlock()
+		return ErrNotRunning
+	}
+	eng := g.eng
+	s.lifeMu.Unlock()
+	if err := eng.SetAdvertisedRoutes(ctx, routes); err != nil {
 		return err
 	}
 	snap, err := eng.Status(ctx)

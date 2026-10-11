@@ -23,6 +23,7 @@ type Client struct {
 	Preferences flavorv1connect.PreferenceServiceClient
 	Forwards    flavorv1connect.ForwardServiceClient
 	ExitNodes   flavorv1connect.ExitNodeServiceClient
+	Routes      flavorv1connect.RouteServiceClient
 }
 
 func HTTPClient(socket string) *http.Client {
@@ -50,5 +51,6 @@ func New(socket string) *Client {
 		Preferences: flavorv1connect.NewPreferenceServiceClient(h, BaseURL),
 		Forwards:    flavorv1connect.NewForwardServiceClient(h, BaseURL),
 		ExitNodes:   flavorv1connect.NewExitNodeServiceClient(h, BaseURL),
+		Routes:      flavorv1connect.NewRouteServiceClient(h, BaseURL),
 	}
 }

@@ -415,14 +415,9 @@ func exitNodeCandidates(q Query, networks []Network, netLabels map[domain.Networ
 	return out
 }
 
-var tailnetPrefixes = []netip.Prefix{
-	netip.MustParsePrefix("100.64.0.0/10"),
-	netip.MustParsePrefix("fd7a:115c:a1e0::/48"),
-}
-
 func tailnetDestination(q Query) bool {
 	if q.Kind == KindAddress {
-		return slices.ContainsFunc(tailnetPrefixes, func(p netip.Prefix) bool { return p.Contains(q.Address) })
+		return slices.ContainsFunc(domain.TailnetPrefixes, func(p netip.Prefix) bool { return p.Contains(q.Address) })
 	}
 	return q.Name == naming.Suffix || strings.HasSuffix(q.Name, "."+naming.Suffix)
 }

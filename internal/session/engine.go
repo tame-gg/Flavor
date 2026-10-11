@@ -42,6 +42,9 @@ type EngineStatus struct {
 	Health       []string
 	DNSRecords   []domain.DNSRecord
 	ExitNode     domain.NodeID
+
+	AdvertisedRoutes []netip.Prefix
+	ApprovedRoutes   []netip.Prefix
 }
 
 type EngineNotify struct {
@@ -59,6 +62,7 @@ type Engine interface {
 	ClearAuthKey()
 	Dial(ctx context.Context, network, address string) (net.Conn, error)
 	SetExitNode(ctx context.Context, id domain.NodeID) error
+	SetAdvertisedRoutes(ctx context.Context, routes []netip.Prefix) error
 }
 
 type EngineFactory func(cfg provider.ResolvedSessionConfig, authKey string, log *slog.Logger) (Engine, error)

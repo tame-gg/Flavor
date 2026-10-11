@@ -150,6 +150,30 @@ describe("explain", () => {
     expect(explain(bare).title).toBe("10.0.0.5 on LunarLabs");
   });
 
+  it("explains an exit node, unique and ambiguous", () => {
+    const unique = create(InspectDestinationResponseSchema, {
+      normalized: "203.0.113.7",
+      kind: DestinationKind.ADDRESS,
+      decision: ResolutionDecision.UNIQUE,
+      reason: DecisionReason.EXIT_NODE,
+      decidedBy: MatchKind.EXIT_NODE,
+      candidates: [candidate("a", "LunarLabs", "gateway", CandidateStatus.SELECTED, MatchKind.EXIT_NODE)],
+    });
+    expect(explain(unique)).toEqual({
+      title: "gateway on LunarLabs",
+      detail: "203.0.113.7 is not on any of your networks, so it goes through the exit node chosen for LunarLabs.",
+    });
+    const tie = create(InspectDestinationResponseSchema, {
+      normalized: "203.0.113.7",
+      kind: DestinationKind.ADDRESS,
+      decision: ResolutionDecision.AMBIGUOUS,
+      reason: DecisionReason.MULTIPLE_MATCHES,
+      decidedBy: MatchKind.EXIT_NODE,
+      candidates: [candidate("a", "A", "x", CandidateStatus.TIED, MatchKind.EXIT_NODE), candidate("b", "B", "y", CandidateStatus.TIED, MatchKind.EXIT_NODE)],
+    });
+    expect(explain(tie).title).toBe("203.0.113.7 could leave through 2 exit nodes");
+  });
+
   it("explains a Flavor name whose network label is shared", () => {
     const r = create(InspectDestinationResponseSchema, {
       normalized: "postgres.home.flavor.internal",

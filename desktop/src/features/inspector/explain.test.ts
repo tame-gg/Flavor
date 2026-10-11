@@ -118,6 +118,38 @@ describe("explain", () => {
     expect(candidateLabel(routed, CandidateStatus.OUTRANKED, MatchKind.SUBNET_ROUTE)).toBe("Less specific route");
   });
 
+  it("explains a DNS record, with and without an owning device", () => {
+    const owned = create(InspectDestinationResponseSchema, {
+      normalized: "grafana.corp.example",
+      kind: DestinationKind.NAME,
+      decision: ResolutionDecision.UNIQUE,
+      reason: DecisionReason.DNS_RECORD,
+      decidedBy: MatchKind.DNS_RECORD,
+      candidates: [{ ...candidate("a", "LunarLabs", "monitoring", CandidateStatus.SELECTED, MatchKind.DNS_RECORD), matchedValue: "100.64.0.1" }],
+    });
+    expect(explain(owned)).toEqual({
+      title: "monitoring on LunarLabs",
+      detail: "Matched by a DNS record the network publishes.",
+    });
+    const bare = create(InspectDestinationResponseSchema, {
+      normalized: "grafana.corp.example",
+      kind: DestinationKind.NAME,
+      decision: ResolutionDecision.UNIQUE,
+      reason: DecisionReason.DNS_RECORD,
+      decidedBy: MatchKind.DNS_RECORD,
+      candidates: [
+        {
+          network: { id: "a", displayName: "LunarLabs" },
+          device: {},
+          match: MatchKind.DNS_RECORD,
+          matchedValue: "10.0.0.5",
+          status: CandidateStatus.SELECTED,
+        },
+      ],
+    });
+    expect(explain(bare).title).toBe("10.0.0.5 on LunarLabs");
+  });
+
   it("explains a Flavor name whose network label is shared", () => {
     const r = create(InspectDestinationResponseSchema, {
       normalized: "postgres.home.flavor.internal",

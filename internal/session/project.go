@@ -135,12 +135,18 @@ var notInternet = []netip.Prefix{
 	netip.MustParsePrefix("198.51.100.0/24"),
 	netip.MustParsePrefix("203.0.113.0/24"),
 	netip.MustParsePrefix("240.0.0.0/4"),
+	netip.MustParsePrefix("100::/64"),
+	netip.MustParsePrefix("2001:2::/48"),
 	netip.MustParsePrefix("2001:db8::/32"),
+	netip.MustParsePrefix("3fff::/20"),
 }
 
 func forwardable(a netip.Addr, advertised []netip.Prefix, local func() []netip.Addr) bool {
 	a = a.Unmap()
 	if !a.IsValid() || a.IsLoopback() || a.IsUnspecified() || a.IsMulticast() || a.IsLinkLocalUnicast() || slices.ContainsFunc(domain.TailnetPrefixes, func(p netip.Prefix) bool { return p.Contains(a) }) {
+		return false
+	}
+	if slices.Contains(local(), a) {
 		return false
 	}
 	if slices.ContainsFunc(advertised, func(p netip.Prefix) bool { return p.Bits() > 0 && p.Contains(a) }) {
@@ -149,7 +155,7 @@ func forwardable(a netip.Addr, advertised []netip.Prefix, local func() []netip.A
 	if !slices.ContainsFunc(advertised, func(p netip.Prefix) bool { return p.Bits() == 0 && p.Addr().Is4() == a.Is4() }) {
 		return false
 	}
-	return a.IsGlobalUnicast() && !a.IsPrivate() && !slices.ContainsFunc(notInternet, func(p netip.Prefix) bool { return p.Contains(a) }) && !slices.Contains(local(), a)
+	return a.IsGlobalUnicast() && !a.IsPrivate() && !slices.ContainsFunc(notInternet, func(p netip.Prefix) bool { return p.Contains(a) })
 }
 
 func offersExitNode(routes []netip.Prefix) bool {

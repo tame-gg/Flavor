@@ -110,6 +110,15 @@ func Conflicts(networks []Network, prefs []domain.DestinationPreference) Conflic
 			groups[ConflictHostname][name] = append(groups[ConflictHostname][name], m)
 		}
 	}
+	for _, n := range networks {
+		if !n.Live {
+			continue
+		}
+		for _, r := range n.Records {
+			m := Member{Network: n.Network, State: n.State, Device: domain.Device{ID: domain.DeviceIdentity{NetworkID: n.Network.ID}, DNSName: r.Name, Addresses: r.Addresses}}
+			groups[ConflictDNSName][r.Name] = append(groups[ConflictDNSName][r.Name], m)
+		}
+	}
 
 	for typ, byValue := range groups {
 		for value, ms := range byValue {

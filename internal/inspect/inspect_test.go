@@ -261,3 +261,26 @@ func TestDNSRecordDoesNotMatchBareOrQualifiedNames(t *testing.T) {
 		t.Fatalf("flavor names never come from records: %+v", r)
 	}
 }
+
+func TestSearchDomainExpandsShortNamesToRecords(t *testing.T) {
+	n := withRecords(lunar, record("git.intra.lunar.internal", "100.64.0.2"))
+	n.SearchDomains = []string{"lunar.internal"}
+	r := resolve(t, "git.intra", n, home)
+	if r.Decision != inspect.DecisionUnique || r.Reason != inspect.ReasonDNSRecord || r.Candidates[0].SearchDomain != "lunar.internal" {
+		t.Fatalf("%+v", r)
+	}
+	if r := resolve(t, "git.intra.lunar.internal", n); r.Decision != inspect.DecisionUnique || r.Candidates[0].SearchDomain != "" {
+		t.Fatalf("%+v", r)
+	}
+	if r := resolve(t, "git.intra", withRecords(lunar, record("git.intra.lunar.internal", "100.64.0.2"))); r.Decision != inspect.DecisionNoMatch {
+		t.Fatalf("no search domain, no expansion: %+v", r)
+	}
+}
+
+func TestSearchDomainMatchIsNoStrongerThanAHostname(t *testing.T) {
+	n := withRecords(lunar, record("desktop.lunar.internal", "100.64.0.2"))
+	n.SearchDomains = []string{"lunar.internal"}
+	if r := resolve(t, "desktop", n, home); r.Decision != inspect.DecisionAmbiguous || len(r.Candidates) != 2 {
+		t.Fatalf("%+v", r)
+	}
+}

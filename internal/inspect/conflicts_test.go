@@ -110,3 +110,15 @@ func TestConflictOrderingAndNotInspected(t *testing.T) {
 		}
 	}
 }
+
+func TestSameRecordOnTwoNetworksIsAConflict(t *testing.T) {
+	a := withRecords(lunar, record("git.intra.internal", "100.64.0.2"))
+	b := withRecords(home, record("git.intra.internal", "100.64.0.9"))
+	c, ok := byID(inspect.Conflicts([]inspect.Network{a, b}, nil))["dns:git.intra.internal"]
+	if !ok || c.Severity != inspect.SeverityAmbiguous || len(c.Members) != 2 {
+		t.Fatalf("%+v", c)
+	}
+	if _, ok := byID(inspect.Conflicts([]inspect.Network{a, home}, nil))["dns:git.intra.internal"]; ok {
+		t.Fatal("a record on one network is not a conflict")
+	}
+}

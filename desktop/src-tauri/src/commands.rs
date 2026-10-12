@@ -187,6 +187,16 @@ pub async fn list_conflicts(daemon: State<'_, Daemon>) -> Result<ListConflictsRe
 }
 
 #[tauri::command]
+pub async fn list_dns(daemon: State<'_, Daemon>, network_id: String) -> Result<ListDNSResponse> {
+    Ok(daemon
+        .client()?
+        .dns
+        .list_dns(ListDNSRequest { network_id, ..Default::default() })
+        .await?
+        .into_owned())
+}
+
+#[tauri::command]
 pub async fn create_workspace(
     daemon: State<'_, Daemon>,
     name: String,

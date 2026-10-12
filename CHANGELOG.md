@@ -2,6 +2,18 @@
 
 All notable changes to Flavor are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Split DNS and search domains. A name under a domain that a network sends to its own nameservers, such as `wiki.corp.example`, is looked up through that network and resolves in `flavorctl explain`, `flavorctl forward`, the SOCKS5 proxy and system-wide names. Short names are completed with the network's search domains, so `git.intra` finds `git.intra.example.internal`; a name completed this way counts as much as a device hostname, so it is ambiguous next to a device of that name on another network. Nameservers given as DNS-over-HTTPS URLs are skipped ([#47](https://github.com/tame-gg/Flavor/issues/47)).
+- `flavorctl dns [network]` lists each network's published names, split DNS domains with their nameservers, and search domains, also with `--json`. The desktop app shows the same on the network page.
+- `flavorctl conflicts` and the Conflict Center list published names that more than one network uses.
+
+### Fixed
+
+- With system-wide names, a published name that points at an address outside the tailnet, such as a LAN address behind a subnet router, now resolves instead of returning no address.
+
 ## [0.1.0-beta.8] - 2026-10-12
 
 ### Added
@@ -111,6 +123,7 @@ First public beta, released as Lattice.
 - Experimental system-wide names through the optional `flavor-netd` helper, confined by systemd sandboxing, polkit, AppArmor and SELinux.
 - Release tarballs for x86_64 and arm64 with an installer and uninstaller, SBOMs, and `SHA256SUMS` signed with Sigstore and GPG, plus GitHub build-provenance attestations.
 
+[Unreleased]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.8...HEAD
 [0.1.0-beta.8]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.7...v0.1.0-beta.8
 [0.1.0-beta.7]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.6...v0.1.0-beta.7
 [0.1.0-beta.6]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.5...v0.1.0-beta.6

@@ -43,6 +43,7 @@ fn main() {
             commands::inspect_destination,
             commands::describe_device,
             commands::list_conflicts,
+            commands::list_dns,
             commands::create_workspace,
             commands::update_workspace,
             commands::delete_workspace,

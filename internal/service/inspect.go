@@ -19,6 +19,7 @@ func (s *Service) Inspect(ctx context.Context, destination string) (inspect.Resu
 	if err != nil {
 		return inspect.Result{}, 0, err
 	}
+	s.resolveSplitDNS(ctx, q, nets)
 	var pref *domain.DestinationPreference
 	if p, err := s.cfg.Store.Preferences().Get(ctx, q.Normalized()); err == nil {
 		pref = &p
@@ -53,7 +54,8 @@ func (s *Service) liveNetworks(ctx context.Context) ([]inspect.Network, uint64, 
 		in := inspect.Network{Network: n, State: v.State, Live: live}
 		if live {
 			in.Devices = s.devices(n.ID)
-			in.Records = s.dnsRecords(n.ID)
+			dns := s.dns(n.ID)
+			in.Records, in.SearchDomains = dns.Records, dns.SearchDomains
 			for _, d := range in.Devices {
 				if d.ExitNode {
 					in.ExitNode = d

@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { NetworkConnectionState as S, ProviderType } from "@gen/flavor/v1/common_pb";
+import type { NetworkDNS } from "@gen/flavor/v1/dns_pb";
 import type { Network } from "@gen/flavor/v1/network_pb";
 import { Banner } from "../../components/ui/Banner";
 import { Button } from "../../components/ui/Button";
 import { Field } from "../../components/ui/Field";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { authDestination } from "../../lib/api/authUrl";
-import { connectNetwork, disconnectNetwork, enrollNetwork, openAuthUrl, updateNetwork } from "../../lib/api/daemon";
+import { connectNetwork, disconnectNetwork, enrollNetwork, listDNS, openAuthUrl, updateNetwork } from "../../lib/api/daemon";
 import { useCanMutate, useDaemon } from "../../app/sync/useDaemon";
 import { useAction } from "../../app/useAction";
 import { controlHost, providerName } from "./format";
@@ -88,6 +89,8 @@ export function NetworkDetail({ network: n, deviceCount, notice, onShowDevices, 
         </div>
       </div>
 
+      {n.state === S.CONNECTED || n.state === S.DEGRADED ? <DNSCard networkId={n.id} /> : null}
+
       <Preferences network={n} />
 
       <details className="card">
@@ -104,6 +107,56 @@ export function NetworkDetail({ network: n, deviceCount, notice, onShowDevices, 
         </dl>
       </details>
     </section>
+  );
+}
+
+function DNSCard({ networkId }: { networkId: string }) {
+  const { sequence, status } = useDaemon();
+  const [dns, setDNS] = useState<NetworkDNS | null>(null);
+
+  useEffect(() => {
+    if (status !== "ready") return;
+    let cancelled = false;
+    listDNS(networkId)
+      .then((r) => !cancelled && setDNS(r.networks[0] ?? null))
+      .catch(() => !cancelled && setDNS(null));
+    return () => {
+      cancelled = true;
+    };
+  }, [networkId, sequence, status]);
+
+  if (!dns) return null;
+  const empty = dns.records.length === 0 && dns.routes.length === 0 && dns.searchDomains.length === 0;
+  return (
+    <div className="card stack">
+      <h3>DNS</h3>
+      {empty ? (
+        <p className="muted">This network publishes no DNS records, split DNS or search domains.</p>
+      ) : (
+        <dl className="dl">
+          {dns.records.map((r) => (
+            <Fragment key={`record:${r.name}`}>
+              <dt className="mono">{r.name}</dt>
+              <dd className="mono">{r.addresses.join(", ")}</dd>
+            </Fragment>
+          ))}
+          {dns.routes.map((r) => (
+            <Fragment key={`route:${r.suffix}`}>
+              <dt className="mono">*.{r.suffix}</dt>
+              <dd>
+                Asks <span className="mono">{r.resolvers.join(", ")}</span>
+              </dd>
+            </Fragment>
+          ))}
+          {dns.searchDomains.length > 0 && (
+            <>
+              <dt>Search domains</dt>
+              <dd className="mono">{dns.searchDomains.join(", ")}</dd>
+            </>
+          )}
+        </dl>
+      )}
+    </div>
   );
 }
 

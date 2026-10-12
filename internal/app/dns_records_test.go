@@ -37,7 +37,7 @@ func dnsRecordEngines(records map[int][]domain.DNSRecord) *sessiontest.Sequence 
 		st := sessiontest.StatusWithPeer("edge-"+string(cfg.NetworkID), "100.64.0.9")
 		st.Self.NodeID = domain.NodeID("self-" + string(cfg.NetworkID))
 		st.Peers[0].Hostname = "edge"
-		st.DNSRecords = records[i]
+		st.DNS = domain.NetworkDNS{Records: records[i]}
 		e.SetStatus(st)
 		network := cfg.NetworkID
 		e.SetDial(func(_ context.Context, _, address string) (net.Conn, error) {

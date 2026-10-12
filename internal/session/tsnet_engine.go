@@ -27,7 +27,7 @@ type tsnetEngine struct {
 	lc  *local.Client
 
 	mu         sync.Mutex
-	records    []domain.DNSRecord
+	dns        domain.NetworkDNS
 	approved   []netip.Prefix
 	advertised []netip.Prefix
 }
@@ -153,7 +153,7 @@ func (e *tsnetEngine) Status(ctx context.Context) (EngineStatus, error) {
 		out.AdvertisedRoutes = slices.Clone(prefs.AdvertiseRoutes)
 		e.advertised = slices.Clone(prefs.AdvertiseRoutes)
 	}
-	out.DNSRecords = domain.CloneDNSRecords(e.records)
+	out.DNS = e.dns.Clone()
 	out.ApprovedRoutes = slices.Clone(e.approved)
 	e.mu.Unlock()
 	return out, nil
@@ -174,13 +174,13 @@ func (e *tsnetEngine) Watch(ctx context.Context, emit func(EngineNotify)) error 
 			return err
 		}
 		if n.NetMap != nil {
-			records := projectDNSRecords(&n.NetMap.DNS)
+			dns := projectDNS(&n.NetMap.DNS)
 			var approved []netip.Prefix
 			if self := n.NetMap.SelfNode; self.Valid() {
 				approved = approvedRoutes(append(self.AllowedIPs().AsSlice(), self.PrimaryRoutes().AsSlice()...), self.Addresses().AsSlice())
 			}
 			e.mu.Lock()
-			e.records, e.approved = records, approved
+			e.dns, e.approved = dns, approved
 			e.mu.Unlock()
 		}
 		ev := EngineNotify{LoginFinished: n.LoginFinished != nil, NetMapChanged: n.NetMap != nil}

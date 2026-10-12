@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package flavor.v1;
+
+import "flavor/v1/inspector.proto";
+
+service DNSService {
+  rpc ListDNS(ListDNSRequest) returns (ListDNSResponse);
+}
+
+message DNSRecord {
+  string name = 1;
+  repeated string addresses = 2;
+}
+
+message DNSRoute {
+  string suffix = 1;
+  repeated string resolvers = 2;
+}
+
+message NetworkDNS {
+  NetworkRef network = 1;
+  repeated DNSRecord records = 2;
+  repeated DNSRoute routes = 3;
+  repeated string search_domains = 4;
+}
+
+message ListDNSRequest {
+  string network_id = 1;
+}
+
+message ListDNSResponse {
+  repeated NetworkDNS networks = 1;
+}

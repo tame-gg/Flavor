@@ -74,8 +74,8 @@ func TestIntegrationHeadscale(t *testing.T) {
 	if err := s.Stop(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if len(s.DNSRecords()) != 0 {
-		t.Fatalf("dns records not cleared after stop: %+v", s.DNSRecords())
+	if len(s.DNS().Records) != 0 {
+		t.Fatalf("dns records not cleared after stop: %+v", s.DNS().Records)
 	}
 	s2, err := session.NewSession(cfg, bus, nil)
 	if err != nil {
@@ -125,10 +125,10 @@ func waitDNSRecords(t *testing.T, s *session.Session) {
 	t.Helper()
 	deadline := time.Now().Add(dnsRecordsTimeout)
 	for time.Now().Before(deadline) {
-		if hasExpectedDNSRecords(s.DNSRecords()) {
+		if hasExpectedDNSRecords(s.DNS().Records) {
 			return
 		}
 		time.Sleep(250 * time.Millisecond)
 	}
-	t.Fatalf("dns records: %+v", s.DNSRecords())
+	t.Fatalf("dns records: %+v", s.DNS().Records)
 }

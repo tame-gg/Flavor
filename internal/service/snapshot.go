@@ -54,12 +54,12 @@ func (s *Service) devices(id domain.NetworkID) []domain.Device {
 	return out
 }
 
-func (s *Service) dnsRecords(id domain.NetworkID) []domain.DNSRecord {
+func (s *Service) dns(id domain.NetworkID) domain.NetworkDNS {
 	sess, ok := s.cfg.Sessions.Get(id)
 	if !ok {
-		return nil
+		return domain.NetworkDNS{}
 	}
-	return sess.DNSRecords()
+	return sess.DNS()
 }
 
 func (s *Service) RoutingDomains(ctx context.Context) []string {
@@ -74,8 +74,12 @@ func (s *Service) RoutingDomains(ctx context.Context) []string {
 				out = append(out, d.DNSName)
 			}
 		}
-		for _, r := range s.dnsRecords(n.ID) {
+		dns := s.dns(n.ID)
+		for _, r := range dns.Records {
 			out = append(out, r.Name)
+		}
+		for _, r := range dns.Routes {
+			out = append(out, r.Suffix)
 		}
 	}
 	return out

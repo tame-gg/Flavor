@@ -151,6 +151,9 @@ func (e *Engine) decide(ctx context.Context, q dnsmessage.Question) outcome {
 		}
 	}
 	real, ok := preferredAddress(sel.Device)
+	if sel.Match == inspect.MatchDNSRecord {
+		real, ok = domain.DNSRecord{Addresses: sel.Addresses}.Target()
+	}
 	if !ok {
 		return outcome{rcode: dnsmessage.RCodeSuccess}
 	}

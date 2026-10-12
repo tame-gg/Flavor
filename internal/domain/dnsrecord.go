@@ -61,3 +61,32 @@ func CloneDNSRecords(records []DNSRecord) []DNSRecord {
 	}
 	return out
 }
+
+type DNSRoute struct {
+	Suffix    string
+	Resolvers []netip.AddrPort
+}
+
+type NetworkDNS struct {
+	Records       []DNSRecord
+	Routes        []DNSRoute
+	SearchDomains []string
+}
+
+func (d NetworkDNS) Clone() NetworkDNS {
+	out := NetworkDNS{Records: CloneDNSRecords(d.Records), SearchDomains: slices.Clone(d.SearchDomains)}
+	for _, r := range d.Routes {
+		out.Routes = append(out.Routes, DNSRoute{Suffix: r.Suffix, Resolvers: slices.Clone(r.Resolvers)})
+	}
+	return out
+}
+
+func (d NetworkDNS) RouteFor(name string) (DNSRoute, bool) {
+	var best DNSRoute
+	for _, r := range d.Routes {
+		if (name == r.Suffix || strings.HasSuffix(name, "."+r.Suffix)) && len(r.Suffix) > len(best.Suffix) {
+			best = r
+		}
+	}
+	return best, best.Suffix != ""
+}

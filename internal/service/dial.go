@@ -59,6 +59,7 @@ func (s *Service) Route(ctx context.Context, destination, rawNetwork string, def
 	if err != nil {
 		return Route{}, err
 	}
+	s.resolveSplitDNS(ctx, q, nets)
 	var pref *domain.DestinationPreference
 	if q.Context == "" {
 		if p, err := s.cfg.Store.Preferences().Get(ctx, q.Normalized()); err == nil {

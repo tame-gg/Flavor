@@ -5,6 +5,7 @@ import { GetStateSnapshotResponseSchema, type GetStateSnapshotResponse } from "@
 import { RunDiagnosticsResponseSchema, type RunDiagnosticsResponse } from "@gen/flavor/v1/diagnostics_pb";
 import { ListConflictsResponseSchema, type ListConflictsResponse } from "@gen/flavor/v1/conflicts_pb";
 import { DaemonEventSchema } from "@gen/flavor/v1/events_pb";
+import { ListDNSResponseSchema, type ListDNSResponse } from "@gen/flavor/v1/dns_pb";
 import {
   DescribeDeviceResponseSchema,
   InspectDestinationResponseSchema,
@@ -73,6 +74,10 @@ export async function inspectDestination(destination: string): Promise<InspectDe
 
 export async function listConflicts(): Promise<ListConflictsResponse> {
   return fromJson(ListConflictsResponseSchema, await invoke<JsonValue>("list_conflicts"), options);
+}
+
+export async function listDNS(networkId: string): Promise<ListDNSResponse> {
+  return fromJson(ListDNSResponseSchema, await invoke<JsonValue>("list_dns", { networkId }), options);
 }
 
 export async function createWorkspace(input: { name: string; description: string; networkIds: string[] }): Promise<Workspace> {

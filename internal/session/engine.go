@@ -40,7 +40,7 @@ type EngineStatus struct {
 	Self         *EnginePeer
 	Peers        []EnginePeer
 	Health       []string
-	DNSRecords   []domain.DNSRecord
+	DNS          domain.NetworkDNS
 	ExitNode     domain.NodeID
 
 	AdvertisedRoutes []netip.Prefix

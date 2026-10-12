@@ -8,6 +8,7 @@ import (
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
 	"tailscale.com/ipn/ipnstate"
 	"tailscale.com/tailcfg"
+	"tailscale.com/types/dnstype"
 	"tailscale.com/types/key"
 	"tailscale.com/types/views"
 )
@@ -142,7 +143,7 @@ func TestProjectExitNode(t *testing.T) {
 }
 
 func TestProjectDNSRecords(t *testing.T) {
-	if projectDNSRecords(nil) != nil {
+	if d := projectDNS(nil); d.Records != nil || d.Routes != nil || d.SearchDomains != nil {
 		t.Fatal("nil config")
 	}
 	cfg := &tailcfg.DNSConfig{ExtraRecords: []tailcfg.DNSRecord{
@@ -154,7 +155,7 @@ func TestProjectDNSRecords(t *testing.T) {
 		{Name: "", Value: "100.64.0.1"},
 		{Name: "app.example.internal", Value: " 100.64.0.3 "},
 	}}
-	got := projectDNSRecords(cfg)
+	got := projectDNS(cfg).Records
 	want := []domain.DNSRecord{
 		{Name: "app.example.internal", Addresses: []netip.Addr{netip.MustParseAddr("100.64.0.3")}},
 		{Name: "git.intra.example.internal", Addresses: []netip.Addr{netip.MustParseAddr("100.64.0.13"), netip.MustParseAddr("fd7a:115c:a1e0::d")}},
@@ -166,6 +167,34 @@ func TestProjectDNSRecords(t *testing.T) {
 		if got[i].Name != want[i].Name || !slices.Equal(got[i].Addresses, want[i].Addresses) {
 			t.Fatalf("record %d: %+v want %+v", i, got[i], want[i])
 		}
+	}
+}
+
+func TestProjectSplitDNSAndSearchDomains(t *testing.T) {
+	cfg := &tailcfg.DNSConfig{
+		Routes: map[string][]*dnstype.Resolver{
+			"Corp.Example.":    {{Addr: "10.0.0.53"}, {Addr: "[fd7a:115c:a1e0::35]:5353"}, {Addr: "https://dns.example/dns-query"}, nil},
+			"lunar.internal":   {},
+			"doh-only.example": {{Addr: "https://dns.example/dns-query"}},
+		},
+		Domains: []string{"Corp.Example.", "corp.example", ""},
+	}
+	got := projectDNS(cfg)
+	if len(got.Routes) != 1 || got.Routes[0].Suffix != "corp.example" {
+		t.Fatalf("%+v", got.Routes)
+	}
+	want := []netip.AddrPort{netip.MustParseAddrPort("10.0.0.53:53"), netip.MustParseAddrPort("[fd7a:115c:a1e0::35]:5353")}
+	if !slices.Equal(got.Routes[0].Resolvers, want) {
+		t.Fatalf("%+v", got.Routes[0].Resolvers)
+	}
+	if !slices.Equal(got.SearchDomains, []string{"corp.example"}) {
+		t.Fatalf("%+v", got.SearchDomains)
+	}
+	if r, ok := got.RouteFor("wiki.corp.example"); !ok || r.Suffix != "corp.example" {
+		t.Fatalf("%+v", r)
+	}
+	if _, ok := got.RouteFor("notcorp.example"); ok {
+		t.Fatal("suffix must match on a label boundary")
 	}
 }
 

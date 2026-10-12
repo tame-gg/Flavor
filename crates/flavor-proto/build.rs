@@ -8,6 +8,7 @@ fn main() {
             "flavor/v1/daemon.proto",
             "flavor/v1/device.proto",
             "flavor/v1/diagnostics.proto",
+            "flavor/v1/dns.proto",
             "flavor/v1/events.proto",
             "flavor/v1/forward.proto",
             "flavor/v1/inspector.proto",

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"cmp"
 	"context"
 	"errors"
 	"flag"
@@ -42,6 +43,7 @@ commands:
                                        listen on loopback and forward through the chosen network
   socks [--listen ADDR]                local SOCKS5 proxy for Flavor destinations (default 127.0.0.1:1080)
   conflicts                            addresses and names that exist more than once
+  dns [network]                        DNS records, split DNS and search domains of each network
   workspace list
   workspace create --name NAME [--description TEXT] [network-id...]
   workspace edit <workspace> [--name NAME] [--description TEXT] [--networks id,id]
@@ -60,7 +62,7 @@ commands:
   routes withdraw <network> <cidr>...
                                        advertised routes need approval on the control server
 
---json prints the daemon response as JSON for info, list, devices, diag, explain, conflicts, workspace list, preference list, exit-node and routes.
+--json prints the daemon response as JSON for info, list, devices, diag, explain, conflicts, dns, workspace list, preference list, exit-node and routes.
 `
 
 func main() {
@@ -291,6 +293,8 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSO
 		return runExitNode(ctx, c, args, asJSON, out)
 	case "routes", "route":
 		return runRoutes(ctx, c, args, asJSON, out)
+	case "dns":
+		return runDNS(ctx, c, args, asJSON, out)
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", cmd, usage)
 	}
@@ -395,7 +399,7 @@ func printConflicts(out io.Writer, r *v1.ListConflictsResponse) error {
 				if name == "" {
 					name = "-"
 				}
-				fmt.Fprintf(w, "  %s\t%s\t%s\t%s\n", m.Network.GetDisplayName(), m.Device.GetHostname(), strings.Join(m.Device.GetAddresses(), ","), name)
+				fmt.Fprintf(w, "  %s\t%s\t%s\t%s\n", m.Network.GetDisplayName(), cmp.Or(m.Device.GetHostname(), "dns record"), strings.Join(m.Device.GetAddresses(), ","), name)
 			}
 		}
 		if err := w.Flush(); err != nil {

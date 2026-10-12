@@ -9,6 +9,7 @@ import (
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
 	"tailscale.com/ipn/ipnstate"
 	"tailscale.com/tailcfg"
+	"tailscale.com/types/dnstype"
 )
 
 func projectStatus(st *ipnstate.Status) EngineStatus {
@@ -53,10 +54,11 @@ func projectPeer(p *ipnstate.PeerStatus) EnginePeer {
 	}
 }
 
-func projectDNSRecords(cfg *tailcfg.DNSConfig) []domain.DNSRecord {
+func projectDNS(cfg *tailcfg.DNSConfig) domain.NetworkDNS {
 	if cfg == nil {
-		return nil
+		return domain.NetworkDNS{}
 	}
+	var out domain.NetworkDNS
 	var records []domain.DNSRecord
 	for _, r := range cfg.ExtraRecords {
 		if r.Type != "" && r.Type != "A" && r.Type != "AAAA" {
@@ -68,7 +70,38 @@ func projectDNSRecords(cfg *tailcfg.DNSConfig) []domain.DNSRecord {
 		}
 		records = append(records, domain.DNSRecord{Name: r.Name, Addresses: []netip.Addr{addr}})
 	}
-	return domain.MergeDNSRecords(records)
+	out.Records = domain.MergeDNSRecords(records)
+	for suffix, resolvers := range cfg.Routes {
+		r := domain.DNSRoute{Suffix: domain.NormalizeDNSName(suffix)}
+		for _, res := range resolvers {
+			if a, ok := resolverAddr(res); ok && !slices.Contains(r.Resolvers, a) {
+				r.Resolvers = append(r.Resolvers, a)
+			}
+		}
+		if r.Suffix != "" && len(r.Resolvers) > 0 {
+			out.Routes = append(out.Routes, r)
+		}
+	}
+	slices.SortFunc(out.Routes, func(a, b domain.DNSRoute) int { return strings.Compare(a.Suffix, b.Suffix) })
+	for _, d := range cfg.Domains {
+		if d = domain.NormalizeDNSName(d); d != "" && !slices.Contains(out.SearchDomains, d) {
+			out.SearchDomains = append(out.SearchDomains, d)
+		}
+	}
+	return out
+}
+
+func resolverAddr(r *dnstype.Resolver) (netip.AddrPort, bool) {
+	if r == nil {
+		return netip.AddrPort{}, false
+	}
+	if ap, err := netip.ParseAddrPort(r.Addr); err == nil {
+		return netip.AddrPortFrom(ap.Addr().Unmap(), ap.Port()), true
+	}
+	if a, err := netip.ParseAddr(r.Addr); err == nil {
+		return netip.AddrPortFrom(a.Unmap(), 53), true
+	}
+	return netip.AddrPort{}, false
 }
 
 func routes(p *ipnstate.PeerStatus) []netip.Prefix {

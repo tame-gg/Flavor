@@ -61,11 +61,14 @@ const (
 	MatchExitNode
 )
 
-func (m MatchKind) rank() MatchKind {
-	if m == MatchDNSRecord {
+func (c Candidate) rank() MatchKind {
+	switch {
+	case c.Match == MatchDNSRecord && c.SearchDomain != "":
+		return MatchDeviceHostname
+	case c.Match == MatchDNSRecord:
 		return MatchDeviceDNSName
 	}
-	return m
+	return c.Match
 }
 
 type Decision int
@@ -123,6 +126,8 @@ type Network struct {
 	Records []domain.DNSRecord
 	Live    bool
 
+	SearchDomains []string
+
 	ExitNode domain.Device
 }
 
@@ -134,6 +139,7 @@ type Candidate struct {
 	MatchedValue string
 	Prefix       netip.Prefix
 	Addresses    []netip.Addr
+	SearchDomain string
 	Status       CandidateStatus
 	Name         string
 	StableName   string
@@ -317,8 +323,8 @@ func resolveMatches(q Query, networks []Network) Result {
 	}
 	sort.SliceStable(res.Candidates, func(i, j int) bool {
 		a, b := res.Candidates[i], res.Candidates[j]
-		if a.Match.rank() != b.Match.rank() {
-			return a.Match.rank() < b.Match.rank()
+		if a.rank() != b.rank() {
+			return a.rank() < b.rank()
 		}
 		if a.Prefix.Bits() != b.Prefix.Bits() {
 			return a.Prefix.Bits() > b.Prefix.Bits()
@@ -362,7 +368,7 @@ func resolveMatches(q Query, networks []Network) Result {
 	tied := 0
 	for i := range res.Candidates {
 		c := res.Candidates[i]
-		if c.Match.rank() == best.Match.rank() && c.Prefix.Bits() == best.Prefix.Bits() {
+		if c.rank() == best.rank() && c.Prefix.Bits() == best.Prefix.Bits() {
 			tied++
 		} else {
 			res.Candidates[i].Status = StatusOutranked
@@ -443,33 +449,50 @@ func recordMatches(q Query, n Network, devices []domain.Device, devLabels map[do
 	if q.Kind != KindName {
 		return nil
 	}
-	for _, d := range devices {
-		if dnsName(d) == q.Name {
-			return nil
+	for _, name := range SearchNames(q.Name, n.SearchDomains) {
+		search := strings.TrimPrefix(strings.TrimPrefix(name, q.Name), ".")
+		for _, d := range devices {
+			if dnsName(d) == name {
+				return nil
+			}
+		}
+		var out []Candidate
+		for _, r := range n.Records {
+			if r.Name != name {
+				continue
+			}
+			target, ok := r.Target()
+			if !ok {
+				continue
+			}
+			c := Candidate{
+				Match:        MatchDNSRecord,
+				MatchedValue: target.String(),
+				Addresses:    slices.Clone(r.Addresses),
+				SearchDomain: search,
+				Network:      n.Network,
+				State:        n.State,
+			}
+			if owner, ok := ownerOf(devices, target); ok {
+				dl := devLabels[owner.ID.NodeID]
+				c.Device = owner
+				c.Name, c.StableName = naming.Name(dl.Published(), nl.Published()), naming.Name(dl.Stable, nl.Stable)
+			}
+			out = append(out, c)
+		}
+		if len(out) > 0 {
+			return out
 		}
 	}
-	var out []Candidate
-	for _, r := range n.Records {
-		if r.Name != q.Name {
-			continue
+	return nil
+}
+
+func SearchNames(name string, search []string) []string {
+	out := []string{name}
+	for _, d := range search {
+		if !strings.HasSuffix(name, "."+d) {
+			out = append(out, name+"."+d)
 		}
-		target, ok := r.Target()
-		if !ok {
-			continue
-		}
-		c := Candidate{
-			Match:        MatchDNSRecord,
-			MatchedValue: target.String(),
-			Addresses:    slices.Clone(r.Addresses),
-			Network:      n.Network,
-			State:        n.State,
-		}
-		if owner, ok := ownerOf(devices, target); ok {
-			dl := devLabels[owner.ID.NodeID]
-			c.Device = owner
-			c.Name, c.StableName = naming.Name(dl.Published(), nl.Published()), naming.Name(dl.Stable, nl.Stable)
-		}
-		out = append(out, c)
 	}
 	return out
 }

@@ -231,6 +231,9 @@ func TestForwardable(t *testing.T) {
 		{"fd00::5", exit, false},
 		{"198.18.0.7", exit, false},
 		{"203.0.113.9", exit, false},
+		{"192.0.2.1", exit, false},
+		{"2001:db8::1", exit, false},
+		{"1.1.1.1", exit, false},
 		{"8.8.8.8", exit, true},
 		{"8.8.8.8", lan, false},
 		{"2606:4700::1111", exit, true},
@@ -241,7 +244,7 @@ func TestForwardable(t *testing.T) {
 		{"0.0.0.0", exit, false},
 		{"224.0.0.1", exit, false},
 	} {
-		local := func() []netip.Addr { return []netip.Addr{netip.MustParseAddr("203.0.113.9")} }
+		local := func() []netip.Addr { return []netip.Addr{netip.MustParseAddr("1.1.1.1")} }
 		if got := forwardable(netip.MustParseAddr(c.addr), c.advertised, local); got != c.want {
 			t.Errorf("%s %v: %v", c.addr, c.advertised, got)
 		}

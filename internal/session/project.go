@@ -127,7 +127,16 @@ func approvedRoutes(allowed []netip.Prefix, addrs []netip.Prefix) []netip.Prefix
 	return out
 }
 
-var syntheticRange = netip.MustParsePrefix("198.18.0.0/15")
+var notInternet = []netip.Prefix{
+	netip.MustParsePrefix("0.0.0.0/8"),
+	netip.MustParsePrefix("192.0.0.0/24"),
+	netip.MustParsePrefix("192.0.2.0/24"),
+	netip.MustParsePrefix("198.18.0.0/15"),
+	netip.MustParsePrefix("198.51.100.0/24"),
+	netip.MustParsePrefix("203.0.113.0/24"),
+	netip.MustParsePrefix("240.0.0.0/4"),
+	netip.MustParsePrefix("2001:db8::/32"),
+}
 
 func forwardable(a netip.Addr, advertised []netip.Prefix, local func() []netip.Addr) bool {
 	a = a.Unmap()
@@ -140,7 +149,7 @@ func forwardable(a netip.Addr, advertised []netip.Prefix, local func() []netip.A
 	if !slices.ContainsFunc(advertised, func(p netip.Prefix) bool { return p.Bits() == 0 && p.Addr().Is4() == a.Is4() }) {
 		return false
 	}
-	return a.IsGlobalUnicast() && !a.IsPrivate() && !syntheticRange.Contains(a) && !slices.Contains(local(), a)
+	return a.IsGlobalUnicast() && !a.IsPrivate() && !slices.ContainsFunc(notInternet, func(p netip.Prefix) bool { return p.Contains(a) }) && !slices.Contains(local(), a)
 }
 
 func offersExitNode(routes []netip.Prefix) bool {

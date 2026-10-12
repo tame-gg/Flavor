@@ -1108,7 +1108,7 @@ dependencies = [
 
 [[package]]
 name = "flavor-desktop"
-version = "0.1.0-beta.8"
+version = "0.1.0-beta.9"
 dependencies = [
  "buffa",
  "flavor-ipc",
@@ -1124,7 +1124,7 @@ dependencies = [
 
 [[package]]
 name = "flavor-ipc"
-version = "0.1.0-beta.8"
+version = "0.1.0-beta.9"
 dependencies = [
  "base64 0.22.1",
  "buffa",
@@ -1142,7 +1142,7 @@ dependencies = [
 
 [[package]]
 name = "flavor-proto"
-version = "0.1.0-beta.8"
+version = "0.1.0-beta.9"
 dependencies = [
  "buffa",
  "buffa-types",

@@ -104,9 +104,9 @@ export function NetworkDetail({ network: n, deviceCount, notice, onShowDevices, 
 
       {n.state === S.CONNECTED || n.state === S.DEGRADED ? (
         <>
-          <SubnetRoutesCard networkId={n.id} />
-          <ExitOfferCard networkId={n.id} />
-          <DNSCard networkId={n.id} />
+          <SubnetRoutesCard key={`routes:${n.id}`} networkId={n.id} />
+          <ExitOfferCard key={`exit:${n.id}`} networkId={n.id} />
+          <DNSCard key={`dns:${n.id}`} networkId={n.id} />
         </>
       ) : null}
 
@@ -217,22 +217,43 @@ function ExitOfferCard({ networkId }: { networkId: string }) {
   const { sequence, status } = useDaemon();
   const canMutate = useCanMutate();
   const [state, setState] = useState<{ offered: boolean; approved: boolean } | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
+  const generation = useRef(0);
   const offer = useAction(async (on: boolean) => {
+    generation.current++;
     const r = await offerExitNode(networkId, on);
+    generation.current++;
     setState({ offered: r.offered, approved: r.approved });
   });
 
   useEffect(() => {
     if (status !== "ready") return;
     let cancelled = false;
+    const started = generation.current;
     getRoutes(networkId)
-      .then((r) => !cancelled && setState({ offered: r.exitNodeOffered, approved: r.exitNodeApproved }))
-      .catch(() => {});
+      .then((r) => {
+        if (cancelled || started !== generation.current) return;
+        setState({ offered: r.exitNodeOffered, approved: r.exitNodeApproved });
+        setLoadError(null);
+      })
+      .catch((e) => !cancelled && setLoadError(errorMessage(e)));
     return () => {
       cancelled = true;
     };
-  }, [networkId, sequence, status]);
+  }, [networkId, sequence, status, reload]);
 
+  if (loadError && !state) {
+    return (
+      <div className="card stack-sm">
+        <h3>Exit node</h3>
+        <Banner tone="danger">{loadError}</Banner>
+        <div className="row">
+          <Button onClick={() => setReload((n) => n + 1)}>Try again</Button>
+        </div>
+      </div>
+    );
+  }
   if (!state) return null;
   return (
     <div className="card stack-sm">

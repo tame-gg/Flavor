@@ -50,7 +50,7 @@ func (s *Service) UpdateRoutes(ctx context.Context, rawNetwork string, add, remo
 	}
 	current := routePrefixes(sess.LocalNode())
 	next := mergeRoutes(current, toAdd, toRemove)
-	if len(next) > maxAdvertisedRoutes {
+	if subnetRoutes(next) > maxAdvertisedRoutes {
 		return domain.LocalNode{}, fail(CodeInvalidArgument, "too many advertised routes", false)
 	}
 	if !slices.Equal(current, next) {
@@ -96,6 +96,16 @@ func mergeRoutes(current, add, remove []netip.Prefix) []netip.Prefix {
 	return next
 }
 
+func subnetRoutes(routes []netip.Prefix) int {
+	n := 0
+	for _, p := range routes {
+		if p.Bits() > 0 {
+			n++
+		}
+	}
+	return n
+}
+
 var exitRoutes = []netip.Prefix{netip.MustParsePrefix("0.0.0.0/0"), netip.MustParsePrefix("::/0")}
 
 func routePrefixes(n domain.LocalNode) []netip.Prefix {
@@ -130,6 +140,9 @@ func (s *Service) OfferExitNode(ctx context.Context, rawNetwork string, offer bo
 		next = mergeRoutes(current, exitRoutes, nil)
 	} else {
 		next = mergeRoutes(current, nil, exitRoutes)
+	}
+	if subnetRoutes(next) > maxAdvertisedRoutes {
+		return domain.LocalNode{}, fail(CodeInvalidArgument, "too many advertised routes", false)
 	}
 	if !slices.Equal(current, next) {
 		err := sess.SetAdvertisedRoutes(ctx, next)

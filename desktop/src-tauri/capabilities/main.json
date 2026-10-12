@@ -20,6 +20,7 @@
     "allow-inspect-destination",
     "allow-describe-device",
     "allow-list-conflicts",
+    "allow-list-dns",
     "allow-create-workspace",
     "allow-update-workspace",
     "allow-delete-workspace",

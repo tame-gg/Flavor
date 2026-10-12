@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"cmp"
 	"context"
 	"errors"
 	"flag"
@@ -399,7 +398,11 @@ func printConflicts(out io.Writer, r *v1.ListConflictsResponse) error {
 				if name == "" {
 					name = "-"
 				}
-				fmt.Fprintf(w, "  %s\t%s\t%s\t%s\n", m.Network.GetDisplayName(), cmp.Or(m.Device.GetHostname(), "dns record"), strings.Join(m.Device.GetAddresses(), ","), name)
+				device := m.Device.GetHostname()
+				if m.Device.GetId().GetNodeId() == "" {
+					device = "dns record"
+				}
+				fmt.Fprintf(w, "  %s\t%s\t%s\t%s\n", m.Network.GetDisplayName(), device, strings.Join(m.Device.GetAddresses(), ","), name)
 			}
 		}
 		if err := w.Flush(); err != nil {

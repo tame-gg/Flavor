@@ -65,6 +65,7 @@ type Service struct {
 	forwards     map[uint64]context.CancelFunc
 	nextForward  uint64
 	warned       map[string]time.Time
+	splitDNS     map[string]splitAnswer
 }
 
 func New(cfg Config) *Service {

@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/netip"
 	"slices"
+	"strings"
 	"time"
 
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
@@ -14,7 +15,17 @@ import (
 	"golang.org/x/net/dns/dnsmessage"
 )
 
-const splitDNSTimeout = 3 * time.Second
+const (
+	splitDNSTimeout  = 3 * time.Second
+	splitQueryBudget = time.Second
+	splitDNSTTL      = 30 * time.Second
+	splitDNSEntries  = 1024
+)
+
+type splitAnswer struct {
+	addrs   []netip.Addr
+	expires time.Time
+}
 
 func (s *Service) resolveSplitDNS(ctx context.Context, q inspect.Query, nets []inspect.Network) {
 	if q.Kind != inspect.KindName || q.Qualified() {
@@ -40,12 +51,30 @@ func (s *Service) resolveSplitDNS(ctx context.Context, q inspect.Query, nets []i
 			if !ok {
 				continue
 			}
-			if addrs := lookupRoute(ctx, sess, *n, route, name); len(addrs) > 0 {
+			if addrs := s.cachedLookup(ctx, sess, *n, route, name); len(addrs) > 0 {
 				n.Records = append(n.Records, domain.DNSRecord{Name: name, Addresses: addrs})
 				break
 			}
 		}
 	}
+}
+
+func (s *Service) cachedLookup(ctx context.Context, sess *session.Session, n inspect.Network, route domain.DNSRoute, name string) []netip.Addr {
+	key := string(n.Network.ID) + "|" + name
+	s.mu.Lock()
+	a, ok := s.splitDNS[key]
+	s.mu.Unlock()
+	if ok && time.Now().Before(a.expires) {
+		return a.addrs
+	}
+	addrs := lookupRoute(ctx, sess, n, route, name)
+	s.mu.Lock()
+	if s.splitDNS == nil || len(s.splitDNS) >= splitDNSEntries {
+		s.splitDNS = make(map[string]splitAnswer)
+	}
+	s.splitDNS[key] = splitAnswer{addrs: addrs, expires: time.Now().Add(splitDNSTTL)}
+	s.mu.Unlock()
+	return addrs
 }
 
 func lookupRoute(ctx context.Context, sess *session.Session, n inspect.Network, route domain.DNSRoute, name string) []netip.Addr {
@@ -90,11 +119,12 @@ func reachable(n inspect.Network, a netip.Addr) bool {
 func lookup(ctx context.Context, dial func(context.Context, string, string) (net.Conn, error), resolver netip.AddrPort, name string) []netip.Addr {
 	var out []netip.Addr
 	for _, t := range []dnsmessage.Type{dnsmessage.TypeA, dnsmessage.TypeAAAA} {
-		addrs, err := query(ctx, dial, resolver, name, t)
-		if err != nil {
-			return out
+		qctx, cancel := context.WithTimeout(ctx, splitQueryBudget)
+		addrs, err := query(qctx, dial, resolver, name, t)
+		cancel()
+		if err == nil {
+			out = append(out, addrs...)
 		}
-		out = append(out, addrs...)
 	}
 	return out
 }
@@ -130,20 +160,34 @@ func query(ctx context.Context, dial func(context.Context, string, string) (net.
 			return nil, err
 		}
 		var resp dnsmessage.Message
-		if resp.Unpack(buf[:n]) != nil || resp.ID != id || !resp.Response {
+		if resp.Unpack(buf[:n]) != nil || resp.ID != id || !resp.Response || len(resp.Questions) != 1 || !sameName(resp.Questions[0].Name, qname) || resp.Questions[0].Type != t {
 			continue
 		}
-		var out []netip.Addr
-		for _, a := range resp.Answers {
-			switch r := a.Body.(type) {
-			case *dnsmessage.AResource:
-				out = append(out, netip.AddrFrom4(r.A))
-			case *dnsmessage.AAAAResource:
-				out = append(out, netip.AddrFrom16(r.AAAA).Unmap())
-			}
-		}
-		return out, nil
+		return answers(resp.Answers, qname), nil
 	}
+}
+
+func answers(rrs []dnsmessage.Resource, qname dnsmessage.Name) []netip.Addr {
+	owners := []dnsmessage.Name{qname}
+	var out []netip.Addr
+	for _, rr := range rrs {
+		if !slices.ContainsFunc(owners, func(o dnsmessage.Name) bool { return sameName(o, rr.Header.Name) }) {
+			continue
+		}
+		switch r := rr.Body.(type) {
+		case *dnsmessage.CNAMEResource:
+			owners = append(owners, r.CNAME)
+		case *dnsmessage.AResource:
+			out = append(out, netip.AddrFrom4(r.A))
+		case *dnsmessage.AAAAResource:
+			out = append(out, netip.AddrFrom16(r.AAAA).Unmap())
+		}
+	}
+	return out
+}
+
+func sameName(a, b dnsmessage.Name) bool {
+	return strings.EqualFold(a.String(), b.String())
 }
 
 type NetworkDNS struct {

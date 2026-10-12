@@ -451,10 +451,8 @@ func recordMatches(q Query, n Network, devices []domain.Device, devLabels map[do
 	}
 	for _, name := range SearchNames(q.Name, n.SearchDomains) {
 		search := strings.TrimPrefix(strings.TrimPrefix(name, q.Name), ".")
-		for _, d := range devices {
-			if dnsName(d) == name {
-				return nil
-			}
+		if slices.ContainsFunc(devices, func(d domain.Device) bool { return dnsName(d) == name }) {
+			continue
 		}
 		var out []Candidate
 		for _, r := range n.Records {

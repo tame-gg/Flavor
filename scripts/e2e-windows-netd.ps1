@@ -13,8 +13,10 @@ function Wait-Until($what, [scriptblock]$check, $seconds = 30) {
     throw "timed out waiting for $what"
 }
 
+$nrpt = "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters\DnsPolicyConfig"
+
 function Flavor-Rules {
-    Get-DnsClientNrptPolicy | Where-Object { $_.Namespace -eq ".flavor.internal" }
+    Get-ChildItem $nrpt -ErrorAction SilentlyContinue | Get-ItemProperty | Where-Object { $_.Name -contains ".flavor.internal" }
 }
 
 try {
@@ -27,7 +29,7 @@ try {
     $daemon = Start-Process (Join-Path $bin "flavord.exe") -ArgumentList "--secret-store", "memory", "--log-level", "debug" -RedirectStandardError $log -PassThru -NoNewWindow
     Wait-Until "the Flavor adapter" { Get-NetAdapter -Name Flavor -ErrorAction SilentlyContinue | Where-Object Status -eq Up }
     Wait-Until "the NRPT rule" { Flavor-Rules }
-    $servers = @((Flavor-Rules | Select-Object -First 1).NameServers)
+    $servers = @((Flavor-Rules | Select-Object -First 1).GenericDNSServers -split "; ")
     "NRPT servers: $servers"
     $v4 = $servers | Where-Object { $_ -match "^198\.1[89]\." } | Select-Object -First 1
     if (-not $v4) { throw "no IPv4 resolver in the NRPT rule" }
@@ -53,7 +55,9 @@ try {
     "windows dns helper e2e passed"
 } catch {
     if ($daemon) { Stop-Process -Id $daemon.Id -Force -ErrorAction SilentlyContinue }
-    whoami /groups
+    & "$env:SystemRoot\System32\whoami.exe" /groups
+    Get-ChildItem $nrpt -ErrorAction SilentlyContinue | Get-ItemProperty | Format-List | Out-String
+    try { Get-DnsClientNrptPolicy -ErrorAction Stop | Format-List | Out-String } catch { $_.Exception | Format-List -Force | Out-String }
     query session
     Get-Content $log -Tail 40 -ErrorAction SilentlyContinue
     Get-Content (Join-Path $installed "flavor-netd.log") -Tail 40 -ErrorAction SilentlyContinue

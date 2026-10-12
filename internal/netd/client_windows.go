@@ -7,9 +7,9 @@ import (
 	"net"
 	"net/netip"
 	"strings"
+	"unsafe"
 
 	netdv1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/netd/v1"
-	"git.lunarlabs.dev/flavor/flavor/internal/winsid"
 	"github.com/tailscale/go-winio"
 	"golang.org/x/sys/windows"
 )
@@ -17,6 +17,8 @@ import (
 const DefaultSocket = `\\.\pipe\flavor-netd`
 
 var ErrForeignHelper = errors.New("the flavor-netd pipe is not served by the system service")
+
+var systemAccounts = []string{"LocalSystem", `NT AUTHORITY\SYSTEM`}
 
 type Client struct {
 	c     net.Conn
@@ -35,12 +37,64 @@ func dialPipe(ctx context.Context, path string) (net.Conn, error) {
 		c.Close()
 		return nil, ErrForeignHelper
 	}
-	sid, err := winsid.OfProcess(pid)
-	if err != nil || !sid.IsWellKnown(windows.WinLocalSystemSid) {
+	if !serviceServes(pid) {
 		c.Close()
 		return nil, ErrForeignHelper
 	}
 	return c, nil
+}
+
+func serviceServes(serverPid uint32) bool {
+	m, err := windows.OpenSCManager(nil, nil, windows.SC_MANAGER_CONNECT)
+	if err != nil {
+		return false
+	}
+	defer windows.CloseServiceHandle(m)
+	name, _ := windows.UTF16PtrFromString(ServiceName)
+	s, err := windows.OpenService(m, name, windows.SERVICE_QUERY_STATUS|windows.SERVICE_QUERY_CONFIG)
+	if err != nil {
+		return false
+	}
+	defer windows.CloseServiceHandle(s)
+
+	var status windows.SERVICE_STATUS_PROCESS
+	var needed uint32
+	err = windows.QueryServiceStatusEx(s, windows.SC_STATUS_PROCESS_INFO, (*byte)(unsafe.Pointer(&status)), uint32(unsafe.Sizeof(status)), &needed)
+	if err != nil {
+		return false
+	}
+
+	startName, err := serviceStartName(s)
+	if err != nil {
+		return false
+	}
+	return serverAllowed(status.CurrentState, status.ProcessId, serverPid, startName)
+}
+
+func serviceStartName(s windows.Handle) (string, error) {
+	var needed uint32
+	err := windows.QueryServiceConfig(s, nil, 0, &needed)
+	if err != windows.ERROR_INSUFFICIENT_BUFFER {
+		return "", err
+	}
+	buf := make([]byte, needed)
+	cfg := (*windows.QUERY_SERVICE_CONFIG)(unsafe.Pointer(&buf[0]))
+	if err := windows.QueryServiceConfig(s, cfg, needed, &needed); err != nil {
+		return "", err
+	}
+	return windows.UTF16PtrToString(cfg.ServiceStartName), nil
+}
+
+func serverAllowed(state, servicePid, serverPid uint32, startName string) bool {
+	if state != windows.SERVICE_RUNNING || servicePid == 0 || servicePid != serverPid {
+		return false
+	}
+	for _, account := range systemAccounts {
+		if strings.EqualFold(startName, account) {
+			return true
+		}
+	}
+	return false
 }
 
 func Dial(ctx context.Context, path string) (*Client, error) {

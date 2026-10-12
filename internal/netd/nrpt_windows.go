@@ -24,19 +24,24 @@ type NRPT struct{}
 
 func nrptRule(i int) string { return fmt.Sprintf("%s%012d}", nrptRulePrefix, i) }
 
+func nrptServerList(servers []netip.Addr) string {
+	list := make([]string, len(servers))
+	for i, a := range servers {
+		list[i] = a.String()
+	}
+	return strings.Join(list, ";")
+}
+
 func (NRPT) Apply(_ context.Context, _ uint32, servers []netip.Addr, domains []string) error {
 	var names []string
 	for _, d := range domains {
 		names = append(names, d, "."+d)
 	}
-	list := make([]string, len(servers))
-	for i, a := range servers {
-		list[i] = a.String()
-	}
+	list := nrptServerList(servers)
 	rules := 0
 	for ; len(names) > 0; rules++ {
 		n := min(nrptPerRule, len(names))
-		if err := writeRule(nrptRule(rules), strings.Join(list, "; "), names[:n]); err != nil {
+		if err := writeRule(nrptRule(rules), list, names[:n]); err != nil {
 			return err
 		}
 		names = names[n:]

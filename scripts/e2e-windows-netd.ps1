@@ -29,7 +29,7 @@ try {
     $daemon = Start-Process (Join-Path $bin "flavord.exe") -ArgumentList "--secret-store", "memory", "--log-level", "debug" -RedirectStandardError $log -PassThru -NoNewWindow
     Wait-Until "the Flavor adapter" { Get-NetAdapter -Name Flavor -ErrorAction SilentlyContinue | Where-Object Status -eq Up }
     Wait-Until "the NRPT rule" { Flavor-Rules }
-    $servers = @((Flavor-Rules | Select-Object -First 1).GenericDNSServers -split "; ")
+    $servers = @((Flavor-Rules | Select-Object -First 1).GenericDNSServers -split ";" | ForEach-Object { $_.Trim() } | Where-Object { $_ })
     "NRPT servers: $servers"
     $v4 = $servers | Where-Object { $_ -match "^198\.1[89]\." } | Select-Object -First 1
     if (-not $v4) { throw "no IPv4 resolver in the NRPT rule" }

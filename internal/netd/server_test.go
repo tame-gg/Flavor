@@ -647,7 +647,7 @@ func TestVerifyTUNRejectsOtherDescriptors(t *testing.T) {
 }
 
 func TestNetlinkAnalysisIsReadOnlyAndComplete(t *testing.T) {
-	occupied, err := Netlink{}.Occupied()
+	occupied, err := Netlink{}.Occupied(0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -655,6 +655,63 @@ func TestNetlinkAnalysisIsReadOnlyAndComplete(t *testing.T) {
 		t.Fatalf("loopback missing from the analysis: %v", occupied)
 	}
 	if _, err := (Netlink{}).Links(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestConfigureRoutesInstallsOnlyFreeSafeRoutes(t *testing.T) {
+	h := newHarness(t, nil)
+	h.with(func() {
+		h.kernel.occupied = []netip.Prefix{netip.MustParsePrefix("0.0.0.0/0"), netip.MustParsePrefix("192.168.1.0/24")}
+	})
+	c := h.client()
+	if !c.Routes() {
+		t.Fatal("hello must offer routes")
+	}
+	resp, tun, err := c.Create(ula, pool, 1280)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tun.Close()
+	lan, sub, v6 := netip.MustParsePrefix("192.168.1.0/24"), netip.MustParsePrefix("10.200.0.0/22"), netip.MustParsePrefix("fd00:aa::/64")
+	installed, refused, err := c.ConfigureRoutes([]netip.Prefix{sub, lan, v6, sub})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(installed, []netip.Prefix{sub, v6}) || refused[lan] != lan || len(refused) != 1 {
+		t.Fatalf("installed %v refused %v", installed, refused)
+	}
+	routes := func() (out []netip.Prefix) {
+		h.with(func() { out = slices.Clone(h.kernel.links[resp.InterfaceIndex].routes) })
+		return out
+	}
+	if r := routes(); !slices.Contains(r, sub) || !slices.Contains(r, v6) || slices.Contains(r, lan) {
+		t.Fatalf("%v", r)
+	}
+	if installed, _, err := c.ConfigureRoutes([]netip.Prefix{v6}); err != nil || !slices.Equal(installed, []netip.Prefix{v6}) || slices.Contains(routes(), sub) {
+		t.Fatalf("%v %v %v", installed, err, routes())
+	}
+	for _, bad := range []string{"0.0.0.0/0", "::/0", "100.100.0.0/16", "fd7a:115c:a1e0::/64", "127.0.0.0/8", "224.0.0.0/4", "169.254.0.0/16", "fe80::/64", "198.19.0.0/16"} {
+		if _, _, err := c.ConfigureRoutes([]netip.Prefix{netip.MustParsePrefix(bad)}); code(err) != netdv1.ErrorCode_ERROR_CODE_INVALID_ROUTE {
+			t.Fatalf("%s accepted: %v", bad, err)
+		}
+	}
+	if !slices.Equal(routes(), []netip.Prefix{ula, pool, v6}) {
+		t.Fatalf("a rejected request must not change the routes: %v", routes())
+	}
+	h.with(func() { h.kernel.failAt = "delroute" })
+	if _, _, err := c.ConfigureRoutes(nil); err != nil || !slices.Contains(routes(), v6) {
+		t.Fatalf("%v %v", err, routes())
+	}
+	h.with(func() { h.kernel.failAt = "" })
+	if _, _, err := c.ConfigureRoutes(nil); err != nil || slices.Contains(routes(), v6) {
+		t.Fatalf("a route whose removal failed must be retried: %v %v", err, routes())
+	}
+}
+
+func TestConfigureRoutesNeedsAnInstance(t *testing.T) {
+	h := newHarness(t, nil)
+	if _, _, err := h.client().ConfigureRoutes([]netip.Prefix{netip.MustParsePrefix("10.200.0.0/22")}); code(err) != netdv1.ErrorCode_ERROR_CODE_INSTANCE_NOT_FOUND {
 		t.Fatal(err)
 	}
 }

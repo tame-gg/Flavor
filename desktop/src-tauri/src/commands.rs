@@ -209,6 +209,31 @@ pub async fn list_dns(daemon: State<'_, Daemon>, network_id: String) -> Result<L
 }
 
 #[tauri::command]
+pub async fn list_subnet_routes(daemon: State<'_, Daemon>, network_id: String) -> Result<ListSubnetRoutesResponse> {
+    Ok(daemon
+        .client()?
+        .routes
+        .list_subnet_routes(ListSubnetRoutesRequest { network_id, ..Default::default() })
+        .await?
+        .into_owned())
+}
+
+#[tauri::command]
+pub async fn use_subnet_routes(
+    daemon: State<'_, Daemon>,
+    network_id: String,
+    add: Vec<String>,
+    remove: Vec<String>,
+) -> Result<UseSubnetRoutesResponse> {
+    Ok(daemon
+        .client()?
+        .routes
+        .use_subnet_routes(UseSubnetRoutesRequest { network_id, add, remove, ..Default::default() })
+        .await?
+        .into_owned())
+}
+
+#[tauri::command]
 pub async fn create_workspace(
     daemon: State<'_, Daemon>,
     name: String,

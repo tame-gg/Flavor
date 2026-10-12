@@ -105,12 +105,13 @@ func (notFound) Inspect(context.Context, string) (inspect.Result, uint64, error)
 }
 
 type fixture struct {
-	alloc *synthetic.Allocator
-	ids   []domain.NetworkID
-	up    *upstreams
-	plane *Plane
-	peer  *dataplanetest.Peer
-	raw   *os.File
+	alloc  *synthetic.Allocator
+	routes *RouteTable
+	ids    []domain.NetworkID
+	up     *upstreams
+	plane  *Plane
+	peer   *dataplanetest.Peer
+	raw    *os.File
 }
 
 func start(t *testing.T, withPeer bool) *fixture {
@@ -121,7 +122,7 @@ func start(t *testing.T, withPeer bool) *fixture {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { db.Close() })
-	f := &fixture{up: &upstreams{conns: make(chan net.Conn, 16)}}
+	f := &fixture{up: &upstreams{conns: make(chan net.Conn, 16)}, routes: &RouteTable{}}
 	for _, name := range []string{"Home", "LunarLabs"} {
 		now := time.Now().UTC()
 		n := domain.Network{ID: domain.NewNetworkID(), DisplayName: name, Provider: domain.ProviderTailscale, NodeHostname: "ws", CreatedAt: now, UpdatedAt: now}
@@ -137,13 +138,13 @@ func start(t *testing.T, withPeer bool) *fixture {
 		t.Fatal(err)
 	}
 	dev, other := dataplanetest.Pair(t)
-	f.plane, err = Start(ctx, dev, f.alloc, &syndns.Engine{Resolver: notFound{}, Addresser: f.alloc}, f.up.dial, slog.New(slog.DiscardHandler))
+	f.plane, err = Start(ctx, dev, f.alloc, f.routes, &syndns.Engine{Resolver: notFound{}, Addresser: f.alloc}, f.up.dial, slog.New(slog.DiscardHandler))
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(f.plane.Close)
 	if withPeer {
-		f.peer = dataplanetest.NewPeer(t, other, f.alloc.ULA(), f.alloc.Pool())
+		f.peer = dataplanetest.NewPeer(t, other, f.alloc.ULA(), f.alloc.Pool(), netip.MustParsePrefix("10.0.0.0/8"))
 	} else {
 		f.raw = other
 	}
@@ -485,4 +486,24 @@ func eventually(t *testing.T, ok func() bool) {
 		}
 	}
 	t.Fatal("condition not reached")
+}
+
+func TestTCPToAnInstalledSubnetRouteReachesItsNetwork(t *testing.T) {
+	f := start(t, true)
+	route := netip.MustParsePrefix("10.200.0.0/22")
+	f.routes.Want(map[netip.Prefix]domain.NetworkID{route: f.ids[1]})
+	f.routes.Install([]netip.Prefix{route})
+	_, r := dialTCP(t, f, netip.MustParseAddrPort("10.200.0.10:22"))
+	line, err := r.ReadString('\n')
+	if want := fmt.Sprintf("network=%s tcp 10.200.0.10:22\n", f.ids[1]); err != nil || line != want {
+		t.Fatalf("%q %v, want %q", line, err, want)
+	}
+
+	f.routes.Install(nil)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if c, err := f.peer.DialTCP(ctx, netip.MustParseAddrPort("10.200.0.11:22")); err == nil {
+		c.Close()
+		t.Fatal("a route that is no longer installed still forwards")
+	}
 }

@@ -650,6 +650,7 @@ type InspectDestinationResponse struct {
 	Candidates       []*ResolutionCandidate `protobuf:"bytes,10,rep,name=candidates,proto3" json:"candidates,omitempty"`
 	NotInspected     []*NetworkRef          `protobuf:"bytes,11,rep,name=not_inspected,json=notInspected,proto3" json:"not_inspected,omitempty"`
 	Preference       *PreferenceUse         `protobuf:"bytes,12,opt,name=preference,proto3" json:"preference,omitempty"`
+	SystemRoute      string                 `protobuf:"bytes,13,opt,name=system_route,json=systemRoute,proto3" json:"system_route,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -766,6 +767,13 @@ func (x *InspectDestinationResponse) GetPreference() *PreferenceUse {
 		return x.Preference
 	}
 	return nil
+}
+
+func (x *InspectDestinationResponse) GetSystemRoute() string {
+	if x != nil {
+		return x.SystemRoute
+	}
+	return ""
 }
 
 type DescribeDeviceRequest struct {
@@ -897,7 +905,7 @@ const file_flavor_v1_inspector_proto_rawDesc = "" +
 	"\vstable_name\x18\a \x01(\tR\n" +
 	"stableName\"=\n" +
 	"\x19InspectDestinationRequest\x12 \n" +
-	"\vdestination\x18\x01 \x01(\tR\vdestination\"\xca\x04\n" +
+	"\vdestination\x18\x01 \x01(\tR\vdestination\"\xed\x04\n" +
 	"\x1aInspectDestinationResponse\x12,\n" +
 	"\x12daemon_instance_id\x18\x01 \x01(\tR\x10daemonInstanceId\x12+\n" +
 	"\x11snapshot_sequence\x18\x02 \x01(\x04R\x10snapshotSequence\x12\x14\n" +
@@ -918,7 +926,8 @@ const file_flavor_v1_inspector_proto_rawDesc = "" +
 	"\rnot_inspected\x18\v \x03(\v2\x15.flavor.v1.NetworkRefR\fnotInspected\x128\n" +
 	"\n" +
 	"preference\x18\f \x01(\v2\x18.flavor.v1.PreferenceUseR\n" +
-	"preference\"O\n" +
+	"preference\x12!\n" +
+	"\fsystem_route\x18\r \x01(\tR\vsystemRoute\"O\n" +
 	"\x15DescribeDeviceRequest\x12\x1d\n" +
 	"\n" +
 	"network_id\x18\x01 \x01(\tR\tnetworkId\x12\x17\n" +

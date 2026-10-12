@@ -6,7 +6,7 @@ use buffa::Message as _;
 use connectrpc::client::{ClientConfig, Http2Connection, SharedHttp2Connection};
 use connectrpc::ErrorCode;
 use flavor_proto::flavor::v1::{
-    ConflictServiceClient, DaemonServiceClient, DeviceServiceClient, DiagnosticsServiceClient, DnsServiceClient, EventServiceClient, ExitNodeServiceClient, InspectorServiceClient, PreferenceServiceClient, WorkspaceServiceClient,
+    ConflictServiceClient, DaemonServiceClient, DeviceServiceClient, DiagnosticsServiceClient, DnsServiceClient, EventServiceClient, ExitNodeServiceClient, InspectorServiceClient, PreferenceServiceClient, RouteServiceClient, WorkspaceServiceClient,
     FlavorErrorCode, FlavorErrorDetail, NetworkServiceClient,
 };
 
@@ -33,6 +33,7 @@ pub struct FlavorIpcClient {
     pub preferences: PreferenceServiceClient<Transport>,
     pub dns: DnsServiceClient<Transport>,
     pub exit_nodes: ExitNodeServiceClient<Transport>,
+    pub routes: RouteServiceClient<Transport>,
 }
 
 impl FlavorIpcClient {
@@ -51,7 +52,8 @@ impl FlavorIpcClient {
             workspaces: WorkspaceServiceClient::new(transport.clone(), config()),
             preferences: PreferenceServiceClient::new(transport.clone(), config()),
             dns: DnsServiceClient::new(transport.clone(), config()),
-            exit_nodes: ExitNodeServiceClient::new(transport, config()),
+            exit_nodes: ExitNodeServiceClient::new(transport.clone(), config()),
+            routes: RouteServiceClient::new(transport, config()),
         }
     }
 }

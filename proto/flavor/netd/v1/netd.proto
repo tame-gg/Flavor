@@ -13,6 +13,7 @@ message Request {
     ConfigureDnsRequest configure_dns = 13;
     ClearDnsRequest clear_dns = 14;
     StatusRequest status = 15;
+    ConfigureRoutesRequest configure_routes = 16;
   }
 }
 
@@ -26,6 +27,7 @@ message Response {
     ConfigureDnsResponse configure_dns = 13;
     ClearDnsResponse clear_dns = 14;
     StatusResponse status = 15;
+    ConfigureRoutesResponse configure_routes = 16;
   }
 }
 
@@ -53,6 +55,7 @@ enum ErrorCode {
   ERROR_CODE_NETLINK_FAILED = 15;
   ERROR_CODE_FD_TRANSFER_FAILED = 16;
   ERROR_CODE_INTERNAL = 17;
+  ERROR_CODE_INVALID_ROUTE = 18;
 }
 
 enum Capability {
@@ -61,6 +64,7 @@ enum Capability {
   CAPABILITY_IPV4 = 2;
   CAPABILITY_RESOLVED_DNS = 3;
   CAPABILITY_NRPT_DNS = 4;
+  CAPABILITY_ROUTES = 5;
 }
 
 message IpPrefix {
@@ -125,4 +129,18 @@ message Instance {
   uint32 mtu = 5;
   bool dns_configured = 6;
   repeated string routing_domains = 7;
+}
+
+message ConfigureRoutesRequest {
+  repeated IpPrefix routes = 1;
+}
+
+message RefusedRoute {
+  IpPrefix route = 1;
+  IpPrefix conflict = 2;
+}
+
+message ConfigureRoutesResponse {
+  repeated IpPrefix installed = 1;
+  repeated RefusedRoute refused = 2;
 }

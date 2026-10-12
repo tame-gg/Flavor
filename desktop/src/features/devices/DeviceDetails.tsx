@@ -143,7 +143,7 @@ export function DeviceDetails({ deviceKey, onClose, onInspect, onOpenNetwork, ca
         )}
         {network && <Button onClick={() => onOpenNetwork(network.id)}>Open network</Button>}
         {ssh && <CopyButton value={ssh} label="Copy SSH command" />}
-        {d.exitNodeOption && !d.local && (
+        {(d.exitNodeOption || d.exitNode) && !d.local && (
           <Button loading={exit.pending} disabled={!canMutate} onClick={() => void exit.run()}>
             {d.exitNode ? "Stop using as exit node" : "Use as exit node"}
           </Button>

@@ -105,6 +105,7 @@ message InspectDestinationResponse {
   repeated ResolutionCandidate candidates = 10;
   repeated NetworkRef not_inspected = 11;
   PreferenceUse preference = 12;
+  string system_route = 13;
 }
 
 message DescribeDeviceRequest {

@@ -1,15 +1,26 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { NetworkConnectionState as S, ProviderType } from "@gen/flavor/v1/common_pb";
 import type { NetworkDNS } from "@gen/flavor/v1/dns_pb";
+import { SubnetRouteUse, type SubnetRoute } from "@gen/flavor/v1/routes_pb";
 import type { Network } from "@gen/flavor/v1/network_pb";
 import { Banner } from "../../components/ui/Banner";
 import { Button } from "../../components/ui/Button";
 import { Field } from "../../components/ui/Field";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { authDestination } from "../../lib/api/authUrl";
-import { connectNetwork, disconnectNetwork, enrollNetwork, listDNS, openAuthUrl, updateNetwork } from "../../lib/api/daemon";
+import {
+  chooseSubnetRoutes,
+  connectNetwork,
+  disconnectNetwork,
+  enrollNetwork,
+  listDNS,
+  listSubnetRoutes,
+  openAuthUrl,
+  updateNetwork,
+} from "../../lib/api/daemon";
 import { useCanMutate, useDaemon } from "../../app/sync/useDaemon";
 import { useAction } from "../../app/useAction";
+import { errorMessage } from "../../lib/api/errors";
 import { controlHost, providerName } from "./format";
 
 const active = new Set([S.CONNECTING, S.AUTHENTICATING, S.AWAITING_APPROVAL, S.CONNECTED, S.DEGRADED, S.RECONNECTING]);
@@ -89,7 +100,12 @@ export function NetworkDetail({ network: n, deviceCount, notice, onShowDevices, 
         </div>
       </div>
 
-      {n.state === S.CONNECTED || n.state === S.DEGRADED ? <DNSCard networkId={n.id} /> : null}
+      {n.state === S.CONNECTED || n.state === S.DEGRADED ? (
+        <>
+          <SubnetRoutesCard networkId={n.id} />
+          <DNSCard networkId={n.id} />
+        </>
+      ) : null}
 
       <Preferences network={n} />
 
@@ -107,6 +123,90 @@ export function NetworkDetail({ network: n, deviceCount, notice, onShowDevices, 
         </dl>
       </details>
     </section>
+  );
+}
+
+const routeUse: Partial<Record<SubnetRouteUse, string>> = {
+  [SubnetRouteUse.INSTALLED]: "In use",
+  [SubnetRouteUse.PENDING]: "Waiting",
+  [SubnetRouteUse.REFUSED]: "Refused",
+  [SubnetRouteUse.NOT_ADVERTISED]: "No device advertises it now",
+};
+
+function SubnetRoutesCard({ networkId }: { networkId: string }) {
+  const { sequence, status } = useDaemon();
+  const canMutate = useCanMutate();
+  const [routes, setRoutes] = useState<SubnetRoute[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
+  const generation = useRef(0);
+  const toggle = useAction(async (prefix: string, on: boolean) => {
+    generation.current++;
+    const r = await chooseSubnetRoutes(networkId, on ? [prefix] : [], on ? [] : [prefix]);
+    generation.current++;
+    setRoutes(r.routes);
+  });
+
+  useEffect(() => {
+    if (status !== "ready") return;
+    let cancelled = false;
+    const started = generation.current;
+    listSubnetRoutes(networkId)
+      .then((r) => {
+        if (cancelled || started !== generation.current) return;
+        setRoutes(r.routes);
+        setLoadError(null);
+      })
+      .catch((e) => !cancelled && setLoadError(errorMessage(e)));
+    return () => {
+      cancelled = true;
+    };
+  }, [networkId, sequence, status, reload]);
+
+  if (loadError && !routes) {
+    return (
+      <div className="card stack-sm">
+        <h3>Subnet routes</h3>
+        <Banner tone="danger">{loadError}</Banner>
+        <div className="row">
+          <Button onClick={() => setReload((n) => n + 1)}>Try again</Button>
+        </div>
+      </div>
+    );
+  }
+  if (!routes || routes.length === 0) return null;
+  return (
+    <div className="card stack">
+      <h3>Subnet routes</h3>
+      <p className="muted">
+        Turn a route on to reach its addresses from every program on this computer. This needs system-wide networking
+        through flavor-netd.
+      </p>
+      {routes.map((r) => {
+        const used = r.use !== SubnetRouteUse.NOT_USED;
+        const via = r.routers.map((d) => (d.online ? d.hostname : `${d.hostname} (offline)`)).join(", ");
+        return (
+          <div key={r.prefix} className="stack-sm">
+            <label className="check">
+              <input
+                type="checkbox"
+                checked={used}
+                disabled={!canMutate || toggle.pending}
+                onChange={(e) => void toggle.run(r.prefix, e.target.checked)}
+              />
+              <span className="mono">{r.prefix}</span>
+              {via && <span className="muted small">via {via}</span>}
+              {routeUse[r.use] && <span className="badge">{routeUse[r.use]}</span>}
+            </label>
+            {r.detail && <p className="muted small">{r.detail}</p>}
+            {r.overlaps.length > 0 && (
+              <p className="muted small">Overlaps a route on {r.overlaps.map((o) => o.displayName).join(", ")}.</p>
+            )}
+          </div>
+        );
+      })}
+      {toggle.error && <Banner tone="danger">{toggle.error}</Banner>}
+    </div>
   );
 }
 

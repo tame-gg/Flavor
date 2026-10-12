@@ -1,0 +1,1 @@
+ALTER TABLE networks ADD COLUMN used_routes TEXT NOT NULL DEFAULT '';

@@ -50,7 +50,7 @@ func TestMigrateFreshDB(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if ver != 5 {
+	if ver != 6 {
 		t.Fatalf("version=%d", ver)
 	}
 }
@@ -433,6 +433,13 @@ func TestNetworkNodePrefs(t *testing.T) {
 	}
 	if got, _ := db.Networks().Get(ctx, n.ID); len(got.AdvertisedRoutes) != 0 {
 		t.Fatalf("%+v", got.AdvertisedRoutes)
+	}
+	used := []netip.Prefix{netip.MustParsePrefix("10.200.0.0/22")}
+	if err := db.Networks().SetUsedRoutes(ctx, n.ID, used); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := db.Networks().Get(ctx, n.ID); !slices.Equal(got.UsedRoutes, used) || len(got.AdvertisedRoutes) != 0 {
+		t.Fatalf("%+v", got)
 	}
 	if err := db.Networks().SetExitNode(ctx, "01M4NYZEAWKW0JM28RR7R946YV", ""); !errors.Is(err, store.ErrNotFound) {
 		t.Fatalf("%v", err)

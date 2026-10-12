@@ -43,14 +43,15 @@ const (
 type Dialer func(ctx context.Context, network domain.NetworkID, proto, address string) (net.Conn, error)
 
 type Plane struct {
-	alloc *synthetic.Allocator
-	dial  Dialer
-	log   *slog.Logger
-	ula   netip.Prefix
-	pool  netip.Prefix
-	dev   io.ReadWriteCloser
-	stack *stack.Stack
-	ep    *channel.Endpoint
+	alloc  *synthetic.Allocator
+	routes *RouteTable
+	dial   Dialer
+	log    *slog.Logger
+	ula    netip.Prefix
+	pool   netip.Prefix
+	dev    io.ReadWriteCloser
+	stack  *stack.Stack
+	ep     *channel.Endpoint
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -62,14 +63,14 @@ type Plane struct {
 	open   map[io.Closer]struct{}
 }
 
-func Start(ctx context.Context, dev io.ReadWriteCloser, alloc *synthetic.Allocator, dns *syndns.Engine, dial Dialer, log *slog.Logger) (*Plane, error) {
+func Start(ctx context.Context, dev io.ReadWriteCloser, alloc *synthetic.Allocator, routes *RouteTable, dns *syndns.Engine, dial Dialer, log *slog.Logger) (*Plane, error) {
 	s, ep, err := newStack()
 	if err != nil {
 		return nil, err
 	}
 	ctx, cancel := context.WithCancel(ctx)
 	p := &Plane{
-		alloc: alloc, dial: dial, log: log, ula: alloc.ULA(), pool: alloc.Pool(), dev: dev, stack: s, ep: ep,
+		alloc: alloc, routes: routes, dial: dial, log: log, ula: alloc.ULA(), pool: alloc.Pool(), dev: dev, stack: s, ep: ep,
 		ctx: ctx, cancel: cancel, done: make(chan struct{}), open: make(map[io.Closer]struct{}),
 	}
 	resolvers := []netip.Addr{layout.ResolverAddress(p.ula)}
@@ -222,7 +223,11 @@ func (p *Plane) admit(b []byte) (tcpip.NetworkProtocolNumber, bool) {
 	if next != byte(tcp.ProtocolNumber) && next != byte(udp.ProtocolNumber) {
 		return 0, false
 	}
-	return proto, p.ula.Contains(dst) || p.pool.Contains(dst)
+	if p.ula.Contains(dst) || p.pool.Contains(dst) {
+		return proto, true
+	}
+	_, routed := p.routes.Lookup(dst)
+	return proto, routed
 }
 
 func (p *Plane) track(cs ...io.Closer) (func(), bool) {
@@ -263,11 +268,10 @@ func (p *Plane) shutdown() {
 }
 
 func (p *Plane) upstream(dst netip.Addr, port uint16, proto string) (net.Conn, func(), error) {
-	network, real, err := p.alloc.Resolve(p.ctx, dst)
+	network, real, release, err := p.target(dst)
 	if err != nil {
 		return nil, nil, err
 	}
-	release := p.alloc.Acquire(dst)
 	ctx, cancel := context.WithTimeout(p.ctx, dialTimeout)
 	defer cancel()
 	up, err := p.dial(ctx, network, proto, netip.AddrPortFrom(real, port).String())
@@ -276,6 +280,20 @@ func (p *Plane) upstream(dst netip.Addr, port uint16, proto string) (net.Conn, f
 		return nil, nil, err
 	}
 	return up, release, nil
+}
+
+func (p *Plane) target(dst netip.Addr) (domain.NetworkID, netip.Addr, func(), error) {
+	if !p.ula.Contains(dst) && !p.pool.Contains(dst) {
+		if network, ok := p.routes.Lookup(dst); ok {
+			return network, dst, func() {}, nil
+		}
+		return "", netip.Addr{}, nil, errors.New("no route for " + dst.String())
+	}
+	network, real, err := p.alloc.Resolve(p.ctx, dst)
+	if err != nil {
+		return "", netip.Addr{}, nil, err
+	}
+	return network, real, p.alloc.Acquire(dst), nil
 }
 
 func (p *Plane) tcp(r *tcp.ForwarderRequest) {

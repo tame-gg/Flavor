@@ -21,6 +21,64 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type SubnetRouteUse int32
+
+const (
+	SubnetRouteUse_SUBNET_ROUTE_USE_UNSPECIFIED    SubnetRouteUse = 0
+	SubnetRouteUse_SUBNET_ROUTE_USE_NOT_USED       SubnetRouteUse = 1
+	SubnetRouteUse_SUBNET_ROUTE_USE_INSTALLED      SubnetRouteUse = 2
+	SubnetRouteUse_SUBNET_ROUTE_USE_PENDING        SubnetRouteUse = 3
+	SubnetRouteUse_SUBNET_ROUTE_USE_REFUSED        SubnetRouteUse = 4
+	SubnetRouteUse_SUBNET_ROUTE_USE_NOT_ADVERTISED SubnetRouteUse = 5
+)
+
+// Enum value maps for SubnetRouteUse.
+var (
+	SubnetRouteUse_name = map[int32]string{
+		0: "SUBNET_ROUTE_USE_UNSPECIFIED",
+		1: "SUBNET_ROUTE_USE_NOT_USED",
+		2: "SUBNET_ROUTE_USE_INSTALLED",
+		3: "SUBNET_ROUTE_USE_PENDING",
+		4: "SUBNET_ROUTE_USE_REFUSED",
+		5: "SUBNET_ROUTE_USE_NOT_ADVERTISED",
+	}
+	SubnetRouteUse_value = map[string]int32{
+		"SUBNET_ROUTE_USE_UNSPECIFIED":    0,
+		"SUBNET_ROUTE_USE_NOT_USED":       1,
+		"SUBNET_ROUTE_USE_INSTALLED":      2,
+		"SUBNET_ROUTE_USE_PENDING":        3,
+		"SUBNET_ROUTE_USE_REFUSED":        4,
+		"SUBNET_ROUTE_USE_NOT_ADVERTISED": 5,
+	}
+)
+
+func (x SubnetRouteUse) Enum() *SubnetRouteUse {
+	p := new(SubnetRouteUse)
+	*p = x
+	return p
+}
+
+func (x SubnetRouteUse) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (SubnetRouteUse) Descriptor() protoreflect.EnumDescriptor {
+	return file_flavor_v1_routes_proto_enumTypes[0].Descriptor()
+}
+
+func (SubnetRouteUse) Type() protoreflect.EnumType {
+	return &file_flavor_v1_routes_proto_enumTypes[0]
+}
+
+func (x SubnetRouteUse) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use SubnetRouteUse.Descriptor instead.
+func (SubnetRouteUse) EnumDescriptor() ([]byte, []int) {
+	return file_flavor_v1_routes_proto_rawDescGZIP(), []int{0}
+}
+
 type AdvertisedRoute struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Prefix        string                 `protobuf:"bytes,1,opt,name=prefix,proto3" json:"prefix,omitempty"`
@@ -265,11 +323,303 @@ func (x *UpdateRoutesResponse) GetRoutes() []*AdvertisedRoute {
 	return nil
 }
 
+type SubnetRoute struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Network       *NetworkRef            `protobuf:"bytes,1,opt,name=network,proto3" json:"network,omitempty"`
+	Prefix        string                 `protobuf:"bytes,2,opt,name=prefix,proto3" json:"prefix,omitempty"`
+	Routers       []*Device              `protobuf:"bytes,3,rep,name=routers,proto3" json:"routers,omitempty"`
+	Use           SubnetRouteUse         `protobuf:"varint,4,opt,name=use,proto3,enum=flavor.v1.SubnetRouteUse" json:"use,omitempty"`
+	Detail        string                 `protobuf:"bytes,5,opt,name=detail,proto3" json:"detail,omitempty"`
+	Overlaps      []*NetworkRef          `protobuf:"bytes,6,rep,name=overlaps,proto3" json:"overlaps,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SubnetRoute) Reset() {
+	*x = SubnetRoute{}
+	mi := &file_flavor_v1_routes_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SubnetRoute) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubnetRoute) ProtoMessage() {}
+
+func (x *SubnetRoute) ProtoReflect() protoreflect.Message {
+	mi := &file_flavor_v1_routes_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubnetRoute.ProtoReflect.Descriptor instead.
+func (*SubnetRoute) Descriptor() ([]byte, []int) {
+	return file_flavor_v1_routes_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *SubnetRoute) GetNetwork() *NetworkRef {
+	if x != nil {
+		return x.Network
+	}
+	return nil
+}
+
+func (x *SubnetRoute) GetPrefix() string {
+	if x != nil {
+		return x.Prefix
+	}
+	return ""
+}
+
+func (x *SubnetRoute) GetRouters() []*Device {
+	if x != nil {
+		return x.Routers
+	}
+	return nil
+}
+
+func (x *SubnetRoute) GetUse() SubnetRouteUse {
+	if x != nil {
+		return x.Use
+	}
+	return SubnetRouteUse_SUBNET_ROUTE_USE_UNSPECIFIED
+}
+
+func (x *SubnetRoute) GetDetail() string {
+	if x != nil {
+		return x.Detail
+	}
+	return ""
+}
+
+func (x *SubnetRoute) GetOverlaps() []*NetworkRef {
+	if x != nil {
+		return x.Overlaps
+	}
+	return nil
+}
+
+type ListSubnetRoutesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	NetworkId     string                 `protobuf:"bytes,1,opt,name=network_id,json=networkId,proto3" json:"network_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListSubnetRoutesRequest) Reset() {
+	*x = ListSubnetRoutesRequest{}
+	mi := &file_flavor_v1_routes_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSubnetRoutesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSubnetRoutesRequest) ProtoMessage() {}
+
+func (x *ListSubnetRoutesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_flavor_v1_routes_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSubnetRoutesRequest.ProtoReflect.Descriptor instead.
+func (*ListSubnetRoutesRequest) Descriptor() ([]byte, []int) {
+	return file_flavor_v1_routes_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ListSubnetRoutesRequest) GetNetworkId() string {
+	if x != nil {
+		return x.NetworkId
+	}
+	return ""
+}
+
+type ListSubnetRoutesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Routes        []*SubnetRoute         `protobuf:"bytes,1,rep,name=routes,proto3" json:"routes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListSubnetRoutesResponse) Reset() {
+	*x = ListSubnetRoutesResponse{}
+	mi := &file_flavor_v1_routes_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListSubnetRoutesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListSubnetRoutesResponse) ProtoMessage() {}
+
+func (x *ListSubnetRoutesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_flavor_v1_routes_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListSubnetRoutesResponse.ProtoReflect.Descriptor instead.
+func (*ListSubnetRoutesResponse) Descriptor() ([]byte, []int) {
+	return file_flavor_v1_routes_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *ListSubnetRoutesResponse) GetRoutes() []*SubnetRoute {
+	if x != nil {
+		return x.Routes
+	}
+	return nil
+}
+
+type UseSubnetRoutesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	NetworkId     string                 `protobuf:"bytes,1,opt,name=network_id,json=networkId,proto3" json:"network_id,omitempty"`
+	Add           []string               `protobuf:"bytes,2,rep,name=add,proto3" json:"add,omitempty"`
+	Remove        []string               `protobuf:"bytes,3,rep,name=remove,proto3" json:"remove,omitempty"`
+	All           bool                   `protobuf:"varint,4,opt,name=all,proto3" json:"all,omitempty"`
+	None          bool                   `protobuf:"varint,5,opt,name=none,proto3" json:"none,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UseSubnetRoutesRequest) Reset() {
+	*x = UseSubnetRoutesRequest{}
+	mi := &file_flavor_v1_routes_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UseSubnetRoutesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UseSubnetRoutesRequest) ProtoMessage() {}
+
+func (x *UseSubnetRoutesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_flavor_v1_routes_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UseSubnetRoutesRequest.ProtoReflect.Descriptor instead.
+func (*UseSubnetRoutesRequest) Descriptor() ([]byte, []int) {
+	return file_flavor_v1_routes_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *UseSubnetRoutesRequest) GetNetworkId() string {
+	if x != nil {
+		return x.NetworkId
+	}
+	return ""
+}
+
+func (x *UseSubnetRoutesRequest) GetAdd() []string {
+	if x != nil {
+		return x.Add
+	}
+	return nil
+}
+
+func (x *UseSubnetRoutesRequest) GetRemove() []string {
+	if x != nil {
+		return x.Remove
+	}
+	return nil
+}
+
+func (x *UseSubnetRoutesRequest) GetAll() bool {
+	if x != nil {
+		return x.All
+	}
+	return false
+}
+
+func (x *UseSubnetRoutesRequest) GetNone() bool {
+	if x != nil {
+		return x.None
+	}
+	return false
+}
+
+type UseSubnetRoutesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Routes        []*SubnetRoute         `protobuf:"bytes,1,rep,name=routes,proto3" json:"routes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UseSubnetRoutesResponse) Reset() {
+	*x = UseSubnetRoutesResponse{}
+	mi := &file_flavor_v1_routes_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UseSubnetRoutesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UseSubnetRoutesResponse) ProtoMessage() {}
+
+func (x *UseSubnetRoutesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_flavor_v1_routes_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UseSubnetRoutesResponse.ProtoReflect.Descriptor instead.
+func (*UseSubnetRoutesResponse) Descriptor() ([]byte, []int) {
+	return file_flavor_v1_routes_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *UseSubnetRoutesResponse) GetRoutes() []*SubnetRoute {
+	if x != nil {
+		return x.Routes
+	}
+	return nil
+}
+
 var File_flavor_v1_routes_proto protoreflect.FileDescriptor
 
 const file_flavor_v1_routes_proto_rawDesc = "" +
 	"\n" +
-	"\x16flavor/v1/routes.proto\x12\tflavor.v1\"E\n" +
+	"\x16flavor/v1/routes.proto\x12\tflavor.v1\x1a\x16flavor/v1/device.proto\x1a\x19flavor/v1/inspector.proto\"E\n" +
 	"\x0fAdvertisedRoute\x12\x16\n" +
 	"\x06prefix\x18\x01 \x01(\tR\x06prefix\x12\x1a\n" +
 	"\bapproved\x18\x02 \x01(\bR\bapproved\"1\n" +
@@ -284,10 +634,40 @@ const file_flavor_v1_routes_proto_rawDesc = "" +
 	"\x03add\x18\x02 \x03(\tR\x03add\x12\x16\n" +
 	"\x06remove\x18\x03 \x03(\tR\x06remove\"J\n" +
 	"\x14UpdateRoutesResponse\x122\n" +
-	"\x06routes\x18\x01 \x03(\v2\x1a.flavor.v1.AdvertisedRouteR\x06routes2\xa7\x01\n" +
+	"\x06routes\x18\x01 \x03(\v2\x1a.flavor.v1.AdvertisedRouteR\x06routes\"\xfb\x01\n" +
+	"\vSubnetRoute\x12/\n" +
+	"\anetwork\x18\x01 \x01(\v2\x15.flavor.v1.NetworkRefR\anetwork\x12\x16\n" +
+	"\x06prefix\x18\x02 \x01(\tR\x06prefix\x12+\n" +
+	"\arouters\x18\x03 \x03(\v2\x11.flavor.v1.DeviceR\arouters\x12+\n" +
+	"\x03use\x18\x04 \x01(\x0e2\x19.flavor.v1.SubnetRouteUseR\x03use\x12\x16\n" +
+	"\x06detail\x18\x05 \x01(\tR\x06detail\x121\n" +
+	"\boverlaps\x18\x06 \x03(\v2\x15.flavor.v1.NetworkRefR\boverlaps\"8\n" +
+	"\x17ListSubnetRoutesRequest\x12\x1d\n" +
+	"\n" +
+	"network_id\x18\x01 \x01(\tR\tnetworkId\"J\n" +
+	"\x18ListSubnetRoutesResponse\x12.\n" +
+	"\x06routes\x18\x01 \x03(\v2\x16.flavor.v1.SubnetRouteR\x06routes\"\x87\x01\n" +
+	"\x16UseSubnetRoutesRequest\x12\x1d\n" +
+	"\n" +
+	"network_id\x18\x01 \x01(\tR\tnetworkId\x12\x10\n" +
+	"\x03add\x18\x02 \x03(\tR\x03add\x12\x16\n" +
+	"\x06remove\x18\x03 \x03(\tR\x06remove\x12\x10\n" +
+	"\x03all\x18\x04 \x01(\bR\x03all\x12\x12\n" +
+	"\x04none\x18\x05 \x01(\bR\x04none\"I\n" +
+	"\x17UseSubnetRoutesResponse\x12.\n" +
+	"\x06routes\x18\x01 \x03(\v2\x16.flavor.v1.SubnetRouteR\x06routes*\xd2\x01\n" +
+	"\x0eSubnetRouteUse\x12 \n" +
+	"\x1cSUBNET_ROUTE_USE_UNSPECIFIED\x10\x00\x12\x1d\n" +
+	"\x19SUBNET_ROUTE_USE_NOT_USED\x10\x01\x12\x1e\n" +
+	"\x1aSUBNET_ROUTE_USE_INSTALLED\x10\x02\x12\x1c\n" +
+	"\x18SUBNET_ROUTE_USE_PENDING\x10\x03\x12\x1c\n" +
+	"\x18SUBNET_ROUTE_USE_REFUSED\x10\x04\x12#\n" +
+	"\x1fSUBNET_ROUTE_USE_NOT_ADVERTISED\x10\x052\xde\x02\n" +
 	"\fRouteService\x12F\n" +
 	"\tGetRoutes\x12\x1b.flavor.v1.GetRoutesRequest\x1a\x1c.flavor.v1.GetRoutesResponse\x12O\n" +
-	"\fUpdateRoutes\x12\x1e.flavor.v1.UpdateRoutesRequest\x1a\x1f.flavor.v1.UpdateRoutesResponseB\x9c\x01\n" +
+	"\fUpdateRoutes\x12\x1e.flavor.v1.UpdateRoutesRequest\x1a\x1f.flavor.v1.UpdateRoutesResponse\x12[\n" +
+	"\x10ListSubnetRoutes\x12\".flavor.v1.ListSubnetRoutesRequest\x1a#.flavor.v1.ListSubnetRoutesResponse\x12X\n" +
+	"\x0fUseSubnetRoutes\x12!.flavor.v1.UseSubnetRoutesRequest\x1a\".flavor.v1.UseSubnetRoutesResponseB\x9c\x01\n" +
 	"\rcom.flavor.v1B\vRoutesProtoP\x01Z9git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1;flavorv1\xa2\x02\x03FXX\xaa\x02\tFlavor.V1\xca\x02\tFlavor\\V1\xe2\x02\x15Flavor\\V1\\GPBMetadata\xea\x02\n" +
 	"Flavor::V1b\x06proto3"
 
@@ -303,26 +683,45 @@ func file_flavor_v1_routes_proto_rawDescGZIP() []byte {
 	return file_flavor_v1_routes_proto_rawDescData
 }
 
-var file_flavor_v1_routes_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_flavor_v1_routes_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_flavor_v1_routes_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_flavor_v1_routes_proto_goTypes = []any{
-	(*AdvertisedRoute)(nil),      // 0: flavor.v1.AdvertisedRoute
-	(*GetRoutesRequest)(nil),     // 1: flavor.v1.GetRoutesRequest
-	(*GetRoutesResponse)(nil),    // 2: flavor.v1.GetRoutesResponse
-	(*UpdateRoutesRequest)(nil),  // 3: flavor.v1.UpdateRoutesRequest
-	(*UpdateRoutesResponse)(nil), // 4: flavor.v1.UpdateRoutesResponse
+	(SubnetRouteUse)(0),              // 0: flavor.v1.SubnetRouteUse
+	(*AdvertisedRoute)(nil),          // 1: flavor.v1.AdvertisedRoute
+	(*GetRoutesRequest)(nil),         // 2: flavor.v1.GetRoutesRequest
+	(*GetRoutesResponse)(nil),        // 3: flavor.v1.GetRoutesResponse
+	(*UpdateRoutesRequest)(nil),      // 4: flavor.v1.UpdateRoutesRequest
+	(*UpdateRoutesResponse)(nil),     // 5: flavor.v1.UpdateRoutesResponse
+	(*SubnetRoute)(nil),              // 6: flavor.v1.SubnetRoute
+	(*ListSubnetRoutesRequest)(nil),  // 7: flavor.v1.ListSubnetRoutesRequest
+	(*ListSubnetRoutesResponse)(nil), // 8: flavor.v1.ListSubnetRoutesResponse
+	(*UseSubnetRoutesRequest)(nil),   // 9: flavor.v1.UseSubnetRoutesRequest
+	(*UseSubnetRoutesResponse)(nil),  // 10: flavor.v1.UseSubnetRoutesResponse
+	(*NetworkRef)(nil),               // 11: flavor.v1.NetworkRef
+	(*Device)(nil),                   // 12: flavor.v1.Device
 }
 var file_flavor_v1_routes_proto_depIdxs = []int32{
-	0, // 0: flavor.v1.GetRoutesResponse.routes:type_name -> flavor.v1.AdvertisedRoute
-	0, // 1: flavor.v1.UpdateRoutesResponse.routes:type_name -> flavor.v1.AdvertisedRoute
-	1, // 2: flavor.v1.RouteService.GetRoutes:input_type -> flavor.v1.GetRoutesRequest
-	3, // 3: flavor.v1.RouteService.UpdateRoutes:input_type -> flavor.v1.UpdateRoutesRequest
-	2, // 4: flavor.v1.RouteService.GetRoutes:output_type -> flavor.v1.GetRoutesResponse
-	4, // 5: flavor.v1.RouteService.UpdateRoutes:output_type -> flavor.v1.UpdateRoutesResponse
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	1,  // 0: flavor.v1.GetRoutesResponse.routes:type_name -> flavor.v1.AdvertisedRoute
+	1,  // 1: flavor.v1.UpdateRoutesResponse.routes:type_name -> flavor.v1.AdvertisedRoute
+	11, // 2: flavor.v1.SubnetRoute.network:type_name -> flavor.v1.NetworkRef
+	12, // 3: flavor.v1.SubnetRoute.routers:type_name -> flavor.v1.Device
+	0,  // 4: flavor.v1.SubnetRoute.use:type_name -> flavor.v1.SubnetRouteUse
+	11, // 5: flavor.v1.SubnetRoute.overlaps:type_name -> flavor.v1.NetworkRef
+	6,  // 6: flavor.v1.ListSubnetRoutesResponse.routes:type_name -> flavor.v1.SubnetRoute
+	6,  // 7: flavor.v1.UseSubnetRoutesResponse.routes:type_name -> flavor.v1.SubnetRoute
+	2,  // 8: flavor.v1.RouteService.GetRoutes:input_type -> flavor.v1.GetRoutesRequest
+	4,  // 9: flavor.v1.RouteService.UpdateRoutes:input_type -> flavor.v1.UpdateRoutesRequest
+	7,  // 10: flavor.v1.RouteService.ListSubnetRoutes:input_type -> flavor.v1.ListSubnetRoutesRequest
+	9,  // 11: flavor.v1.RouteService.UseSubnetRoutes:input_type -> flavor.v1.UseSubnetRoutesRequest
+	3,  // 12: flavor.v1.RouteService.GetRoutes:output_type -> flavor.v1.GetRoutesResponse
+	5,  // 13: flavor.v1.RouteService.UpdateRoutes:output_type -> flavor.v1.UpdateRoutesResponse
+	8,  // 14: flavor.v1.RouteService.ListSubnetRoutes:output_type -> flavor.v1.ListSubnetRoutesResponse
+	10, // 15: flavor.v1.RouteService.UseSubnetRoutes:output_type -> flavor.v1.UseSubnetRoutesResponse
+	12, // [12:16] is the sub-list for method output_type
+	8,  // [8:12] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_flavor_v1_routes_proto_init() }
@@ -330,18 +729,21 @@ func file_flavor_v1_routes_proto_init() {
 	if File_flavor_v1_routes_proto != nil {
 		return
 	}
+	file_flavor_v1_device_proto_init()
+	file_flavor_v1_inspector_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_flavor_v1_routes_proto_rawDesc), len(file_flavor_v1_routes_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   5,
+			NumEnums:      1,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_flavor_v1_routes_proto_goTypes,
 		DependencyIndexes: file_flavor_v1_routes_proto_depIdxs,
+		EnumInfos:         file_flavor_v1_routes_proto_enumTypes,
 		MessageInfos:      file_flavor_v1_routes_proto_msgTypes,
 	}.Build()
 	File_flavor_v1_routes_proto = out.File

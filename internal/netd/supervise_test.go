@@ -6,7 +6,10 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/netip"
 	"os"
+	"slices"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -47,13 +50,13 @@ func (a *attachments) counts() (int, []string) {
 	return a.attached, append([]string(nil), a.warnings...)
 }
 
-func supervise(t *testing.T, h *harness, a *attachments) (context.CancelFunc, chan struct{}) {
+func supervise(t *testing.T, h *harness, a *attachments, tweak ...func(*Supervisor)) (context.CancelFunc, chan struct{}) {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
 	stopped := make(chan struct{})
 	go func() {
 		defer close(stopped)
-		Supervisor{
+		s := Supervisor{
 			Socket: h.path, V6: ula, V4: pool, MTU: 1280,
 			Attach: a.attach, Warn: a.warn, Log: slog.New(slog.DiscardHandler),
 			Backoff: 20 * time.Millisecond, Probe: 20 * time.Millisecond,
@@ -64,7 +67,11 @@ func supervise(t *testing.T, h *harness, a *attachments) (context.CancelFunc, ch
 				}
 				return c, err
 			},
-		}.Run(ctx)
+		}
+		for _, f := range tweak {
+			f(&s)
+		}
+		s.Run(ctx)
 	}()
 	t.Cleanup(func() { cancel(); <-stopped })
 	return cancel, stopped
@@ -214,5 +221,46 @@ func TestSupervisorBacksOffWhenInstancesDieImmediately(t *testing.T) {
 	defer mu.Unlock()
 	if attached < 2 || attached > 7 {
 		t.Fatalf("instances that die at once must not be recreated in a tight loop: %d attempts", attached)
+	}
+}
+
+func TestSupervisorKeepsRoutesInSyncAndReportsThem(t *testing.T) {
+	h := newHarness(t, nil)
+	h.with(func() { h.kernel.occupied = []netip.Prefix{netip.MustParsePrefix("192.168.1.0/24")} })
+	sub, lan := netip.MustParsePrefix("10.200.0.0/22"), netip.MustParsePrefix("192.168.1.0/24")
+	var mu sync.Mutex
+	want := []netip.Prefix{sub, lan}
+	var active bool
+	var installed []netip.Prefix
+	var refused map[netip.Prefix]string
+	nudge := make(chan struct{}, 1)
+	cancel, stopped := supervise(t, h, &attachments{}, func(s *Supervisor) {
+		s.Probe = time.Hour
+		s.Nudge = nudge
+		s.Routes = func() []netip.Prefix { mu.Lock(); defer mu.Unlock(); return slices.Clone(want) }
+		s.Applied = func(a bool, in []netip.Prefix, r map[netip.Prefix]string) {
+			mu.Lock()
+			defer mu.Unlock()
+			active, installed, refused = a, in, r
+		}
+	})
+	report := func() (bool, []netip.Prefix, map[netip.Prefix]string) {
+		mu.Lock()
+		defer mu.Unlock()
+		return active, installed, refused
+	}
+	eventually(t, "routes installed", func() bool {
+		a, in, r := report()
+		return a && slices.Equal(in, []netip.Prefix{sub}) && strings.Contains(r[lan], "192.168.1.0/24")
+	})
+	mu.Lock()
+	want = nil
+	mu.Unlock()
+	nudge <- struct{}{}
+	eventually(t, "routes removed", func() bool { a, in, _ := report(); return a && len(in) == 0 })
+	cancel()
+	<-stopped
+	if a, _, _ := report(); a {
+		t.Fatal("stopping must report the routes as inactive")
 	}
 }

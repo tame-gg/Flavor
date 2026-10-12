@@ -66,6 +66,9 @@ type Service struct {
 	nextForward  uint64
 	warned       map[string]time.Time
 	splitDNS     map[string]splitAnswer
+	routes       installedRoutes
+	routesMu     sync.Mutex
+	routesNudge  chan struct{}
 }
 
 func New(cfg Config) *Service {

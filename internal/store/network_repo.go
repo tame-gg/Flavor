@@ -40,7 +40,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 
 func (r *NetworkRepository) Get(ctx context.Context, id domain.NetworkID) (domain.Network, error) {
 	row := r.db.sql.QueryRowContext(ctx, `
-SELECT id, display_name, provider, control_url, auto_connect, node_hostname, created_at, updated_at, exit_node_id, advertised_routes
+SELECT id, display_name, provider, control_url, auto_connect, node_hostname, created_at, updated_at, exit_node_id, advertised_routes, used_routes
 FROM networks WHERE id = ?`, string(id))
 	n, err := scanNetwork(row)
 	if err == sql.ErrNoRows {
@@ -51,7 +51,7 @@ FROM networks WHERE id = ?`, string(id))
 
 func (r *NetworkRepository) List(ctx context.Context) ([]domain.Network, error) {
 	rows, err := r.db.sql.QueryContext(ctx, `
-SELECT id, display_name, provider, control_url, auto_connect, node_hostname, created_at, updated_at, exit_node_id, advertised_routes
+SELECT id, display_name, provider, control_url, auto_connect, node_hostname, created_at, updated_at, exit_node_id, advertised_routes, used_routes
 FROM networks ORDER BY created_at ASC, id ASC`)
 	if err != nil {
 		return nil, err
@@ -101,11 +101,19 @@ func (r *NetworkRepository) SetExitNode(ctx context.Context, id domain.NetworkID
 }
 
 func (r *NetworkRepository) SetAdvertisedRoutes(ctx context.Context, id domain.NetworkID, routes []netip.Prefix) error {
+	return r.setColumn(ctx, id, "advertised_routes", joinRoutes(routes))
+}
+
+func (r *NetworkRepository) SetUsedRoutes(ctx context.Context, id domain.NetworkID, routes []netip.Prefix) error {
+	return r.setColumn(ctx, id, "used_routes", joinRoutes(routes))
+}
+
+func joinRoutes(routes []netip.Prefix) string {
 	parts := make([]string, len(routes))
 	for i, p := range routes {
 		parts[i] = p.String()
 	}
-	return r.setColumn(ctx, id, "advertised_routes", strings.Join(parts, " "))
+	return strings.Join(parts, " ")
 }
 
 func (r *NetworkRepository) setColumn(ctx context.Context, id domain.NetworkID, column, value string) error {
@@ -156,10 +164,10 @@ type rowScanner interface {
 
 func scanNetwork(row rowScanner) (domain.Network, error) {
 	var (
-		id, display, provider, control, hostname, created, updated, exit, routes string
-		auto                                                                     int
+		id, display, provider, control, hostname, created, updated, exit, routes, used string
+		auto                                                                           int
 	)
-	if err := row.Scan(&id, &display, &provider, &control, &auto, &hostname, &created, &updated, &exit, &routes); err != nil {
+	if err := row.Scan(&id, &display, &provider, &control, &auto, &hostname, &created, &updated, &exit, &routes, &used); err != nil {
 		return domain.Network{}, err
 	}
 	nid, err := domain.ParseNetworkID(id)
@@ -188,6 +196,10 @@ func scanNetwork(row rowScanner) (domain.Network, error) {
 	if err != nil {
 		return domain.Network{}, fmt.Errorf("%w: advertised_routes", ErrCorruptDB)
 	}
+	usedRoutes, err := parseRoutes(used)
+	if err != nil {
+		return domain.Network{}, fmt.Errorf("%w: used_routes", ErrCorruptDB)
+	}
 	n := domain.Network{
 		ID:               nid,
 		DisplayName:      display,
@@ -199,6 +211,7 @@ func scanNetwork(row rowScanner) (domain.Network, error) {
 		UpdatedAt:        updatedAt.UTC(),
 		ExitNode:         domain.NodeID(exit),
 		AdvertisedRoutes: advertised,
+		UsedRoutes:       usedRoutes,
 	}
 	if err := n.Validate(); err != nil {
 		return domain.Network{}, fmt.Errorf("%w: %v", ErrCorruptDB, err)

@@ -7,9 +7,11 @@ All notable changes to Flavor are listed here. The format follows [Keep a Change
 ### Added
 
 - The desktop app can pick an exit node: open a device that offers itself as an exit node and choose **Use as exit node**, or **Stop using as exit node** to clear it. Devices in use as an exit node show an **Exit node** badge ([#43](https://github.com/tame-gg/Flavor/issues/43)).
+- Subnet routes that other devices advertise can be used system-wide. `flavorctl routes available [network]` lists them, `flavorctl routes use <network> <cidr>...` or `--all` picks them and `routes unuse` drops them; the desktop app has a **Subnet routes** section on the network page. With `flavor-netd` running, Flavor adds the chosen routes to its network adapter, so every program reaches those addresses over TCP and UDP; ping does not work through them. Nothing is used until you pick it. Default routes and Tailscale ranges are never offered, a route can be used from one network at a time, and `flavor-netd` refuses any route that overlaps one this computer already has, such as your LAN. The choice is kept per network. `flavorctl explain <address>` says when every program can reach an address ([#62](https://github.com/tame-gg/Flavor/issues/62)).
 
 ### Fixed
 
+- In the desktop app, a device that stops offering itself as an exit node while you use it keeps its **Stop using as exit node** button.
 - On Windows, system-wide names work for standard users. `flavord` checked the `flavor-netd` service by reading its process token, which only administrators may do, so for everyone else it never used the service ([#59](https://github.com/tame-gg/Flavor/issues/59)).
 - On Windows, the DNS rule that `flavor-netd` writes lists its nameservers in a form Windows reads. Before, Windows saw no nameservers, so Flavor names did not resolve, and the effective policy could fail for other rules too ([#59](https://github.com/tame-gg/Flavor/issues/59)).
 

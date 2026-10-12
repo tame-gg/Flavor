@@ -23,6 +23,8 @@
     "allow-list-dns",
     "allow-set-exit-node",
     "allow-clear-exit-node",
+    "allow-list-subnet-routes",
+    "allow-use-subnet-routes",
     "allow-create-workspace",
     "allow-update-workspace",
     "allow-delete-workspace",

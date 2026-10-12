@@ -7,6 +7,12 @@ import { ListConflictsResponseSchema, type ListConflictsResponse } from "@gen/fl
 import { DaemonEventSchema } from "@gen/flavor/v1/events_pb";
 import { ListDNSResponseSchema, type ListDNSResponse } from "@gen/flavor/v1/dns_pb";
 import {
+  ListSubnetRoutesResponseSchema,
+  UseSubnetRoutesResponseSchema,
+  type ListSubnetRoutesResponse,
+  type UseSubnetRoutesResponse,
+} from "@gen/flavor/v1/routes_pb";
+import {
   DescribeDeviceResponseSchema,
   InspectDestinationResponseSchema,
   type DescribeDeviceResponse,
@@ -80,6 +86,14 @@ export async function listConflicts(): Promise<ListConflictsResponse> {
 
 export async function listDNS(networkId: string): Promise<ListDNSResponse> {
   return fromJson(ListDNSResponseSchema, await invoke<JsonValue>("list_dns", { networkId }), options);
+}
+
+export async function listSubnetRoutes(networkId: string): Promise<ListSubnetRoutesResponse> {
+  return fromJson(ListSubnetRoutesResponseSchema, await invoke<JsonValue>("list_subnet_routes", { networkId }), options);
+}
+
+export async function chooseSubnetRoutes(networkId: string, add: string[], remove: string[]): Promise<UseSubnetRoutesResponse> {
+  return fromJson(UseSubnetRoutesResponseSchema, await invoke<JsonValue>("use_subnet_routes", { networkId, add, remove }), options);
 }
 
 export async function createWorkspace(input: { name: string; description: string; networkIds: string[] }): Promise<Workspace> {

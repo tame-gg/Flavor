@@ -60,6 +60,10 @@ commands:
   routes advertise <network> <cidr>...
   routes withdraw <network> <cidr>...
                                        advertised routes need approval on the control server
+  routes available [network]           subnet routes other devices advertise, and which this computer uses
+  routes use <network> <cidr>...|--all
+  routes unuse <network> <cidr>...|--all
+                                       with flavor-netd, programs on this computer reach the routes you use
 
 --json prints the daemon response as JSON for info, list, devices, diag, explain, conflicts, dns, workspace list, preference list, exit-node and routes.
 `
@@ -337,6 +341,9 @@ func printExplain(out io.Writer, r *v1.InspectDestinationResponse) error {
 			v1.PreferenceState_PREFERENCE_STATE_NO_MATCH_ON_NETWORK:   "not applied, no matching device on that network",
 		}[p.State]
 		fmt.Fprintf(out, "preference   %s (%s)\n", p.Network.GetDisplayName(), state)
+	}
+	if r.SystemRoute != "" {
+		fmt.Fprintf(out, "system-wide  programs reach it over TCP and UDP through %s\n", r.SystemRoute)
 	}
 	if len(r.Candidates) > 0 {
 		fmt.Fprintln(out)

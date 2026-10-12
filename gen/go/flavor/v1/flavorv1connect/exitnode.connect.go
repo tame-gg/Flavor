@@ -39,12 +39,16 @@ const (
 	// ExitNodeServiceClearExitNodeProcedure is the fully-qualified name of the ExitNodeService's
 	// ClearExitNode RPC.
 	ExitNodeServiceClearExitNodeProcedure = "/flavor.v1.ExitNodeService/ClearExitNode"
+	// ExitNodeServiceOfferExitNodeProcedure is the fully-qualified name of the ExitNodeService's
+	// OfferExitNode RPC.
+	ExitNodeServiceOfferExitNodeProcedure = "/flavor.v1.ExitNodeService/OfferExitNode"
 )
 
 // ExitNodeServiceClient is a client for the flavor.v1.ExitNodeService service.
 type ExitNodeServiceClient interface {
 	SetExitNode(context.Context, *connect.Request[v1.SetExitNodeRequest]) (*connect.Response[v1.SetExitNodeResponse], error)
 	ClearExitNode(context.Context, *connect.Request[v1.ClearExitNodeRequest]) (*connect.Response[v1.ClearExitNodeResponse], error)
+	OfferExitNode(context.Context, *connect.Request[v1.OfferExitNodeRequest]) (*connect.Response[v1.OfferExitNodeResponse], error)
 }
 
 // NewExitNodeServiceClient constructs a client for the flavor.v1.ExitNodeService service. By
@@ -70,6 +74,12 @@ func NewExitNodeServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(exitNodeServiceMethods.ByName("ClearExitNode")),
 			connect.WithClientOptions(opts...),
 		),
+		offerExitNode: connect.NewClient[v1.OfferExitNodeRequest, v1.OfferExitNodeResponse](
+			httpClient,
+			baseURL+ExitNodeServiceOfferExitNodeProcedure,
+			connect.WithSchema(exitNodeServiceMethods.ByName("OfferExitNode")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -77,6 +87,7 @@ func NewExitNodeServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 type exitNodeServiceClient struct {
 	setExitNode   *connect.Client[v1.SetExitNodeRequest, v1.SetExitNodeResponse]
 	clearExitNode *connect.Client[v1.ClearExitNodeRequest, v1.ClearExitNodeResponse]
+	offerExitNode *connect.Client[v1.OfferExitNodeRequest, v1.OfferExitNodeResponse]
 }
 
 // SetExitNode calls flavor.v1.ExitNodeService.SetExitNode.
@@ -89,10 +100,16 @@ func (c *exitNodeServiceClient) ClearExitNode(ctx context.Context, req *connect.
 	return c.clearExitNode.CallUnary(ctx, req)
 }
 
+// OfferExitNode calls flavor.v1.ExitNodeService.OfferExitNode.
+func (c *exitNodeServiceClient) OfferExitNode(ctx context.Context, req *connect.Request[v1.OfferExitNodeRequest]) (*connect.Response[v1.OfferExitNodeResponse], error) {
+	return c.offerExitNode.CallUnary(ctx, req)
+}
+
 // ExitNodeServiceHandler is an implementation of the flavor.v1.ExitNodeService service.
 type ExitNodeServiceHandler interface {
 	SetExitNode(context.Context, *connect.Request[v1.SetExitNodeRequest]) (*connect.Response[v1.SetExitNodeResponse], error)
 	ClearExitNode(context.Context, *connect.Request[v1.ClearExitNodeRequest]) (*connect.Response[v1.ClearExitNodeResponse], error)
+	OfferExitNode(context.Context, *connect.Request[v1.OfferExitNodeRequest]) (*connect.Response[v1.OfferExitNodeResponse], error)
 }
 
 // NewExitNodeServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -114,12 +131,20 @@ func NewExitNodeServiceHandler(svc ExitNodeServiceHandler, opts ...connect.Handl
 		connect.WithSchema(exitNodeServiceMethods.ByName("ClearExitNode")),
 		connect.WithHandlerOptions(opts...),
 	)
+	exitNodeServiceOfferExitNodeHandler := connect.NewUnaryHandler(
+		ExitNodeServiceOfferExitNodeProcedure,
+		svc.OfferExitNode,
+		connect.WithSchema(exitNodeServiceMethods.ByName("OfferExitNode")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/flavor.v1.ExitNodeService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ExitNodeServiceSetExitNodeProcedure:
 			exitNodeServiceSetExitNodeHandler.ServeHTTP(w, r)
 		case ExitNodeServiceClearExitNodeProcedure:
 			exitNodeServiceClearExitNodeHandler.ServeHTTP(w, r)
+		case ExitNodeServiceOfferExitNodeProcedure:
+			exitNodeServiceOfferExitNodeHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -135,4 +160,8 @@ func (UnimplementedExitNodeServiceHandler) SetExitNode(context.Context, *connect
 
 func (UnimplementedExitNodeServiceHandler) ClearExitNode(context.Context, *connect.Request[v1.ClearExitNodeRequest]) (*connect.Response[v1.ClearExitNodeResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("flavor.v1.ExitNodeService.ClearExitNode is not implemented"))
+}
+
+func (UnimplementedExitNodeServiceHandler) OfferExitNode(context.Context, *connect.Request[v1.OfferExitNodeRequest]) (*connect.Response[v1.OfferExitNodeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("flavor.v1.ExitNodeService.OfferExitNode is not implemented"))
 }

@@ -207,7 +207,7 @@ func TestApprovedRoutes(t *testing.T) {
 		netip.MustParsePrefix("10.1.2.3/32"),
 	)
 	routes := approvedRoutes(append(allowed, netip.MustParsePrefix("192.168.1.0/24")), addrs)
-	want := []netip.Prefix{netip.MustParsePrefix("192.168.1.0/24"), netip.MustParsePrefix("10.1.2.3/32")}
+	want := []netip.Prefix{netip.MustParsePrefix("192.168.1.0/24"), netip.MustParsePrefix("0.0.0.0/0"), netip.MustParsePrefix("::/0"), netip.MustParsePrefix("10.1.2.3/32")}
 	if !slices.Equal(routes, want) {
 		t.Fatalf("%v", routes)
 	}
@@ -226,8 +226,14 @@ func TestForwardable(t *testing.T) {
 	}{
 		{"192.168.50.7", lan, true},
 		{"192.168.51.7", lan, false},
-		{"192.168.51.7", exit, true},
-		{"2001:db8::1", exit, true},
+		{"192.168.51.7", exit, false},
+		{"10.0.0.5", exit, false},
+		{"fd00::5", exit, false},
+		{"198.18.0.7", exit, false},
+		{"203.0.113.9", exit, false},
+		{"8.8.8.8", exit, true},
+		{"8.8.8.8", lan, false},
+		{"2606:4700::1111", exit, true},
 		{"100.64.0.9", exit, false},
 		{"127.0.0.1", exit, false},
 		{"::ffff:127.0.0.1", exit, false},
@@ -235,7 +241,8 @@ func TestForwardable(t *testing.T) {
 		{"0.0.0.0", exit, false},
 		{"224.0.0.1", exit, false},
 	} {
-		if got := forwardable(netip.MustParseAddr(c.addr), c.advertised); got != c.want {
+		local := func() []netip.Addr { return []netip.Addr{netip.MustParseAddr("203.0.113.9")} }
+		if got := forwardable(netip.MustParseAddr(c.addr), c.advertised, local); got != c.want {
 			t.Errorf("%s %v: %v", c.addr, c.advertised, got)
 		}
 	}

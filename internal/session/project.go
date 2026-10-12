@@ -120,20 +120,34 @@ func routes(p *ipnstate.PeerStatus) []netip.Prefix {
 func approvedRoutes(allowed []netip.Prefix, addrs []netip.Prefix) []netip.Prefix {
 	var out []netip.Prefix
 	for _, r := range allowed {
-		if r.IsValid() && r.Bits() != 0 && !slices.Contains(addrs, r) && !slices.Contains(out, r.Masked()) {
+		if r.IsValid() && !slices.Contains(addrs, r) && !slices.Contains(out, r.Masked()) {
 			out = append(out, r.Masked())
 		}
 	}
 	return out
 }
 
-func forwardable(a netip.Addr, advertised []netip.Prefix) bool {
+var syntheticRange = netip.MustParsePrefix("198.18.0.0/15")
+
+func forwardable(a netip.Addr, advertised []netip.Prefix, local func() []netip.Addr) bool {
 	a = a.Unmap()
 	if !a.IsValid() || a.IsLoopback() || a.IsUnspecified() || a.IsMulticast() || a.IsLinkLocalUnicast() || slices.ContainsFunc(domain.TailnetPrefixes, func(p netip.Prefix) bool { return p.Contains(a) }) {
 		return false
 	}
-	return slices.ContainsFunc(advertised, func(p netip.Prefix) bool { return p.Contains(a) })
+	if slices.ContainsFunc(advertised, func(p netip.Prefix) bool { return p.Bits() > 0 && p.Contains(a) }) {
+		return true
+	}
+	if !slices.ContainsFunc(advertised, func(p netip.Prefix) bool { return p.Bits() == 0 && p.Addr().Is4() == a.Is4() }) {
+		return false
+	}
+	return a.IsGlobalUnicast() && !a.IsPrivate() && !syntheticRange.Contains(a) && !slices.Contains(local(), a)
 }
+
+func offersExitNode(routes []netip.Prefix) bool {
+	return slices.Contains(routes, exitRoutes[0]) && slices.Contains(routes, exitRoutes[1])
+}
+
+var exitRoutes = []netip.Prefix{netip.MustParsePrefix("0.0.0.0/0"), netip.MustParsePrefix("::/0")}
 
 func projectAdvertised(snap EngineStatus) []domain.AdvertisedRoute {
 	var routes []domain.AdvertisedRoute

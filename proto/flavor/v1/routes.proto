@@ -23,6 +23,8 @@ message GetRoutesRequest {
 
 message GetRoutesResponse {
   repeated AdvertisedRoute routes = 1;
+  bool exit_node_offered = 2;
+  bool exit_node_approved = 3;
 }
 
 message UpdateRoutesRequest {

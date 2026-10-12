@@ -197,6 +197,110 @@ func (*ClearExitNodeResponse) Descriptor() ([]byte, []int) {
 	return file_flavor_v1_exitnode_proto_rawDescGZIP(), []int{3}
 }
 
+type OfferExitNodeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	NetworkId     string                 `protobuf:"bytes,1,opt,name=network_id,json=networkId,proto3" json:"network_id,omitempty"`
+	Offer         bool                   `protobuf:"varint,2,opt,name=offer,proto3" json:"offer,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OfferExitNodeRequest) Reset() {
+	*x = OfferExitNodeRequest{}
+	mi := &file_flavor_v1_exitnode_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OfferExitNodeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OfferExitNodeRequest) ProtoMessage() {}
+
+func (x *OfferExitNodeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_flavor_v1_exitnode_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OfferExitNodeRequest.ProtoReflect.Descriptor instead.
+func (*OfferExitNodeRequest) Descriptor() ([]byte, []int) {
+	return file_flavor_v1_exitnode_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *OfferExitNodeRequest) GetNetworkId() string {
+	if x != nil {
+		return x.NetworkId
+	}
+	return ""
+}
+
+func (x *OfferExitNodeRequest) GetOffer() bool {
+	if x != nil {
+		return x.Offer
+	}
+	return false
+}
+
+type OfferExitNodeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Offered       bool                   `protobuf:"varint,1,opt,name=offered,proto3" json:"offered,omitempty"`
+	Approved      bool                   `protobuf:"varint,2,opt,name=approved,proto3" json:"approved,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OfferExitNodeResponse) Reset() {
+	*x = OfferExitNodeResponse{}
+	mi := &file_flavor_v1_exitnode_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OfferExitNodeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OfferExitNodeResponse) ProtoMessage() {}
+
+func (x *OfferExitNodeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_flavor_v1_exitnode_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OfferExitNodeResponse.ProtoReflect.Descriptor instead.
+func (*OfferExitNodeResponse) Descriptor() ([]byte, []int) {
+	return file_flavor_v1_exitnode_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *OfferExitNodeResponse) GetOffered() bool {
+	if x != nil {
+		return x.Offered
+	}
+	return false
+}
+
+func (x *OfferExitNodeResponse) GetApproved() bool {
+	if x != nil {
+		return x.Approved
+	}
+	return false
+}
+
 var File_flavor_v1_exitnode_proto protoreflect.FileDescriptor
 
 const file_flavor_v1_exitnode_proto_rawDesc = "" +
@@ -211,10 +315,18 @@ const file_flavor_v1_exitnode_proto_rawDesc = "" +
 	"\x14ClearExitNodeRequest\x12\x1d\n" +
 	"\n" +
 	"network_id\x18\x01 \x01(\tR\tnetworkId\"\x17\n" +
-	"\x15ClearExitNodeResponse2\xb3\x01\n" +
+	"\x15ClearExitNodeResponse\"K\n" +
+	"\x14OfferExitNodeRequest\x12\x1d\n" +
+	"\n" +
+	"network_id\x18\x01 \x01(\tR\tnetworkId\x12\x14\n" +
+	"\x05offer\x18\x02 \x01(\bR\x05offer\"M\n" +
+	"\x15OfferExitNodeResponse\x12\x18\n" +
+	"\aoffered\x18\x01 \x01(\bR\aoffered\x12\x1a\n" +
+	"\bapproved\x18\x02 \x01(\bR\bapproved2\x87\x02\n" +
 	"\x0fExitNodeService\x12L\n" +
 	"\vSetExitNode\x12\x1d.flavor.v1.SetExitNodeRequest\x1a\x1e.flavor.v1.SetExitNodeResponse\x12R\n" +
-	"\rClearExitNode\x12\x1f.flavor.v1.ClearExitNodeRequest\x1a .flavor.v1.ClearExitNodeResponseB\x9e\x01\n" +
+	"\rClearExitNode\x12\x1f.flavor.v1.ClearExitNodeRequest\x1a .flavor.v1.ClearExitNodeResponse\x12R\n" +
+	"\rOfferExitNode\x12\x1f.flavor.v1.OfferExitNodeRequest\x1a .flavor.v1.OfferExitNodeResponseB\x9e\x01\n" +
 	"\rcom.flavor.v1B\rExitnodeProtoP\x01Z9git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1;flavorv1\xa2\x02\x03FXX\xaa\x02\tFlavor.V1\xca\x02\tFlavor\\V1\xe2\x02\x15Flavor\\V1\\GPBMetadata\xea\x02\n" +
 	"Flavor::V1b\x06proto3"
 
@@ -230,22 +342,26 @@ func file_flavor_v1_exitnode_proto_rawDescGZIP() []byte {
 	return file_flavor_v1_exitnode_proto_rawDescData
 }
 
-var file_flavor_v1_exitnode_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_flavor_v1_exitnode_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_flavor_v1_exitnode_proto_goTypes = []any{
 	(*SetExitNodeRequest)(nil),    // 0: flavor.v1.SetExitNodeRequest
 	(*SetExitNodeResponse)(nil),   // 1: flavor.v1.SetExitNodeResponse
 	(*ClearExitNodeRequest)(nil),  // 2: flavor.v1.ClearExitNodeRequest
 	(*ClearExitNodeResponse)(nil), // 3: flavor.v1.ClearExitNodeResponse
-	(*Device)(nil),                // 4: flavor.v1.Device
+	(*OfferExitNodeRequest)(nil),  // 4: flavor.v1.OfferExitNodeRequest
+	(*OfferExitNodeResponse)(nil), // 5: flavor.v1.OfferExitNodeResponse
+	(*Device)(nil),                // 6: flavor.v1.Device
 }
 var file_flavor_v1_exitnode_proto_depIdxs = []int32{
-	4, // 0: flavor.v1.SetExitNodeResponse.device:type_name -> flavor.v1.Device
+	6, // 0: flavor.v1.SetExitNodeResponse.device:type_name -> flavor.v1.Device
 	0, // 1: flavor.v1.ExitNodeService.SetExitNode:input_type -> flavor.v1.SetExitNodeRequest
 	2, // 2: flavor.v1.ExitNodeService.ClearExitNode:input_type -> flavor.v1.ClearExitNodeRequest
-	1, // 3: flavor.v1.ExitNodeService.SetExitNode:output_type -> flavor.v1.SetExitNodeResponse
-	3, // 4: flavor.v1.ExitNodeService.ClearExitNode:output_type -> flavor.v1.ClearExitNodeResponse
-	3, // [3:5] is the sub-list for method output_type
-	1, // [1:3] is the sub-list for method input_type
+	4, // 3: flavor.v1.ExitNodeService.OfferExitNode:input_type -> flavor.v1.OfferExitNodeRequest
+	1, // 4: flavor.v1.ExitNodeService.SetExitNode:output_type -> flavor.v1.SetExitNodeResponse
+	3, // 5: flavor.v1.ExitNodeService.ClearExitNode:output_type -> flavor.v1.ClearExitNodeResponse
+	5, // 6: flavor.v1.ExitNodeService.OfferExitNode:output_type -> flavor.v1.OfferExitNodeResponse
+	4, // [4:7] is the sub-list for method output_type
+	1, // [1:4] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -263,7 +379,7 @@ func file_flavor_v1_exitnode_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_flavor_v1_exitnode_proto_rawDesc), len(file_flavor_v1_exitnode_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

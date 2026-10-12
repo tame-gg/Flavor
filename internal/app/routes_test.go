@@ -209,3 +209,51 @@ func TestRoutesAndExitNodeSurviveReconnect(t *testing.T) {
 		t.Fatalf("routes %v exit %q", routes, exit)
 	}
 }
+
+func TestOfferingThisMachineAsAnExitNode(t *testing.T) {
+	c, seq, a, _ := exitNodeDaemon(t)
+	engine := seq.Engine(0)
+	ctx := context.Background()
+	offer := func(on bool) *v1.OfferExitNodeResponse {
+		t.Helper()
+		res, err := c.ExitNodes.OfferExitNode(ctx, connect.NewRequest(&v1.OfferExitNodeRequest{NetworkId: a.Id, Offer: on}))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return res.Msg
+	}
+	v4, v6, lan := netip.MustParsePrefix("0.0.0.0/0"), netip.MustParsePrefix("::/0"), netip.MustParsePrefix("192.168.50.0/24")
+
+	if r := offer(true); !r.Offered || r.Approved {
+		t.Fatalf("%+v", r)
+	}
+	if got := engine.AdvertisedRoutes(); !slices.Contains(got, v4) || !slices.Contains(got, v6) {
+		t.Fatalf("engine routes %v", got)
+	}
+	mustUpdateRoutes(t, c, a.Id, []string{lan.String()}, nil)
+	if got := engine.AdvertisedRoutes(); !slices.Equal(got, []netip.Prefix{v4, lan, v6}) {
+		t.Fatalf("advertising a subnet route must keep the exit node offer: %v", got)
+	}
+	engine.ApproveRoutes(v4, v6)
+	engine.PushNetMap()
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		res, err := c.Routes.GetRoutes(ctx, connect.NewRequest(&v1.GetRoutesRequest{NetworkId: a.Id}))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if res.Msg.ExitNodeOffered && res.Msg.ExitNodeApproved {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("%+v", res.Msg)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if r := offer(false); r.Offered {
+		t.Fatalf("%+v", r)
+	}
+	if got := engine.AdvertisedRoutes(); !slices.Equal(got, []netip.Prefix{lan}) {
+		t.Fatalf("engine routes %v", got)
+	}
+}

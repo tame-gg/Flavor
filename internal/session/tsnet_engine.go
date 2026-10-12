@@ -57,7 +57,7 @@ func newTsnetEngine(cfg provider.ResolvedSessionConfig, authKey string, log *slo
 
 func (e *tsnetEngine) forward(_, dst netip.AddrPort) (func(net.Conn), bool) {
 	e.mu.Lock()
-	ok := forwardable(dst.Addr(), e.advertised)
+	ok := forwardable(dst.Addr(), e.advertised, hostAddrs)
 	e.mu.Unlock()
 	if !ok {
 		return nil, false
@@ -75,6 +75,17 @@ func (e *tsnetEngine) forward(_, dst netip.AddrPort) (func(net.Conn), bool) {
 }
 
 const forwardDialTimeout = 30 * time.Second
+
+func hostAddrs() []netip.Addr {
+	addrs, _ := net.InterfaceAddrs()
+	var out []netip.Addr
+	for _, a := range addrs {
+		if p, err := netip.ParsePrefix(a.String()); err == nil {
+			out = append(out, p.Addr().Unmap())
+		}
+	}
+	return out
+}
 
 var tsnetSecrets = regexp.MustCompile(`(?i)[a-z][a-z0-9+.-]*://\S+|\b(?:tskey|hskey)-\S+|\b(?:[a-z]+key|nlpriv|nlpub|chalpriv):[0-9a-f]+|\b[0-9a-f]{32,}\b|[a-z0-9_-]{40,}`)
 

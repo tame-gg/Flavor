@@ -56,6 +56,8 @@ commands:
   exit-node list [network]             devices that can be an exit node
   exit-node set <network> <device>     <device> is a hostname, DNS name or node id
   exit-node clear <network>            <network> is an id or an exact name
+  exit-node offer <network>            offer this machine as an exit node (TCP to public addresses only)
+  exit-node stop-offering <network>
   routes list [network]                subnet routes this machine advertises
   routes advertise <network> <cidr>...
   routes withdraw <network> <cidr>...

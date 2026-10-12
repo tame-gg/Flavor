@@ -7,6 +7,7 @@ import "flavor/v1/device.proto";
 service ExitNodeService {
   rpc SetExitNode(SetExitNodeRequest) returns (SetExitNodeResponse);
   rpc ClearExitNode(ClearExitNodeRequest) returns (ClearExitNodeResponse);
+  rpc OfferExitNode(OfferExitNodeRequest) returns (OfferExitNodeResponse);
 }
 
 message SetExitNodeRequest {
@@ -23,3 +24,13 @@ message ClearExitNodeRequest {
 }
 
 message ClearExitNodeResponse {}
+
+message OfferExitNodeRequest {
+  string network_id = 1;
+  bool offer = 2;
+}
+
+message OfferExitNodeResponse {
+  bool offered = 1;
+  bool approved = 2;
+}

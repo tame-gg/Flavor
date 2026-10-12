@@ -15,7 +15,9 @@ func (h *handlers) GetRoutes(ctx context.Context, req *connect.Request[v1.GetRou
 		return nil, toConnect(err)
 	}
 	return connect.NewResponse(&v1.GetRoutesResponse{
-		Routes: advertisedRoutes(n.Routes),
+		Routes:           advertisedRoutes(n.Routes),
+		ExitNodeOffered:  n.OffersExitNode,
+		ExitNodeApproved: n.ExitNodeApproved,
 	}), nil
 }
 

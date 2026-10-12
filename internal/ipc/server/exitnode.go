@@ -21,3 +21,11 @@ func (h *handlers) ClearExitNode(ctx context.Context, req *connect.Request[v1.Cl
 	}
 	return connect.NewResponse(&v1.ClearExitNodeResponse{}), nil
 }
+
+func (h *handlers) OfferExitNode(ctx context.Context, req *connect.Request[v1.OfferExitNodeRequest]) (*connect.Response[v1.OfferExitNodeResponse], error) {
+	n, err := h.svc.OfferExitNode(ctx, req.Msg.NetworkId, req.Msg.Offer)
+	if err != nil {
+		return nil, toConnect(err)
+	}
+	return connect.NewResponse(&v1.OfferExitNodeResponse{Offered: n.OffersExitNode, Approved: n.ExitNodeApproved}), nil
+}

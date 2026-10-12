@@ -340,6 +340,8 @@ func (s *Session) applyStatus(snap EngineStatus) {
 		local.Addresses = append([]netip.Addr(nil), snap.TailscaleIPs...)
 	}
 	local.Routes = projectAdvertised(snap)
+	local.OffersExitNode = offersExitNode(snap.AdvertisedRoutes)
+	local.ExitNodeApproved = local.OffersExitNode && slices.ContainsFunc(exitRoutes, func(p netip.Prefix) bool { return slices.Contains(snap.ApprovedRoutes, p) })
 
 	newDevices := make(map[domain.NodeID]domain.Device, len(snap.Peers)+1)
 	for _, p := range snap.Peers {

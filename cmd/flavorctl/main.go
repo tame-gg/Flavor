@@ -343,7 +343,7 @@ func printExplain(out io.Writer, r *v1.InspectDestinationResponse) error {
 		fmt.Fprintf(out, "preference   %s (%s)\n", p.Network.GetDisplayName(), state)
 	}
 	if r.SystemRoute != "" {
-		fmt.Fprintf(out, "system-wide  every program reaches it through %s\n", r.SystemRoute)
+		fmt.Fprintf(out, "system-wide  programs reach it over TCP and UDP through %s\n", r.SystemRoute)
 	}
 	if len(r.Candidates) > 0 {
 		fmt.Fprintln(out)

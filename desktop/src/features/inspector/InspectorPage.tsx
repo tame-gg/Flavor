@@ -141,7 +141,8 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
             {note && <p className="muted">{note}</p>}
             {result.systemRoute && (
               <p className="muted">
-                Every program on this computer reaches it through <span className="mono">{result.systemRoute}</span>.
+                Programs on this computer reach it over TCP and UDP through the route{" "}
+                <span className="mono">{result.systemRoute}</span>. Ping does not go through it.
               </p>
             )}
             {result.preference && canPrefer && (

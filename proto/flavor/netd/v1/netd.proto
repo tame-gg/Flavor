@@ -60,6 +60,7 @@ enum Capability {
   CAPABILITY_IPV6 = 1;
   CAPABILITY_IPV4 = 2;
   CAPABILITY_RESOLVED_DNS = 3;
+  CAPABILITY_NRPT_DNS = 4;
 }
 
 message IpPrefix {
@@ -90,6 +91,7 @@ message CreateSyntheticInterfaceResponse {
   bytes v6_resolver_address = 4;
   bytes v4_host_address = 5;
   bytes v4_resolver_address = 6;
+  string packet_pipe = 7;
 }
 
 message DestroySyntheticInterfaceRequest {}

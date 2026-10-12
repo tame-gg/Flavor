@@ -470,12 +470,12 @@ func TestConfigureDNSUsesOnlyTheExpectedResolvers(t *testing.T) {
 			t.Fatalf("%q accepted: %v", bad, err)
 		}
 	}
-	many := make([]string, 32)
+	many := make([]string, maxDomains+1)
 	for i := range many {
 		many[i] = "n" + string(rune('a'+i%26)) + string(rune('a'+i/26)) + ".example.com"
 	}
 	if _, err := c.ConfigureDNS(many); code(err) != netdv1.ErrorCode_ERROR_CODE_INVALID_DOMAIN {
-		t.Fatalf("more than 32 domains in total accepted: %v", err)
+		t.Fatalf("more than %d domains in total accepted: %v", maxDomains, err)
 	}
 	if !slices.Equal(h.applied(resp.InterfaceIndex), []string{"flavor.internal", "tail1234.ts.net", "home.example.com"}) {
 		t.Fatal("a rejected request must not change the applied configuration")

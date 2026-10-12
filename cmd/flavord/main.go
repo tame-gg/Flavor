@@ -41,9 +41,12 @@ func main() {
 		fmt.Fprintf(os.Stderr, "flavord: invalid --log-level %q\n", *logLevel)
 		os.Exit(2)
 	}
-	if *syntheticHelper != "" && runtime.GOOS != "linux" {
-		fmt.Fprintln(os.Stderr, "flavord: --synthetic-helper is only supported on Linux")
+	if *syntheticHelper != "" && runtime.GOOS != "linux" && runtime.GOOS != "windows" {
+		fmt.Fprintln(os.Stderr, "flavord: --synthetic-helper is only supported on Linux and Windows")
 		os.Exit(2)
+	}
+	if *syntheticHelper == "" {
+		*syntheticHelper = defaultSyntheticHelper()
 	}
 	mode := secret.Mode(*secretStore)
 	if mode != secret.ModeAuto && mode != secret.ModeMemory {

@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"git.lunarlabs.dev/flavor/flavor/internal/netd"
 	"golang.org/x/sys/windows"
 )
 
@@ -39,4 +40,11 @@ func usable(std uint32) bool {
 
 func defaultLogFile() string {
 	return filepath.Join(os.Getenv("LOCALAPPDATA"), "flavor", "flavord.log")
+}
+
+func defaultSyntheticHelper() string {
+	if netd.Installed() {
+		return netd.DefaultSocket
+	}
+	return ""
 }

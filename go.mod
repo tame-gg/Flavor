@@ -8,10 +8,12 @@ require (
 	github.com/jsimonetti/rtnetlink v1.4.0
 	github.com/oklog/ulid/v2 v2.1.0
 	github.com/tailscale/go-winio v0.0.0-20231025203758-c4f33415bf55
+	github.com/tailscale/wireguard-go v0.0.0-20250716170648-1d0488a3d7da
 	github.com/zalando/go-keyring v0.2.6
 	golang.org/x/net v0.40.0
 	golang.org/x/sys v0.33.0
 	golang.org/x/time v0.11.0
+	golang.zx2c4.com/wireguard/windows v0.5.3
 	google.golang.org/protobuf v1.36.12
 	gvisor.dev/gvisor v0.0.0-20250205023644-9414b50a5633
 	modernc.org/sqlite v1.34.5
@@ -49,7 +51,6 @@ require (
 	github.com/tailscale/hujson v0.0.0-20221223112325-20486734a56a // indirect
 	github.com/tailscale/peercred v0.0.0-20250107143737-35a0c7bd7edc // indirect
 	github.com/tailscale/web-client-prebuilt v0.0.0-20250124233751-d4cd19a26976 // indirect
-	github.com/tailscale/wireguard-go v0.0.0-20250716170648-1d0488a3d7da // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go4.org/mem v0.0.0-20240501181205-ae6ca9944745 // indirect
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba // indirect
@@ -60,7 +61,6 @@ require (
 	golang.org/x/term v0.32.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
 	golang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 // indirect
-	golang.zx2c4.com/wireguard/windows v0.5.3 // indirect
 	modernc.org/libc v1.55.3 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect

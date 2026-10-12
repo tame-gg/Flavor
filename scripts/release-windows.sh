@@ -23,11 +23,15 @@ pkg=git.lunarlabs.dev/flavor/flavor/internal/version
 ldflags="-s -w -buildid= -X $pkg.daemonVersion=$version -X $pkg.buildCommit=$commit"
 CGO_ENABLED=0 GOOS=windows GOARCH="$arch" ./scripts/go.sh build -trimpath -buildvcs=false -ldflags "$ldflags -H=windowsgui" -o "$stage/bin/flavord.exe" ./cmd/flavord
 CGO_ENABLED=0 GOOS=windows GOARCH="$arch" ./scripts/go.sh build -trimpath -buildvcs=false -ldflags "$ldflags" -o "$stage/bin/flavorctl.exe" ./cmd/flavorctl
-cp "$stage/bin/flavord.exe" "desktop/src-tauri/binaries/flavord-$triple.exe"
-cp "$stage/bin/flavorctl.exe" "desktop/src-tauri/binaries/flavorctl-$triple.exe"
+CGO_ENABLED=0 GOOS=windows GOARCH="$arch" ./scripts/go.sh build -trimpath -buildvcs=false -ldflags "$ldflags" -o "$stage/bin/flavor-netd.exe" ./cmd/flavor-netd
+./scripts/fetch-wintun.sh "$arch" "$stage/bin/wintun.dll"
+for bin in flavord flavorctl flavor-netd; do
+	cp "$stage/bin/$bin.exe" "desktop/src-tauri/binaries/$bin-$triple.exe"
+done
+cp "$stage/bin/wintun.dll" desktop/src-tauri/binaries/wintun.dll
 
 (cd desktop && npm ci && npm run tauri build -- --runner "$ROOT/scripts/cargo-auditable.cmd" --bundles nsis \
-	--config '{"bundle":{"active":true,"publisher":"tame-gg","externalBin":["binaries/flavord","binaries/flavorctl"],"windows":{"nsis":{"installMode":"currentUser","installerHooks":"../../packaging/windows/hooks.nsh"}}}}')
+	--config '{"bundle":{"active":true,"publisher":"tame-gg","externalBin":["binaries/flavord","binaries/flavorctl","binaries/flavor-netd"],"resources":{"binaries/wintun.dll":"wintun.dll"},"windows":{"nsis":{"installMode":"currentUser","installerHooks":"../../packaging/windows/hooks.nsh"}}}}')
 cp target/release/flavor-desktop.exe "$stage/Flavor.exe"
 cp target/release/bundle/nsis/*-setup.exe "dist/$name-setup.exe"
 cp LICENSE README.md "$stage/"

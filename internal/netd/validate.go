@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || windows
 
 package netd
 
@@ -11,10 +11,11 @@ import (
 )
 
 const (
-	MinMTU        = 1280
-	MaxMTU        = 9000
-	maxDomains    = 32
-	FlavorDomain = "flavor.internal"
+	MinMTU         = 1280
+	MaxMTU         = 9000
+	maxDomains     = 128
+	maxRoutedBytes = 3072
+	FlavorDomain   = "flavor.internal"
 )
 
 var (

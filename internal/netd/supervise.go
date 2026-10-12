@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || windows
 
 package netd
 
@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/netip"
-	"os"
+	"slices"
+	"strings"
 	"time"
 )
 
@@ -20,13 +21,14 @@ const (
 	WarnDNSUnavailable = "synthetic_dns_unavailable"
 )
 
-type Attach func(ctx context.Context, tun *os.File) (done <-chan struct{}, stop func(), err error)
+type Attach func(ctx context.Context, tun Packets) (done <-chan struct{}, stop func(), err error)
 
 type Supervisor struct {
 	Socket  string
 	V6, V4  netip.Prefix
 	MTU     uint32
 	Attach  Attach
+	Domains func() []string
 	Log     *slog.Logger
 	Warn    func(code, message string)
 	Backoff time.Duration
@@ -89,10 +91,27 @@ func (s Supervisor) once(ctx context.Context) error {
 	}
 	defer stop()
 	s.Log.Info("synthetic interface active", "link", created.InterfaceName)
-	if _, err := c.ConfigureDNS(nil); err != nil {
-		s.Log.Warn("system dns not configured for flavor names", "err", err.Error())
-		s.Warn(WarnDNSUnavailable, "Flavor names will not resolve system-wide: "+err.Error())
+	var routed []string
+	configured, warned := false, false
+	syncDNS := func() {
+		want, truncated := s.routingDomains()
+		if configured && slices.Equal(want, routed) {
+			return
+		}
+		if truncated {
+			s.Log.Warn("too many names to route through system dns; some will not resolve", "routed", len(want))
+		}
+		if _, err := c.ConfigureDNS(want); err != nil {
+			if !warned {
+				s.Log.Warn("system dns not configured for flavor names", "err", err.Error())
+				s.Warn(WarnDNSUnavailable, "Flavor names will not resolve system-wide: "+err.Error())
+			}
+			configured, warned = false, true
+			return
+		}
+		routed, configured, warned = want, true, false
 	}
+	syncDNS()
 	probe := time.NewTicker(s.Probe)
 	defer probe.Stop()
 	for {
@@ -107,6 +126,31 @@ func (s Supervisor) once(ctx context.Context) error {
 				s.Log.Info("lost the connection to flavor-netd", "err", err.Error())
 				return nil
 			}
+			syncDNS()
 		}
 	}
+}
+
+func (s Supervisor) routingDomains() ([]string, bool) {
+	if s.Domains == nil {
+		return nil, false
+	}
+	var out []string
+	seen := map[string]bool{FlavorDomain: true}
+	size := 0
+	for _, raw := range s.Domains() {
+		d := strings.TrimSuffix(strings.ToLower(raw), ".")
+		if seen[d] || strings.HasSuffix(d, "."+FlavorDomain) || !validSuffix(d) || reserved(d) {
+			continue
+		}
+		if len(out) == maxDomains-1 || size+len(d)+2 > maxRoutedBytes {
+			slices.Sort(out)
+			return out, true
+		}
+		seen[d] = true
+		size += len(d) + 2
+		out = append(out, d)
+	}
+	slices.Sort(out)
+	return out, false
 }

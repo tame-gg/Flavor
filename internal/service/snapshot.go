@@ -62,6 +62,25 @@ func (s *Service) dnsRecords(id domain.NetworkID) []domain.DNSRecord {
 	return sess.DNSRecords()
 }
 
+func (s *Service) RoutingDomains(ctx context.Context) []string {
+	all, err := s.cfg.Store.Networks().List(ctx)
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, n := range all {
+		for _, d := range s.devices(n.ID) {
+			if d.DNSName != "" {
+				out = append(out, d.DNSName)
+			}
+		}
+		for _, r := range s.dnsRecords(n.ID) {
+			out = append(out, r.Name)
+		}
+	}
+	return out
+}
+
 func (s *Service) ListDevices(ctx context.Context, rawID string) ([]domain.Device, uint64, error) {
 	seq := s.cfg.Bus.Sequence()
 	if rawID == "" {

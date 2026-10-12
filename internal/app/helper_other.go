@@ -1,4 +1,4 @@
-//go:build !linux
+//go:build !linux && !windows
 
 package app
 
@@ -14,5 +14,5 @@ import (
 )
 
 func superviseHelper(context.Context, string, *synthetic.Allocator, *syndns.Engine, dataplane.Dialer, *service.Service, *slog.Logger) (func(), error) {
-	return nil, errors.New("system-wide names through flavor-netd are only supported on Linux")
+	return nil, errors.New("system-wide names through flavor-netd are only supported on Linux and Windows")
 }

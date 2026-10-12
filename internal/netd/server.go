@@ -1,4 +1,4 @@
-//go:build linux
+//go:build linux || windows
 
 package netd
 
@@ -33,7 +33,7 @@ const (
 
 type Kernel interface {
 	Occupied() ([]netip.Prefix, error)
-	CreateTUN(name string) (*os.File, uint32, error)
+	CreateTUN(name string) (Device, uint32, error)
 	Up(index, mtu uint32) error
 	AddAddress(index uint32, a netip.Addr) error
 	AddRoute(index uint32, p netip.Prefix) error
@@ -62,7 +62,7 @@ type Config struct {
 	Authorizer   Authorizer
 	Sessions     Sessions
 	Log          *slog.Logger
-	Identify     func(*net.UnixConn) (Peer, error)
+	Identify     func(wireConn) (Peer, error)
 	HelloTimeout time.Duration
 	Poll         time.Duration
 	IdleExit     time.Duration
@@ -73,20 +73,20 @@ type Server struct {
 
 	mu       sync.Mutex
 	conns    map[*conn]struct{}
-	perUID   map[uint32]int
-	limiters map[uint32]*rate.Limiter
+	perUID   map[userID]int
+	limiters map[userID]*rate.Limiter
 	owner    *instance
 	idleFrom time.Time
 }
 
 type conn struct {
-	c    *net.UnixConn
+	c    wireConn
 	peer Peer
 }
 
 type instance struct {
 	conn       *conn
-	uid        uint32
+	uid        userID
 	session    string
 	name       string
 	index      uint32
@@ -105,10 +105,10 @@ func NewServer(cfg Config) *Server {
 	if cfg.Poll == 0 {
 		cfg.Poll = DefaultPollInterval
 	}
-	return &Server{cfg: cfg, conns: map[*conn]struct{}{}, perUID: map[uint32]int{}, limiters: map[uint32]*rate.Limiter{}, idleFrom: time.Now()}
+	return &Server{cfg: cfg, conns: map[*conn]struct{}{}, perUID: map[userID]int{}, limiters: map[userID]*rate.Limiter{}, idleFrom: time.Now()}
 }
 
-func (s *Server) Serve(ctx context.Context, ln *net.UnixListener) error {
+func (s *Server) Serve(ctx context.Context, ln net.Listener) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	s.reconcile(ctx)
@@ -120,13 +120,18 @@ func (s *Server) Serve(ctx context.Context, ln *net.UnixListener) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
 	for {
-		c, err := ln.AcceptUnix()
+		accepted, err := ln.Accept()
 		if err != nil {
 			if ctx.Err() != nil {
 				s.shutdown()
 				return nil
 			}
 			return err
+		}
+		c, ok := accepted.(wireConn)
+		if !ok {
+			accepted.Close()
+			continue
 		}
 		peer, err := s.cfg.Identify(c)
 		if err != nil {
@@ -186,7 +191,7 @@ func (s *Server) release(cn *conn) {
 	}
 }
 
-func (s *Server) limiter(uid uint32) *rate.Limiter {
+func (s *Server) limiter(uid userID) *rate.Limiter {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	l, ok := s.limiters[uid]
@@ -303,7 +308,7 @@ func (s *Server) authorize(ctx context.Context, cn *conn) *netdv1.Response {
 		s.cfg.Log.Warn("authorization check failed", "uid", cn.peer.UID, "err", err.Error())
 	}
 	if !ok {
-		return failure(0, netdv1.ErrorCode_ERROR_CODE_UNAUTHORIZED, "not authorized for "+ManageAction)
+		return failure(0, netdv1.ErrorCode_ERROR_CODE_UNAUTHORIZED, "not authorized to manage the synthetic interface")
 	}
 	return nil
 }
@@ -314,7 +319,7 @@ func (s *Server) hello(cn *conn) *netdv1.Response {
 	return &netdv1.Response{Body: &netdv1.Response_Hello{Hello: &netdv1.HelloResponse{
 		ProtocolMajor:       ProtocolMajor,
 		ProtocolMinor:       ProtocolMinor,
-		Capabilities:        []netdv1.Capability{netdv1.Capability_CAPABILITY_IPV6, netdv1.Capability_CAPABILITY_IPV4, netdv1.Capability_CAPABILITY_RESOLVED_DNS},
+		Capabilities:        []netdv1.Capability{netdv1.Capability_CAPABILITY_IPV6, netdv1.Capability_CAPABILITY_IPV4, dnsCapability},
 		OccupiedByOtherUser: s.owner != nil && s.owner.uid != cn.peer.UID,
 		CallerOwnsInstance:  s.owner != nil && s.owner.conn == cn,
 	}}}
@@ -356,8 +361,6 @@ func wireAddr(a netip.Addr) []byte {
 	}
 	return a.AsSlice()
 }
-
-func LinkName(uid uint32) string { return LinkPrefix + strconv.FormatUint(uint64(uid), 10) }
 
 func (s *Server) create(ctx context.Context, cn *conn, req *netdv1.CreateSyntheticInterfaceRequest) (*netdv1.Response, *os.File) {
 	sctx, cancel := context.WithTimeout(ctx, backendCallTimeout)
@@ -403,18 +406,19 @@ func (s *Server) create(ctx context.Context, cn *conn, req *netdv1.CreateSynthet
 			func() error { return s.cfg.Kernel.AddRoute(index, r.v4) },
 		)
 	}
+	rollback := func(err error, code netdv1.ErrorCode) *netdv1.Response {
+		tun.Close()
+		if derr := s.cfg.Kernel.DeleteLink(index); derr != nil {
+			s.cfg.Log.Error("rollback could not delete link", "link", name, "err", derr.Error())
+		}
+		s.cfg.Log.Warn("create failed; rolled back", "link", name, "err", err.Error())
+		return failure(0, code, "could not configure "+name)
+	}
 	for _, step := range steps {
 		if err := step(); err != nil {
-			tun.Close()
-			if derr := s.cfg.Kernel.DeleteLink(index); derr != nil {
-				s.cfg.Log.Error("rollback could not delete link", "link", name, "err", derr.Error())
-			}
-			s.cfg.Log.Warn("create failed; rolled back", "link", name, "err", err.Error())
-			return failure(0, netdv1.ErrorCode_ERROR_CODE_NETLINK_FAILED, "could not configure "+name), nil
+			return rollback(err, netdv1.ErrorCode_ERROR_CODE_NETLINK_FAILED), nil
 		}
 	}
-	s.owner = &instance{conn: cn, uid: cn.peer.UID, session: session, name: name, index: index, ranges: r}
-	s.cfg.Log.Info("synthetic interface created", "link", name, "uid", cn.peer.UID)
 	out := &netdv1.CreateSyntheticInterfaceResponse{
 		InterfaceName:     name,
 		InterfaceIndex:    index,
@@ -424,7 +428,13 @@ func (s *Server) create(ctx context.Context, cn *conn, req *netdv1.CreateSynthet
 	if r.v4.IsValid() {
 		out.V4HostAddress, out.V4ResolverAddress = wireAddr(layout.HostV4(r.v4)), wireAddr(layout.ResolverV4(r.v4))
 	}
-	return &netdv1.Response{Body: &netdv1.Response_CreateSyntheticInterface{CreateSyntheticInterface: out}}, tun
+	transfer, err := s.handoff(cn, tun, out)
+	if err != nil {
+		return rollback(err, netdv1.ErrorCode_ERROR_CODE_FD_TRANSFER_FAILED), nil
+	}
+	s.owner = &instance{conn: cn, uid: cn.peer.UID, session: session, name: name, index: index, ranges: r}
+	s.cfg.Log.Info("synthetic interface created", "link", name, "uid", cn.peer.UID)
+	return &netdv1.Response{Body: &netdv1.Response_CreateSyntheticInterface{CreateSyntheticInterface: out}}, transfer
 }
 
 func (s *Server) owned(cn *conn) (*instance, *netdv1.Response) {
@@ -459,9 +469,9 @@ func (s *Server) configureDNS(ctx context.Context, cn *conn, req *netdv1.Configu
 	defer cancel()
 	gen, _ := s.cfg.DNS.Generation(ctx)
 	if err := s.cfg.DNS.Apply(ctx, o.index, o.ranges.resolvers(), domains); err != nil {
-		s.cfg.Log.Warn("configuring resolved failed", "err", err.Error())
+		s.cfg.Log.Warn("configuring system dns failed", "err", err.Error())
 		o.domains = nil
-		return failure(0, netdv1.ErrorCode_ERROR_CODE_RESOLVED_UNAVAILABLE, "systemd-resolved rejected or is unavailable")
+		return failure(0, netdv1.ErrorCode_ERROR_CODE_RESOLVED_UNAVAILABLE, "the system resolver rejected the configuration or is unavailable")
 	}
 	o.domains, o.generation = domains, gen
 	return &netdv1.Response{Body: &netdv1.Response_ConfigureDns{ConfigureDns: &netdv1.ConfigureDnsResponse{RoutingDomains: domains}}}
@@ -477,7 +487,7 @@ func (s *Server) clearDNS(ctx context.Context, cn *conn) *netdv1.Response {
 	ctx, cancel := context.WithTimeout(ctx, backendCallTimeout)
 	defer cancel()
 	if err := s.cfg.DNS.Revert(ctx, o.index); err != nil {
-		return failure(0, netdv1.ErrorCode_ERROR_CODE_RESOLVED_UNAVAILABLE, "systemd-resolved is unavailable")
+		return failure(0, netdv1.ErrorCode_ERROR_CODE_RESOLVED_UNAVAILABLE, "the system resolver is unavailable")
 	}
 	o.domains = nil
 	return &netdv1.Response{Body: &netdv1.Response_ClearDns{ClearDns: &netdv1.ClearDnsResponse{}}}
@@ -493,7 +503,7 @@ func (s *Server) teardownLocked() {
 	defer cancel()
 	if o.domains != nil {
 		if err := s.cfg.DNS.Revert(ctx, o.index); err != nil {
-			s.cfg.Log.Warn("reverting resolved link failed", "link", o.name, "err", err.Error())
+			s.cfg.Log.Warn("reverting system dns failed", "link", o.name, "err", err.Error())
 		}
 	}
 	if err := s.cfg.Kernel.DeleteLink(o.index); err != nil {
@@ -566,10 +576,10 @@ func (s *Server) check(ctx context.Context, stop context.CancelFunc) {
 	}
 	if gen, err := s.cfg.DNS.Generation(ctx); err == nil && gen != o.generation {
 		if err := s.cfg.DNS.Apply(ctx, o.index, o.ranges.resolvers(), o.domains); err != nil {
-			s.cfg.Log.Warn("reapplying dns after resolved restart failed", "err", err.Error())
+			s.cfg.Log.Warn("reapplying dns after a resolver restart failed", "err", err.Error())
 			return
 		}
 		o.generation = gen
-		s.cfg.Log.Info("reapplied dns after resolved restart")
+		s.cfg.Log.Info("reapplied dns after a resolver restart")
 	}
 }

@@ -122,6 +122,7 @@ const (
 	Capability_CAPABILITY_IPV6         Capability = 1
 	Capability_CAPABILITY_IPV4         Capability = 2
 	Capability_CAPABILITY_RESOLVED_DNS Capability = 3
+	Capability_CAPABILITY_NRPT_DNS     Capability = 4
 )
 
 // Enum value maps for Capability.
@@ -131,12 +132,14 @@ var (
 		1: "CAPABILITY_IPV6",
 		2: "CAPABILITY_IPV4",
 		3: "CAPABILITY_RESOLVED_DNS",
+		4: "CAPABILITY_NRPT_DNS",
 	}
 	Capability_value = map[string]int32{
 		"CAPABILITY_UNSPECIFIED":  0,
 		"CAPABILITY_IPV6":         1,
 		"CAPABILITY_IPV4":         2,
 		"CAPABILITY_RESOLVED_DNS": 3,
+		"CAPABILITY_NRPT_DNS":     4,
 	}
 )
 
@@ -783,6 +786,7 @@ type CreateSyntheticInterfaceResponse struct {
 	V6ResolverAddress []byte                 `protobuf:"bytes,4,opt,name=v6_resolver_address,json=v6ResolverAddress,proto3" json:"v6_resolver_address,omitempty"`
 	V4HostAddress     []byte                 `protobuf:"bytes,5,opt,name=v4_host_address,json=v4HostAddress,proto3" json:"v4_host_address,omitempty"`
 	V4ResolverAddress []byte                 `protobuf:"bytes,6,opt,name=v4_resolver_address,json=v4ResolverAddress,proto3" json:"v4_resolver_address,omitempty"`
+	PacketPipe        string                 `protobuf:"bytes,7,opt,name=packet_pipe,json=packetPipe,proto3" json:"packet_pipe,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -857,6 +861,13 @@ func (x *CreateSyntheticInterfaceResponse) GetV4ResolverAddress() []byte {
 		return x.V4ResolverAddress
 	}
 	return nil
+}
+
+func (x *CreateSyntheticInterfaceResponse) GetPacketPipe() string {
+	if x != nil {
+		return x.PacketPipe
+	}
+	return ""
 }
 
 type DestroySyntheticInterfaceRequest struct {
@@ -1317,14 +1328,16 @@ const file_flavor_netd_v1_netd_proto_rawDesc = "" +
 	"\x1fCreateSyntheticInterfaceRequest\x12D\n" +
 	"\x11v6_install_prefix\x18\x01 \x01(\v2\x18.flavor.netd.v1.IpPrefixR\x0fv6InstallPrefix\x121\n" +
 	"\av4_pool\x18\x02 \x01(\v2\x18.flavor.netd.v1.IpPrefixR\x06v4Pool\x12\x10\n" +
-	"\x03mtu\x18\x03 \x01(\rR\x03mtu\"\xa2\x02\n" +
+	"\x03mtu\x18\x03 \x01(\rR\x03mtu\"\xc3\x02\n" +
 	" CreateSyntheticInterfaceResponse\x12%\n" +
 	"\x0einterface_name\x18\x01 \x01(\tR\rinterfaceName\x12'\n" +
 	"\x0finterface_index\x18\x02 \x01(\rR\x0einterfaceIndex\x12&\n" +
 	"\x0fv6_host_address\x18\x03 \x01(\fR\rv6HostAddress\x12.\n" +
 	"\x13v6_resolver_address\x18\x04 \x01(\fR\x11v6ResolverAddress\x12&\n" +
 	"\x0fv4_host_address\x18\x05 \x01(\fR\rv4HostAddress\x12.\n" +
-	"\x13v4_resolver_address\x18\x06 \x01(\fR\x11v4ResolverAddress\"\"\n" +
+	"\x13v4_resolver_address\x18\x06 \x01(\fR\x11v4ResolverAddress\x12\x1f\n" +
+	"\vpacket_pipe\x18\a \x01(\tR\n" +
+	"packetPipe\"\"\n" +
 	" DestroySyntheticInterfaceRequest\"#\n" +
 	"!DestroySyntheticInterfaceResponse\">\n" +
 	"\x13ConfigureDnsRequest\x12'\n" +
@@ -1364,13 +1377,14 @@ const file_flavor_netd_v1_netd_proto_rawDesc = "" +
 	"\x1aERROR_CODE_TUN_UNAVAILABLE\x10\x0e\x12\x1d\n" +
 	"\x19ERROR_CODE_NETLINK_FAILED\x10\x0f\x12!\n" +
 	"\x1dERROR_CODE_FD_TRANSFER_FAILED\x10\x10\x12\x17\n" +
-	"\x13ERROR_CODE_INTERNAL\x10\x11*o\n" +
+	"\x13ERROR_CODE_INTERNAL\x10\x11*\x88\x01\n" +
 	"\n" +
 	"Capability\x12\x1a\n" +
 	"\x16CAPABILITY_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fCAPABILITY_IPV6\x10\x01\x12\x13\n" +
 	"\x0fCAPABILITY_IPV4\x10\x02\x12\x1b\n" +
-	"\x17CAPABILITY_RESOLVED_DNS\x10\x03B\xb7\x01\n" +
+	"\x17CAPABILITY_RESOLVED_DNS\x10\x03\x12\x17\n" +
+	"\x13CAPABILITY_NRPT_DNS\x10\x04B\xb7\x01\n" +
 	"\x12com.flavor.netd.v1B\tNetdProtoP\x01Z<git.lunarlabs.dev/flavor/flavor/gen/go/flavor/netd/v1;netdv1\xa2\x02\x03FNX\xaa\x02\x0eFlavor.Netd.V1\xca\x02\x0eFlavor\\Netd\\V1\xe2\x02\x1aFlavor\\Netd\\V1\\GPBMetadata\xea\x02\x10Flavor::Netd::V1b\x06proto3"
 
 var (

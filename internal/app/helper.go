@@ -1,9 +1,10 @@
+//go:build linux || windows
+
 package app
 
 import (
 	"context"
 	"log/slog"
-	"os"
 
 	"git.lunarlabs.dev/flavor/flavor/internal/dataplane"
 	"git.lunarlabs.dev/flavor/flavor/internal/netd"
@@ -17,13 +18,14 @@ func superviseHelper(ctx context.Context, socket string, alloc *synthetic.Alloca
 	go func() {
 		defer close(done)
 		netd.Supervisor{
-			Socket: socket,
-			V6:     alloc.ULA(),
-			V4:     alloc.Pool(),
-			MTU:    dataplane.MTU,
-			Log:    log,
-			Warn:   svc.Warn,
-			Attach: func(ctx context.Context, tun *os.File) (<-chan struct{}, func(), error) {
+			Socket:  socket,
+			V6:      alloc.ULA(),
+			V4:      alloc.Pool(),
+			MTU:     dataplane.MTU,
+			Log:     log,
+			Warn:    svc.Warn,
+			Domains: func() []string { return svc.RoutingDomains(ctx) },
+			Attach: func(ctx context.Context, tun netd.Packets) (<-chan struct{}, func(), error) {
 				plane, err := dataplane.Start(ctx, tun, alloc, engine, dial, log)
 				if err != nil {
 					return nil, nil, err

@@ -3,7 +3,6 @@
 package netd
 
 import (
-	"errors"
 	"io"
 	"net"
 	"os"
@@ -12,14 +11,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const (
-	ProtocolMajor = 1
-	ProtocolMinor = 0
-	maxPacket     = 4096
-	maxRights     = 4
-)
-
-var errProtocol = errors.New("netd protocol violation")
+const maxRights = 4
 
 func readPacket(c *net.UnixConn) ([]byte, []*os.File, error) {
 	buf := make([]byte, maxPacket)
@@ -56,12 +48,6 @@ func rights(oob []byte) ([]*os.File, error) {
 		}
 	}
 	return files, nil
-}
-
-func closeAll(files []*os.File) {
-	for _, f := range files {
-		f.Close()
-	}
 }
 
 func writePacket(c *net.UnixConn, m proto.Message, f *os.File) error {

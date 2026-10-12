@@ -78,6 +78,14 @@ jobs:
         run: |
           ./scripts/go.sh vet ./...
           ./scripts/go.sh test ./...
+      - name: dns helper e2e
+        timeout-minutes: 10
+        run: |
+          dir="$(cygpath -u "$RUNNER_TEMP")/netd"
+          mkdir -p "$dir"
+          for cmd in flavord flavor-netd; do ./scripts/go.sh build -o "$dir/$cmd.exe" "./cmd/$cmd"; done
+          ./scripts/fetch-wintun.sh "$(./scripts/go.sh env GOARCH)" "$dir/wintun.dll"
+          pwsh -NoProfile -File scripts/e2e-windows-netd.ps1 "$(cygpath -w "$dir")"
 
   rust:
     strategy:

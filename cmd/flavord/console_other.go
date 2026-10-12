@@ -5,3 +5,5 @@ package main
 func prepareConsole() bool { return true }
 
 func defaultLogFile() string { return "" }
+
+func defaultSyntheticHelper() string { return "" }

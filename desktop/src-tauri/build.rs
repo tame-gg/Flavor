@@ -13,6 +13,8 @@ const COMMANDS: &[&str] = &[
     "describe_device",
     "list_conflicts",
     "list_dns",
+    "set_exit_node",
+    "clear_exit_node",
     "create_workspace",
     "update_workspace",
     "delete_workspace",

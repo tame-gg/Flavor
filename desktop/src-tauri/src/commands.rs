@@ -127,6 +127,18 @@ pub async fn disconnect_network(daemon: State<'_, Daemon>, network_id: String) -
 }
 
 #[tauri::command]
+pub async fn set_exit_node(daemon: State<'_, Daemon>, network_id: String, node_id: String) -> Result<()> {
+    daemon.client()?.exit_nodes.set_exit_node(SetExitNodeRequest { network_id, node_id, ..Default::default() }).await?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn clear_exit_node(daemon: State<'_, Daemon>, network_id: String) -> Result<()> {
+    daemon.client()?.exit_nodes.clear_exit_node(ClearExitNodeRequest { network_id, ..Default::default() }).await?;
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn enroll_network(daemon: State<'_, Daemon>, network_id: String, pre_auth_key: String) -> Result<()> {
     let enrollment = EnrollmentCredential {
         credential: Some(enrollment_credential::Credential::PreAuthKey(pre_auth_key)),

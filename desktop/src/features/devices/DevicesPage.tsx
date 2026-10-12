@@ -132,6 +132,7 @@ export function DevicesPage({ networkId, onNetworkChange, query, onQueryChange, 
         )}
         {selected && (
           <DeviceDetails
+            key={selected}
             deviceKey={selected}
             onClose={() => onSelect(null)}
             onInspect={onInspect}

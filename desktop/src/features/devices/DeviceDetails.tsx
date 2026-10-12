@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { timestampDate } from "@bufbuild/protobuf/wkt";
 import type { DescribeDeviceResponse } from "@gen/flavor/v1/inspector_pb";
+import { Banner } from "../../components/ui/Banner";
 import { Button } from "../../components/ui/Button";
 import { CopyButton } from "../../components/ui/CopyButton";
 import { StatusBadge } from "../../components/ui/StatusBadge";
-import { useDaemon } from "../../app/sync/useDaemon";
-import { describeDevice } from "../../lib/api/daemon";
+import { useCanMutate, useDaemon } from "../../app/sync/useDaemon";
+import { useAction } from "../../app/useAction";
+import { clearExitNode, describeDevice, setExitNode } from "../../lib/api/daemon";
 import { providerName } from "../networks/format";
 import { lastSeen, sshTarget } from "./format";
 
@@ -24,6 +26,8 @@ export function DeviceDetails({ deviceKey, onClose, onInspect, onOpenNetwork, ca
   const [names, setNames] = useState<DescribeDeviceResponse | null>(null);
   const networkId = d?.id?.networkId;
   const nodeId = d?.id?.nodeId;
+  const canMutate = useCanMutate();
+  const exit = useAction(() => (d?.exitNode ? clearExitNode(networkId!) : setExitNode(networkId!, nodeId!)));
   useEffect(() => {
     if (!networkId || !nodeId) return;
     let cancelled = false;
@@ -66,6 +70,7 @@ export function DeviceDetails({ deviceKey, onClose, onInspect, onOpenNetwork, ca
       <div className="row">
         <span className={`badge ${d.online ? "badge-ok" : ""}`}>{d.online ? "Online" : "Offline"}</span>
         {d.local && <span className="badge badge-info">This device</span>}
+        {d.exitNode && <span className="badge badge-info">Exit node</span>}
         {seen && <span className="muted small">Last seen {seen}</span>}
       </div>
 
@@ -138,7 +143,18 @@ export function DeviceDetails({ deviceKey, onClose, onInspect, onOpenNetwork, ca
         )}
         {network && <Button onClick={() => onOpenNetwork(network.id)}>Open network</Button>}
         {ssh && <CopyButton value={ssh} label="Copy SSH command" />}
+        {d.exitNodeOption && !d.local && (
+          <Button loading={exit.pending} disabled={!canMutate} onClick={() => void exit.run()}>
+            {d.exitNode ? "Stop using as exit node" : "Use as exit node"}
+          </Button>
+        )}
       </div>
+      {exit.error && <Banner tone="danger">{exit.error}</Banner>}
+      {d.exitNodeOption && !d.local && !d.exitNode && (
+        <p className="muted small">
+          Connections through Flavor to addresses and names outside your networks would leave through this device.
+        </p>
+      )}
 
       <details>
         <summary className="field-label">Identifiers</summary>

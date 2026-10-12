@@ -44,6 +44,8 @@ fn main() {
             commands::describe_device,
             commands::list_conflicts,
             commands::list_dns,
+            commands::set_exit_node,
+            commands::clear_exit_node,
             commands::create_workspace,
             commands::update_workspace,
             commands::delete_workspace,

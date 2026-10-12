@@ -58,6 +58,8 @@ export async function updateNetwork(networkId: string, patch: { displayName?: st
 
 export const connectNetwork = (networkId: string) => invoke<void>("connect_network", { networkId });
 export const disconnectNetwork = (networkId: string) => invoke<void>("disconnect_network", { networkId });
+export const setExitNode = (networkId: string, nodeId: string) => invoke<void>("set_exit_node", { networkId, nodeId });
+export const clearExitNode = (networkId: string) => invoke<void>("clear_exit_node", { networkId });
 export const enrollNetwork = (networkId: string, preAuthKey: string) =>
   invoke<void>("enroll_network", { networkId, preAuthKey });
 export const removeNetwork = (networkId: string) => invoke<void>("remove_network", { networkId });

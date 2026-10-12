@@ -21,6 +21,8 @@
     "allow-describe-device",
     "allow-list-conflicts",
     "allow-list-dns",
+    "allow-set-exit-node",
+    "allow-clear-exit-node",
     "allow-create-workspace",
     "allow-update-workspace",
     "allow-delete-workspace",

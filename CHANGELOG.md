@@ -2,6 +2,17 @@
 
 All notable changes to Flavor are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- The desktop app can pick an exit node: open a device that offers itself as an exit node and choose **Use as exit node**, or **Stop using as exit node** to clear it. Devices in use as an exit node show an **Exit node** badge ([#43](https://github.com/tame-gg/Flavor/issues/43)).
+
+### Fixed
+
+- On Windows, system-wide names work for standard users. `flavord` checked the `flavor-netd` service by reading its process token, which only administrators may do, so for everyone else it never used the service ([#59](https://github.com/tame-gg/Flavor/issues/59)).
+- On Windows, the DNS rule that `flavor-netd` writes lists its nameservers in a form Windows reads. Before, Windows saw no nameservers, so Flavor names did not resolve, and the effective policy could fail for other rules too ([#59](https://github.com/tame-gg/Flavor/issues/59)).
+
 ## [0.1.0-beta.9] - 2026-10-12
 
 ### Added
@@ -123,6 +134,7 @@ First public beta, released as Lattice.
 - Experimental system-wide names through the optional `flavor-netd` helper, confined by systemd sandboxing, polkit, AppArmor and SELinux.
 - Release tarballs for x86_64 and arm64 with an installer and uninstaller, SBOMs, and `SHA256SUMS` signed with Sigstore and GPG, plus GitHub build-provenance attestations.
 
+[Unreleased]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.9...HEAD
 [0.1.0-beta.9]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.8...v0.1.0-beta.9
 [0.1.0-beta.8]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.7...v0.1.0-beta.8
 [0.1.0-beta.7]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.6...v0.1.0-beta.7

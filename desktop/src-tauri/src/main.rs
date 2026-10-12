@@ -46,6 +46,8 @@ fn main() {
             commands::list_dns,
             commands::set_exit_node,
             commands::clear_exit_node,
+            commands::list_subnet_routes,
+            commands::use_subnet_routes,
             commands::create_workspace,
             commands::update_workspace,
             commands::delete_workspace,

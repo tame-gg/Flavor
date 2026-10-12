@@ -52,7 +52,7 @@ func (k *fakeKernel) step(op string) error {
 	return nil
 }
 
-func (k *fakeKernel) Occupied() ([]netip.Prefix, error) {
+func (k *fakeKernel) Occupied(exclude uint32) ([]netip.Prefix, error) {
 	k.mu.Lock()
 	defer k.mu.Unlock()
 	k.ops = append(k.ops, "occupied")
@@ -110,6 +110,16 @@ func (k *fakeKernel) AddRoute(index uint32, p netip.Prefix) error {
 		return err
 	}
 	k.links[index].routes = append(k.links[index].routes, p)
+	return nil
+}
+
+func (k *fakeKernel) DeleteRoute(index uint32, p netip.Prefix) error {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	if err := k.step("delroute"); err != nil {
+		return err
+	}
+	k.links[index].routes = slices.DeleteFunc(k.links[index].routes, func(q netip.Prefix) bool { return q == p })
 	return nil
 }
 

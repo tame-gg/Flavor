@@ -68,7 +68,7 @@ func TestHelperDescriptorDrivesTheDataPlane(t *testing.T) {
 		}()
 		return near, nil
 	}
-	plane, err := dataplane.Start(ctx, tun, alloc, &syndns.Engine{Resolver: nothing{}, Addresser: alloc}, dial, slog.New(slog.DiscardHandler))
+	plane, err := dataplane.Start(ctx, tun, alloc, nil, &syndns.Engine{Resolver: nothing{}, Addresser: alloc}, dial, slog.New(slog.DiscardHandler))
 	if err != nil {
 		t.Fatal(err)
 	}

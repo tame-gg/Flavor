@@ -26,7 +26,7 @@ type Netlink struct{}
 
 func (Netlink) dial() (*rtnetlink.Conn, error) { return rtnetlink.Dial(nil) }
 
-func (k Netlink) Occupied() ([]netip.Prefix, error) {
+func (k Netlink) Occupied(exclude uint32) ([]netip.Prefix, error) {
 	c, err := k.dial()
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func (k Netlink) Occupied() ([]netip.Prefix, error) {
 		return nil, fmt.Errorf("list addresses: %w", err)
 	}
 	for _, a := range addrs {
-		if a.Attributes == nil {
+		if a.Attributes == nil || (exclude != 0 && a.Index == exclude) {
 			continue
 		}
 		for _, ip := range []net.IP{a.Attributes.Address, a.Attributes.Local} {
@@ -52,6 +52,9 @@ func (k Netlink) Occupied() ([]netip.Prefix, error) {
 		return nil, fmt.Errorf("list routes: %w", err)
 	}
 	for _, r := range routes {
+		if exclude != 0 && r.Attributes.OutIface == exclude {
+			continue
+		}
 		if p, ok := ipPrefix(r.Attributes.Dst, r.DstLength); ok {
 			out = append(out, p)
 		}
@@ -147,7 +150,23 @@ func (k Netlink) AddRoute(index uint32, p netip.Prefix) error {
 		return err
 	}
 	defer c.Close()
-	return c.Route.Add(&rtnetlink.RouteMessage{
+	return c.Route.Add(routeMessage(index, p))
+}
+
+func (k Netlink) DeleteRoute(index uint32, p netip.Prefix) error {
+	c, err := k.dial()
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	if err := c.Route.Delete(routeMessage(index, p)); err != nil && !errors.Is(err, unix.ESRCH) {
+		return err
+	}
+	return nil
+}
+
+func routeMessage(index uint32, p netip.Prefix) *rtnetlink.RouteMessage {
+	return &rtnetlink.RouteMessage{
 		Family:     family(p.Addr()),
 		DstLength:  uint8(p.Bits()),
 		Table:      unix.RT_TABLE_MAIN,
@@ -155,7 +174,7 @@ func (k Netlink) AddRoute(index uint32, p netip.Prefix) error {
 		Scope:      unix.RT_SCOPE_LINK,
 		Type:       unix.RTN_UNICAST,
 		Attributes: rtnetlink.RouteAttributes{Dst: net.IP(p.Addr().AsSlice()), OutIface: index},
-	})
+	}
 }
 
 func (k Netlink) DeleteLink(index uint32) error {

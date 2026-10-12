@@ -55,7 +55,13 @@ func (h *handlers) InspectDestination(ctx context.Context, req *connect.Request[
 	if err != nil {
 		return nil, toConnect(err)
 	}
-	return connect.NewResponse(inspection(res, seq, h.svc.InstanceID())), nil
+	out := inspection(res, seq, h.svc.InstanceID())
+	if res.Query.Kind == inspect.KindAddress {
+		if p, ok := h.svc.SystemRouteFor(res.Query.Address); ok {
+			out.SystemRoute = p.String()
+		}
+	}
+	return connect.NewResponse(out), nil
 }
 
 func inspection(res inspect.Result, seq uint64, instance string) *v1.InspectDestinationResponse {

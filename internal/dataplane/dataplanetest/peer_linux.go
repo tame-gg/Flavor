@@ -39,7 +39,7 @@ type Peer struct {
 	cancel context.CancelFunc
 }
 
-func NewPeer(t testing.TB, dev *os.File, ula, pool netip.Prefix) *Peer {
+func NewPeer(t testing.TB, dev *os.File, ula, pool netip.Prefix, extra ...netip.Prefix) *Peer {
 	t.Helper()
 	s := stack.New(stack.Options{
 		NetworkProtocols:   []stack.NetworkProtocolFactory{ipv4.NewProtocol, ipv6.NewProtocol},
@@ -67,6 +67,13 @@ func NewPeer(t testing.TB, dev *os.File, ula, pool netip.Prefix) *Peer {
 	add(layout.HostAddress(ula), ula)
 	if pool.IsValid() {
 		add(layout.HostV4(pool), pool)
+	}
+	for _, dst := range extra {
+		sub, err := tcpip.NewSubnet(tcpip.AddrFromSlice(dst.Masked().Addr().AsSlice()), tcpip.MaskFromBytes(net.CIDRMask(dst.Bits(), dst.Addr().BitLen())))
+		if err != nil {
+			t.Fatal(err)
+		}
+		routes = append(routes, tcpip.Route{Destination: sub, NIC: 1})
 	}
 	s.SetRouteTable(routes)
 	ctx, cancel := context.WithCancel(context.Background())

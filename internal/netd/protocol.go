@@ -9,7 +9,7 @@ import (
 
 const (
 	ProtocolMajor = 1
-	ProtocolMinor = 1
+	ProtocolMinor = 2
 	maxPacket     = 4096
 )
 

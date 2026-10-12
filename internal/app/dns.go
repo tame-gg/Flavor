@@ -46,7 +46,7 @@ func startSynthetic(ctx context.Context, opts Options, db *store.DB, svc *servic
 		return s.Dial(ctx, proto, address)
 	}
 	if opts.TUN != nil {
-		plane, err := dataplane.Start(ctx, opts.TUN, alloc, engine, dial, log)
+		plane, err := dataplane.Start(ctx, opts.TUN, alloc, nil, engine, dial, log)
 		if err != nil {
 			return nil, err
 		}

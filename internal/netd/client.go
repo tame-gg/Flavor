@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/netip"
 	"os"
+	"slices"
 	"time"
 
 	netdv1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/netd/v1"
@@ -82,6 +83,36 @@ func (c *Client) ConfigureDNS(domains []string) ([]string, error) {
 		return nil, err
 	}
 	return resp.GetConfigureDns().GetRoutingDomains(), nil
+}
+
+func (c *Client) ConfigureRoutes(routes []netip.Prefix) ([]netip.Prefix, map[netip.Prefix]netip.Prefix, error) {
+	req := &netdv1.ConfigureRoutesRequest{}
+	for _, p := range routes {
+		req.Routes = append(req.Routes, wirePrefix(p))
+	}
+	resp, _, err := c.roundTrip(&netdv1.Request{Body: &netdv1.Request_ConfigureRoutes{ConfigureRoutes: req}}, false)
+	if err != nil {
+		return nil, nil, err
+	}
+	var installed []netip.Prefix
+	for _, w := range resp.GetConfigureRoutes().GetInstalled() {
+		if p, ok := prefixOf(w, len(w.GetAddress())); ok {
+			installed = append(installed, p)
+		}
+	}
+	refused := map[netip.Prefix]netip.Prefix{}
+	for _, r := range resp.GetConfigureRoutes().GetRefused() {
+		p, ok := prefixOf(r.GetRoute(), len(r.GetRoute().GetAddress()))
+		c, _ := prefixOf(r.GetConflict(), len(r.GetConflict().GetAddress()))
+		if ok {
+			refused[p] = c
+		}
+	}
+	return installed, refused, nil
+}
+
+func (c *Client) Routes() bool {
+	return slices.Contains(c.Hello.GetCapabilities(), netdv1.Capability_CAPABILITY_ROUTES)
 }
 
 func (c *Client) ClearDNS() error {

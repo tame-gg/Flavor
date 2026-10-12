@@ -1,6 +1,7 @@
 package netd
 
 import (
+	"errors"
 	"net/netip"
 	"sync"
 
@@ -32,13 +33,16 @@ type Wintun struct {
 
 func NewWintun() *Wintun { return &Wintun{devs: map[uint32]*wintunDevice{}} }
 
-func (k *Wintun) Occupied() ([]netip.Prefix, error) {
+func (k *Wintun) Occupied(exclude uint32) ([]netip.Prefix, error) {
 	var out []netip.Prefix
 	addrs, err := winipcfg.GetUnicastIPAddressTable(windows.AF_UNSPEC)
 	if err != nil {
 		return nil, err
 	}
 	for _, a := range addrs {
+		if exclude != 0 && a.InterfaceIndex == exclude {
+			continue
+		}
 		if p, err := a.Address.Addr().Unmap().Prefix(int(a.OnLinkPrefixLength)); err == nil {
 			out = append(out, p)
 		}
@@ -48,6 +52,9 @@ func (k *Wintun) Occupied() ([]netip.Prefix, error) {
 		return nil, err
 	}
 	for _, r := range routes {
+		if exclude != 0 && r.InterfaceIndex == exclude {
+			continue
+		}
 		out = append(out, r.DestinationPrefix.Prefix())
 	}
 	return out, nil
@@ -103,11 +110,25 @@ func (k *Wintun) AddRoute(index uint32, p netip.Prefix) error {
 	if err != nil {
 		return err
 	}
-	next := netip.IPv6Unspecified()
-	if p.Addr().Is4() {
-		next = netip.IPv4Unspecified()
+	return luid.AddRoute(p, onLink(p), 0)
+}
+
+func (k *Wintun) DeleteRoute(index uint32, p netip.Prefix) error {
+	luid, err := winipcfg.LUIDFromIndex(index)
+	if err != nil {
+		return err
 	}
-	return luid.AddRoute(p, next, 0)
+	if err := luid.DeleteRoute(p, onLink(p)); err != nil && !errors.Is(err, windows.ERROR_NOT_FOUND) {
+		return err
+	}
+	return nil
+}
+
+func onLink(p netip.Prefix) netip.Addr {
+	if p.Addr().Is4() {
+		return netip.IPv4Unspecified()
+	}
+	return netip.IPv6Unspecified()
 }
 
 func (k *Wintun) DeleteLink(index uint32) error {

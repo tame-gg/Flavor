@@ -2,9 +2,14 @@ syntax = "proto3";
 
 package flavor.v1;
 
+import "flavor/v1/device.proto";
+import "flavor/v1/inspector.proto";
+
 service RouteService {
   rpc GetRoutes(GetRoutesRequest) returns (GetRoutesResponse);
   rpc UpdateRoutes(UpdateRoutesRequest) returns (UpdateRoutesResponse);
+  rpc ListSubnetRoutes(ListSubnetRoutesRequest) returns (ListSubnetRoutesResponse);
+  rpc UseSubnetRoutes(UseSubnetRoutesRequest) returns (UseSubnetRoutesResponse);
 }
 
 message AdvertisedRoute {
@@ -28,4 +33,42 @@ message UpdateRoutesRequest {
 
 message UpdateRoutesResponse {
   repeated AdvertisedRoute routes = 1;
+}
+
+enum SubnetRouteUse {
+  SUBNET_ROUTE_USE_UNSPECIFIED = 0;
+  SUBNET_ROUTE_USE_NOT_USED = 1;
+  SUBNET_ROUTE_USE_INSTALLED = 2;
+  SUBNET_ROUTE_USE_PENDING = 3;
+  SUBNET_ROUTE_USE_REFUSED = 4;
+  SUBNET_ROUTE_USE_NOT_ADVERTISED = 5;
+}
+
+message SubnetRoute {
+  NetworkRef network = 1;
+  string prefix = 2;
+  repeated Device routers = 3;
+  SubnetRouteUse use = 4;
+  string detail = 5;
+  repeated NetworkRef overlaps = 6;
+}
+
+message ListSubnetRoutesRequest {
+  string network_id = 1;
+}
+
+message ListSubnetRoutesResponse {
+  repeated SubnetRoute routes = 1;
+}
+
+message UseSubnetRoutesRequest {
+  string network_id = 1;
+  repeated string add = 2;
+  repeated string remove = 3;
+  bool all = 4;
+  bool none = 5;
+}
+
+message UseSubnetRoutesResponse {
+  repeated SubnetRoute routes = 1;
 }

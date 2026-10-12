@@ -29,6 +29,9 @@ type Supervisor struct {
 	MTU     uint32
 	Attach  Attach
 	Domains func() []string
+	Routes  func() []netip.Prefix
+	Applied func(active bool, installed []netip.Prefix, refused map[netip.Prefix]string)
+	Nudge   <-chan struct{}
 	Log     *slog.Logger
 	Warn    func(code, message string)
 	Backoff time.Duration
@@ -112,6 +115,48 @@ func (s Supervisor) once(ctx context.Context) error {
 		routed, configured, warned = want, true, false
 	}
 	syncDNS()
+	var synced []netip.Prefix
+	routesSynced := false
+	applied := func(active bool, in []netip.Prefix, refused map[netip.Prefix]string) {
+		if s.Applied != nil {
+			s.Applied(active, in, refused)
+		}
+	}
+	defer applied(false, nil, nil)
+	syncRoutes := func() {
+		if s.Routes == nil {
+			return
+		}
+		want := s.Routes()
+		if routesSynced && slices.Equal(want, synced) {
+			return
+		}
+		refused := map[netip.Prefix]string{}
+		if !c.Routes() {
+			for _, p := range want {
+				refused[p] = "flavor-netd is too old to install routes; update Flavor"
+			}
+			applied(true, nil, refused)
+			synced, routesSynced = want, true
+			return
+		}
+		in, conflicts, err := c.ConfigureRoutes(want)
+		if err != nil {
+			s.Log.Warn("routes not installed", "err", err.Error())
+			for _, p := range want {
+				refused[p] = "flavor-netd refused the route: " + err.Error()
+			}
+			applied(true, nil, refused)
+			routesSynced = false
+			return
+		}
+		for p, c := range conflicts {
+			refused[p] = "overlaps " + c.String() + ", which this computer already routes"
+		}
+		applied(true, in, refused)
+		synced, routesSynced = want, len(conflicts) == 0
+	}
+	syncRoutes()
 	probe := time.NewTicker(s.Probe)
 	defer probe.Stop()
 	for {
@@ -127,6 +172,9 @@ func (s Supervisor) once(ctx context.Context) error {
 				return nil
 			}
 			syncDNS()
+			syncRoutes()
+		case <-s.Nudge:
+			syncRoutes()
 		}
 	}
 }

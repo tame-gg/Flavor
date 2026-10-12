@@ -1,11 +1,13 @@
 package main
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/netip"
+	"strings"
 	"text/tabwriter"
 
 	"connectrpc.com/connect"
@@ -84,10 +86,101 @@ func runRoutes(ctx context.Context, c *client.Client, args []string, asJSON bool
 				fmt.Fprintf(out, "no longer advertising %s on %s\n", cidr, n.DisplayName)
 			}
 		}
+	case "available":
+		if len(rest) > 1 {
+			return fmt.Errorf("routes available: expected at most one network\n\n%s", usage)
+		}
+		req := &v1.ListSubnetRoutesRequest{}
+		if len(rest) == 1 {
+			n, err := findNetwork(nets.Msg.Networks, rest[0])
+			if err != nil {
+				return err
+			}
+			req.NetworkId = n.Id
+		}
+		res, err := c.Routes.ListSubnetRoutes(ctx, connect.NewRequest(req))
+		if err != nil {
+			return err
+		}
+		if asJSON {
+			return emit(out, res.Msg)
+		}
+		return printSubnetRoutes(out, res.Msg.Routes)
+	case "use", "unuse":
+		if len(rest) < 2 {
+			return fmt.Errorf("routes %s: expected a network and CIDRs or --all\n\n%s", sub, usage)
+		}
+		n, err := findNetwork(nets.Msg.Networks, rest[0])
+		if err != nil {
+			return err
+		}
+		req := &v1.UseSubnetRoutesRequest{NetworkId: n.Id}
+		for _, a := range rest[1:] {
+			switch {
+			case a == "--all" && sub == "use":
+				req.All = true
+			case a == "--all":
+				req.None = true
+			case sub == "use":
+				req.Add = append(req.Add, a)
+			default:
+				req.Remove = append(req.Remove, a)
+			}
+		}
+		res, err := c.Routes.UseSubnetRoutes(ctx, connect.NewRequest(req))
+		if err != nil {
+			return err
+		}
+		if asJSON {
+			return emit(out, res.Msg)
+		}
+		return printSubnetRoutes(out, res.Msg.Routes)
 	default:
 		return fmt.Errorf("unknown routes command %q\n\n%s", sub, usage)
 	}
 	return nil
+}
+
+func printSubnetRoutes(out io.Writer, routes []*v1.SubnetRoute) error {
+	if len(routes) == 0 {
+		fmt.Fprintln(out, "no subnet routes are advertised on your connected networks")
+		return nil
+	}
+	w := tabwriter.NewWriter(out, 0, 4, 2, ' ', 0)
+	fmt.Fprintln(w, "NETWORK\tROUTE\tVIA\tON THIS COMPUTER")
+	for _, r := range routes {
+		var via []string
+		for _, d := range r.Routers {
+			name := d.Hostname
+			if !d.Online {
+				name += " (offline)"
+			}
+			via = append(via, name)
+		}
+		use := subnetRouteUse(r)
+		for _, o := range r.Overlaps {
+			use += "; overlaps a route on " + o.DisplayName
+		}
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", r.Network.GetDisplayName(), r.Prefix, cmp.Or(strings.Join(via, ", "), "-"), use)
+	}
+	return w.Flush()
+}
+
+func subnetRouteUse(r *v1.SubnetRoute) string {
+	switch r.Use {
+	case v1.SubnetRouteUse_SUBNET_ROUTE_USE_INSTALLED:
+		return "in use"
+	case v1.SubnetRouteUse_SUBNET_ROUTE_USE_PENDING:
+		if r.Detail != "" {
+			return "waiting: " + r.Detail
+		}
+		return "waiting"
+	case v1.SubnetRouteUse_SUBNET_ROUTE_USE_REFUSED:
+		return "refused: " + r.Detail
+	case v1.SubnetRouteUse_SUBNET_ROUTE_USE_NOT_ADVERTISED:
+		return "chosen, but no device advertises it now"
+	}
+	return "not used"
 }
 
 type networkRoutes struct {

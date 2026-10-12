@@ -22,6 +22,7 @@ type Network struct {
 
 	ExitNode         NodeID
 	AdvertisedRoutes []netip.Prefix
+	UsedRoutes       []netip.Prefix
 }
 
 var (

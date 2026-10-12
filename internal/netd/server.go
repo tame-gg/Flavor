@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/netip"
 	"os"
+	"slices"
 	"strconv"
 	"sync"
 	"time"
@@ -32,11 +33,12 @@ const (
 )
 
 type Kernel interface {
-	Occupied() ([]netip.Prefix, error)
+	Occupied(exclude uint32) ([]netip.Prefix, error)
 	CreateTUN(name string) (Device, uint32, error)
 	Up(index, mtu uint32) error
 	AddAddress(index uint32, a netip.Addr) error
 	AddRoute(index uint32, p netip.Prefix) error
+	DeleteRoute(index uint32, p netip.Prefix) error
 	DeleteLink(index uint32) error
 	Links() ([]Link, error)
 }
@@ -92,6 +94,7 @@ type instance struct {
 	index      uint32
 	ranges     ranges
 	domains    []string
+	routes     []netip.Prefix
 	generation string
 }
 
@@ -296,6 +299,11 @@ func (s *Server) dispatch(ctx context.Context, cn *conn, req *netdv1.Request) (*
 			return r, nil
 		}
 		return s.clearDNS(ctx, cn), nil
+	case *netdv1.Request_ConfigureRoutes:
+		if r := s.authorize(ctx, cn); r != nil {
+			return r, nil
+		}
+		return s.configureRoutes(cn, body.ConfigureRoutes), nil
 	}
 	return failure(0, netdv1.ErrorCode_ERROR_CODE_PROTOCOL_ERROR, "unknown request"), nil
 }
@@ -319,7 +327,7 @@ func (s *Server) hello(cn *conn) *netdv1.Response {
 	return &netdv1.Response{Body: &netdv1.Response_Hello{Hello: &netdv1.HelloResponse{
 		ProtocolMajor:       ProtocolMajor,
 		ProtocolMinor:       ProtocolMinor,
-		Capabilities:        []netdv1.Capability{netdv1.Capability_CAPABILITY_IPV6, netdv1.Capability_CAPABILITY_IPV4, dnsCapability},
+		Capabilities:        []netdv1.Capability{netdv1.Capability_CAPABILITY_IPV6, netdv1.Capability_CAPABILITY_IPV4, dnsCapability, netdv1.Capability_CAPABILITY_ROUTES},
 		OccupiedByOtherUser: s.owner != nil && s.owner.uid != cn.peer.UID,
 		CallerOwnsInstance:  s.owner != nil && s.owner.conn == cn,
 	}}}
@@ -382,7 +390,7 @@ func (s *Server) create(ctx context.Context, cn *conn, req *netdv1.CreateSynthet
 	if code != netdv1.ErrorCode_ERROR_CODE_UNSPECIFIED {
 		return failure(0, code, "invalid range or mtu"), nil
 	}
-	occupied, err := s.cfg.Kernel.Occupied()
+	occupied, err := s.cfg.Kernel.Occupied(0)
 	if err != nil {
 		return failure(0, netdv1.ErrorCode_ERROR_CODE_RANGE_OVERLAP, "could not analyse kernel addresses, routes and rules"), nil
 	}
@@ -491,6 +499,50 @@ func (s *Server) clearDNS(ctx context.Context, cn *conn) *netdv1.Response {
 	}
 	o.domains = nil
 	return &netdv1.Response{Body: &netdv1.Response_ClearDns{ClearDns: &netdv1.ClearDnsResponse{}}}
+}
+
+func (s *Server) configureRoutes(cn *conn, req *netdv1.ConfigureRoutesRequest) *netdv1.Response {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	o, r := s.owned(cn)
+	if r != nil {
+		return r
+	}
+	want, code := validateRoutes(req.GetRoutes(), o.ranges)
+	if code != netdv1.ErrorCode_ERROR_CODE_UNSPECIFIED {
+		return failure(0, code, "route rejected")
+	}
+	occupied, err := s.cfg.Kernel.Occupied(o.index)
+	if err != nil {
+		return failure(0, netdv1.ErrorCode_ERROR_CODE_NETLINK_FAILED, "could not analyse kernel addresses and routes")
+	}
+	out := &netdv1.ConfigureRoutesResponse{}
+	var installed []netip.Prefix
+	for _, p := range want {
+		if c, clash := routeConflict(p, occupied); clash {
+			out.Refused = append(out.Refused, &netdv1.RefusedRoute{Route: wirePrefix(p), Conflict: wirePrefix(c)})
+			continue
+		}
+		if !slices.Contains(o.routes, p) {
+			if err := s.cfg.Kernel.AddRoute(o.index, p); err != nil {
+				s.cfg.Log.Warn("adding route failed", "route", p.String(), "err", err.Error())
+				continue
+			}
+		}
+		installed = append(installed, p)
+	}
+	for _, p := range o.routes {
+		if !slices.Contains(installed, p) {
+			if err := s.cfg.Kernel.DeleteRoute(o.index, p); err != nil {
+				s.cfg.Log.Warn("removing route failed", "route", p.String(), "err", err.Error())
+			}
+		}
+	}
+	o.routes = installed
+	for _, p := range installed {
+		out.Installed = append(out.Installed, wirePrefix(p))
+	}
+	return &netdv1.Response{Body: &netdv1.Response_ConfigureRoutes{ConfigureRoutes: out}}
 }
 
 func (s *Server) teardownLocked() {

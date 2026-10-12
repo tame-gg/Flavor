@@ -38,12 +38,20 @@ const (
 	// RouteServiceUpdateRoutesProcedure is the fully-qualified name of the RouteService's UpdateRoutes
 	// RPC.
 	RouteServiceUpdateRoutesProcedure = "/flavor.v1.RouteService/UpdateRoutes"
+	// RouteServiceListSubnetRoutesProcedure is the fully-qualified name of the RouteService's
+	// ListSubnetRoutes RPC.
+	RouteServiceListSubnetRoutesProcedure = "/flavor.v1.RouteService/ListSubnetRoutes"
+	// RouteServiceUseSubnetRoutesProcedure is the fully-qualified name of the RouteService's
+	// UseSubnetRoutes RPC.
+	RouteServiceUseSubnetRoutesProcedure = "/flavor.v1.RouteService/UseSubnetRoutes"
 )
 
 // RouteServiceClient is a client for the flavor.v1.RouteService service.
 type RouteServiceClient interface {
 	GetRoutes(context.Context, *connect.Request[v1.GetRoutesRequest]) (*connect.Response[v1.GetRoutesResponse], error)
 	UpdateRoutes(context.Context, *connect.Request[v1.UpdateRoutesRequest]) (*connect.Response[v1.UpdateRoutesResponse], error)
+	ListSubnetRoutes(context.Context, *connect.Request[v1.ListSubnetRoutesRequest]) (*connect.Response[v1.ListSubnetRoutesResponse], error)
+	UseSubnetRoutes(context.Context, *connect.Request[v1.UseSubnetRoutesRequest]) (*connect.Response[v1.UseSubnetRoutesResponse], error)
 }
 
 // NewRouteServiceClient constructs a client for the flavor.v1.RouteService service. By default, it
@@ -69,13 +77,27 @@ func NewRouteServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(routeServiceMethods.ByName("UpdateRoutes")),
 			connect.WithClientOptions(opts...),
 		),
+		listSubnetRoutes: connect.NewClient[v1.ListSubnetRoutesRequest, v1.ListSubnetRoutesResponse](
+			httpClient,
+			baseURL+RouteServiceListSubnetRoutesProcedure,
+			connect.WithSchema(routeServiceMethods.ByName("ListSubnetRoutes")),
+			connect.WithClientOptions(opts...),
+		),
+		useSubnetRoutes: connect.NewClient[v1.UseSubnetRoutesRequest, v1.UseSubnetRoutesResponse](
+			httpClient,
+			baseURL+RouteServiceUseSubnetRoutesProcedure,
+			connect.WithSchema(routeServiceMethods.ByName("UseSubnetRoutes")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // routeServiceClient implements RouteServiceClient.
 type routeServiceClient struct {
-	getRoutes    *connect.Client[v1.GetRoutesRequest, v1.GetRoutesResponse]
-	updateRoutes *connect.Client[v1.UpdateRoutesRequest, v1.UpdateRoutesResponse]
+	getRoutes        *connect.Client[v1.GetRoutesRequest, v1.GetRoutesResponse]
+	updateRoutes     *connect.Client[v1.UpdateRoutesRequest, v1.UpdateRoutesResponse]
+	listSubnetRoutes *connect.Client[v1.ListSubnetRoutesRequest, v1.ListSubnetRoutesResponse]
+	useSubnetRoutes  *connect.Client[v1.UseSubnetRoutesRequest, v1.UseSubnetRoutesResponse]
 }
 
 // GetRoutes calls flavor.v1.RouteService.GetRoutes.
@@ -88,10 +110,22 @@ func (c *routeServiceClient) UpdateRoutes(ctx context.Context, req *connect.Requ
 	return c.updateRoutes.CallUnary(ctx, req)
 }
 
+// ListSubnetRoutes calls flavor.v1.RouteService.ListSubnetRoutes.
+func (c *routeServiceClient) ListSubnetRoutes(ctx context.Context, req *connect.Request[v1.ListSubnetRoutesRequest]) (*connect.Response[v1.ListSubnetRoutesResponse], error) {
+	return c.listSubnetRoutes.CallUnary(ctx, req)
+}
+
+// UseSubnetRoutes calls flavor.v1.RouteService.UseSubnetRoutes.
+func (c *routeServiceClient) UseSubnetRoutes(ctx context.Context, req *connect.Request[v1.UseSubnetRoutesRequest]) (*connect.Response[v1.UseSubnetRoutesResponse], error) {
+	return c.useSubnetRoutes.CallUnary(ctx, req)
+}
+
 // RouteServiceHandler is an implementation of the flavor.v1.RouteService service.
 type RouteServiceHandler interface {
 	GetRoutes(context.Context, *connect.Request[v1.GetRoutesRequest]) (*connect.Response[v1.GetRoutesResponse], error)
 	UpdateRoutes(context.Context, *connect.Request[v1.UpdateRoutesRequest]) (*connect.Response[v1.UpdateRoutesResponse], error)
+	ListSubnetRoutes(context.Context, *connect.Request[v1.ListSubnetRoutesRequest]) (*connect.Response[v1.ListSubnetRoutesResponse], error)
+	UseSubnetRoutes(context.Context, *connect.Request[v1.UseSubnetRoutesRequest]) (*connect.Response[v1.UseSubnetRoutesResponse], error)
 }
 
 // NewRouteServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -113,12 +147,28 @@ func NewRouteServiceHandler(svc RouteServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(routeServiceMethods.ByName("UpdateRoutes")),
 		connect.WithHandlerOptions(opts...),
 	)
+	routeServiceListSubnetRoutesHandler := connect.NewUnaryHandler(
+		RouteServiceListSubnetRoutesProcedure,
+		svc.ListSubnetRoutes,
+		connect.WithSchema(routeServiceMethods.ByName("ListSubnetRoutes")),
+		connect.WithHandlerOptions(opts...),
+	)
+	routeServiceUseSubnetRoutesHandler := connect.NewUnaryHandler(
+		RouteServiceUseSubnetRoutesProcedure,
+		svc.UseSubnetRoutes,
+		connect.WithSchema(routeServiceMethods.ByName("UseSubnetRoutes")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/flavor.v1.RouteService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case RouteServiceGetRoutesProcedure:
 			routeServiceGetRoutesHandler.ServeHTTP(w, r)
 		case RouteServiceUpdateRoutesProcedure:
 			routeServiceUpdateRoutesHandler.ServeHTTP(w, r)
+		case RouteServiceListSubnetRoutesProcedure:
+			routeServiceListSubnetRoutesHandler.ServeHTTP(w, r)
+		case RouteServiceUseSubnetRoutesProcedure:
+			routeServiceUseSubnetRoutesHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -134,4 +184,12 @@ func (UnimplementedRouteServiceHandler) GetRoutes(context.Context, *connect.Requ
 
 func (UnimplementedRouteServiceHandler) UpdateRoutes(context.Context, *connect.Request[v1.UpdateRoutesRequest]) (*connect.Response[v1.UpdateRoutesResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("flavor.v1.RouteService.UpdateRoutes is not implemented"))
+}
+
+func (UnimplementedRouteServiceHandler) ListSubnetRoutes(context.Context, *connect.Request[v1.ListSubnetRoutesRequest]) (*connect.Response[v1.ListSubnetRoutesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("flavor.v1.RouteService.ListSubnetRoutes is not implemented"))
+}
+
+func (UnimplementedRouteServiceHandler) UseSubnetRoutes(context.Context, *connect.Request[v1.UseSubnetRoutesRequest]) (*connect.Response[v1.UseSubnetRoutesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("flavor.v1.RouteService.UseSubnetRoutes is not implemented"))
 }

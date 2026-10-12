@@ -42,6 +42,7 @@ const (
 	ErrorCode_ERROR_CODE_NETLINK_FAILED          ErrorCode = 15
 	ErrorCode_ERROR_CODE_FD_TRANSFER_FAILED      ErrorCode = 16
 	ErrorCode_ERROR_CODE_INTERNAL                ErrorCode = 17
+	ErrorCode_ERROR_CODE_INVALID_ROUTE           ErrorCode = 18
 )
 
 // Enum value maps for ErrorCode.
@@ -65,6 +66,7 @@ var (
 		15: "ERROR_CODE_NETLINK_FAILED",
 		16: "ERROR_CODE_FD_TRANSFER_FAILED",
 		17: "ERROR_CODE_INTERNAL",
+		18: "ERROR_CODE_INVALID_ROUTE",
 	}
 	ErrorCode_value = map[string]int32{
 		"ERROR_CODE_UNSPECIFIED":             0,
@@ -85,6 +87,7 @@ var (
 		"ERROR_CODE_NETLINK_FAILED":          15,
 		"ERROR_CODE_FD_TRANSFER_FAILED":      16,
 		"ERROR_CODE_INTERNAL":                17,
+		"ERROR_CODE_INVALID_ROUTE":           18,
 	}
 )
 
@@ -123,6 +126,7 @@ const (
 	Capability_CAPABILITY_IPV4         Capability = 2
 	Capability_CAPABILITY_RESOLVED_DNS Capability = 3
 	Capability_CAPABILITY_NRPT_DNS     Capability = 4
+	Capability_CAPABILITY_ROUTES       Capability = 5
 )
 
 // Enum value maps for Capability.
@@ -133,6 +137,7 @@ var (
 		2: "CAPABILITY_IPV4",
 		3: "CAPABILITY_RESOLVED_DNS",
 		4: "CAPABILITY_NRPT_DNS",
+		5: "CAPABILITY_ROUTES",
 	}
 	Capability_value = map[string]int32{
 		"CAPABILITY_UNSPECIFIED":  0,
@@ -140,6 +145,7 @@ var (
 		"CAPABILITY_IPV4":         2,
 		"CAPABILITY_RESOLVED_DNS": 3,
 		"CAPABILITY_NRPT_DNS":     4,
+		"CAPABILITY_ROUTES":       5,
 	}
 )
 
@@ -183,6 +189,7 @@ type Request struct {
 	//	*Request_ConfigureDns
 	//	*Request_ClearDns
 	//	*Request_Status
+	//	*Request_ConfigureRoutes
 	Body          isRequest_Body `protobuf_oneof:"body"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -300,6 +307,15 @@ func (x *Request) GetStatus() *StatusRequest {
 	return nil
 }
 
+func (x *Request) GetConfigureRoutes() *ConfigureRoutesRequest {
+	if x != nil {
+		if x, ok := x.Body.(*Request_ConfigureRoutes); ok {
+			return x.ConfigureRoutes
+		}
+	}
+	return nil
+}
+
 type isRequest_Body interface {
 	isRequest_Body()
 }
@@ -328,6 +344,10 @@ type Request_Status struct {
 	Status *StatusRequest `protobuf:"bytes,15,opt,name=status,proto3,oneof"`
 }
 
+type Request_ConfigureRoutes struct {
+	ConfigureRoutes *ConfigureRoutesRequest `protobuf:"bytes,16,opt,name=configure_routes,json=configureRoutes,proto3,oneof"`
+}
+
 func (*Request_Hello) isRequest_Body() {}
 
 func (*Request_CreateSyntheticInterface) isRequest_Body() {}
@@ -339,6 +359,8 @@ func (*Request_ConfigureDns) isRequest_Body() {}
 func (*Request_ClearDns) isRequest_Body() {}
 
 func (*Request_Status) isRequest_Body() {}
+
+func (*Request_ConfigureRoutes) isRequest_Body() {}
 
 type Response struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
@@ -352,6 +374,7 @@ type Response struct {
 	//	*Response_ConfigureDns
 	//	*Response_ClearDns
 	//	*Response_Status
+	//	*Response_ConfigureRoutes
 	Body          isResponse_Body `protobuf_oneof:"body"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -462,6 +485,15 @@ func (x *Response) GetStatus() *StatusResponse {
 	return nil
 }
 
+func (x *Response) GetConfigureRoutes() *ConfigureRoutesResponse {
+	if x != nil {
+		if x, ok := x.Body.(*Response_ConfigureRoutes); ok {
+			return x.ConfigureRoutes
+		}
+	}
+	return nil
+}
+
 type isResponse_Body interface {
 	isResponse_Body()
 }
@@ -490,6 +522,10 @@ type Response_Status struct {
 	Status *StatusResponse `protobuf:"bytes,15,opt,name=status,proto3,oneof"`
 }
 
+type Response_ConfigureRoutes struct {
+	ConfigureRoutes *ConfigureRoutesResponse `protobuf:"bytes,16,opt,name=configure_routes,json=configureRoutes,proto3,oneof"`
+}
+
 func (*Response_Hello) isResponse_Body() {}
 
 func (*Response_CreateSyntheticInterface) isResponse_Body() {}
@@ -501,6 +537,8 @@ func (*Response_ConfigureDns) isResponse_Body() {}
 func (*Response_ClearDns) isResponse_Body() {}
 
 func (*Response_Status) isResponse_Body() {}
+
+func (*Response_ConfigureRoutes) isResponse_Body() {}
 
 type Error struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1282,11 +1320,159 @@ func (x *Instance) GetRoutingDomains() []string {
 	return nil
 }
 
+type ConfigureRoutesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Routes        []*IpPrefix            `protobuf:"bytes,1,rep,name=routes,proto3" json:"routes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConfigureRoutesRequest) Reset() {
+	*x = ConfigureRoutesRequest{}
+	mi := &file_flavor_netd_v1_netd_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConfigureRoutesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConfigureRoutesRequest) ProtoMessage() {}
+
+func (x *ConfigureRoutesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_flavor_netd_v1_netd_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConfigureRoutesRequest.ProtoReflect.Descriptor instead.
+func (*ConfigureRoutesRequest) Descriptor() ([]byte, []int) {
+	return file_flavor_netd_v1_netd_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *ConfigureRoutesRequest) GetRoutes() []*IpPrefix {
+	if x != nil {
+		return x.Routes
+	}
+	return nil
+}
+
+type RefusedRoute struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Route         *IpPrefix              `protobuf:"bytes,1,opt,name=route,proto3" json:"route,omitempty"`
+	Conflict      *IpPrefix              `protobuf:"bytes,2,opt,name=conflict,proto3" json:"conflict,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefusedRoute) Reset() {
+	*x = RefusedRoute{}
+	mi := &file_flavor_netd_v1_netd_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefusedRoute) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefusedRoute) ProtoMessage() {}
+
+func (x *RefusedRoute) ProtoReflect() protoreflect.Message {
+	mi := &file_flavor_netd_v1_netd_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefusedRoute.ProtoReflect.Descriptor instead.
+func (*RefusedRoute) Descriptor() ([]byte, []int) {
+	return file_flavor_netd_v1_netd_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *RefusedRoute) GetRoute() *IpPrefix {
+	if x != nil {
+		return x.Route
+	}
+	return nil
+}
+
+func (x *RefusedRoute) GetConflict() *IpPrefix {
+	if x != nil {
+		return x.Conflict
+	}
+	return nil
+}
+
+type ConfigureRoutesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Installed     []*IpPrefix            `protobuf:"bytes,1,rep,name=installed,proto3" json:"installed,omitempty"`
+	Refused       []*RefusedRoute        `protobuf:"bytes,2,rep,name=refused,proto3" json:"refused,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ConfigureRoutesResponse) Reset() {
+	*x = ConfigureRoutesResponse{}
+	mi := &file_flavor_netd_v1_netd_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConfigureRoutesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConfigureRoutesResponse) ProtoMessage() {}
+
+func (x *ConfigureRoutesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_flavor_netd_v1_netd_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConfigureRoutesResponse.ProtoReflect.Descriptor instead.
+func (*ConfigureRoutesResponse) Descriptor() ([]byte, []int) {
+	return file_flavor_netd_v1_netd_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *ConfigureRoutesResponse) GetInstalled() []*IpPrefix {
+	if x != nil {
+		return x.Installed
+	}
+	return nil
+}
+
+func (x *ConfigureRoutesResponse) GetRefused() []*RefusedRoute {
+	if x != nil {
+		return x.Refused
+	}
+	return nil
+}
+
 var File_flavor_netd_v1_netd_proto protoreflect.FileDescriptor
 
 const file_flavor_netd_v1_netd_proto_rawDesc = "" +
 	"\n" +
-	"\x19flavor/netd/v1/netd.proto\x12\x0eflavor.netd.v1\"\xde\x04\n" +
+	"\x19flavor/netd/v1/netd.proto\x12\x0eflavor.netd.v1\"\xb3\x05\n" +
 	"\aRequest\x12%\n" +
 	"\x0eprotocol_major\x18\x01 \x01(\rR\rprotocolMajor\x12%\n" +
 	"\x0eprotocol_minor\x18\x02 \x01(\rR\rprotocolMinor\x12\x1d\n" +
@@ -1298,8 +1484,9 @@ const file_flavor_netd_v1_netd_proto_rawDesc = "" +
 	"\x1bdestroy_synthetic_interface\x18\f \x01(\v20.flavor.netd.v1.DestroySyntheticInterfaceRequestH\x00R\x19destroySyntheticInterface\x12J\n" +
 	"\rconfigure_dns\x18\r \x01(\v2#.flavor.netd.v1.ConfigureDnsRequestH\x00R\fconfigureDns\x12>\n" +
 	"\tclear_dns\x18\x0e \x01(\v2\x1f.flavor.netd.v1.ClearDnsRequestH\x00R\bclearDns\x127\n" +
-	"\x06status\x18\x0f \x01(\v2\x1d.flavor.netd.v1.StatusRequestH\x00R\x06statusB\x06\n" +
-	"\x04body\"\xc4\x04\n" +
+	"\x06status\x18\x0f \x01(\v2\x1d.flavor.netd.v1.StatusRequestH\x00R\x06status\x12S\n" +
+	"\x10configure_routes\x18\x10 \x01(\v2&.flavor.netd.v1.ConfigureRoutesRequestH\x00R\x0fconfigureRoutesB\x06\n" +
+	"\x04body\"\x9a\x05\n" +
 	"\bResponse\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\x04R\trequestId\x12+\n" +
@@ -1310,7 +1497,8 @@ const file_flavor_netd_v1_netd_proto_rawDesc = "" +
 	"\x1bdestroy_synthetic_interface\x18\f \x01(\v21.flavor.netd.v1.DestroySyntheticInterfaceResponseH\x00R\x19destroySyntheticInterface\x12K\n" +
 	"\rconfigure_dns\x18\r \x01(\v2$.flavor.netd.v1.ConfigureDnsResponseH\x00R\fconfigureDns\x12?\n" +
 	"\tclear_dns\x18\x0e \x01(\v2 .flavor.netd.v1.ClearDnsResponseH\x00R\bclearDns\x128\n" +
-	"\x06status\x18\x0f \x01(\v2\x1e.flavor.netd.v1.StatusResponseH\x00R\x06statusB\x06\n" +
+	"\x06status\x18\x0f \x01(\v2\x1e.flavor.netd.v1.StatusResponseH\x00R\x06status\x12T\n" +
+	"\x10configure_routes\x18\x10 \x01(\v2'.flavor.netd.v1.ConfigureRoutesResponseH\x00R\x0fconfigureRoutesB\x06\n" +
 	"\x04body\"N\n" +
 	"\x05Error\x12-\n" +
 	"\x04code\x18\x01 \x01(\x0e2\x19.flavor.netd.v1.ErrorCodeR\x04code\x12\x16\n" +
@@ -1357,7 +1545,15 @@ const file_flavor_netd_v1_netd_proto_rawDesc = "" +
 	"\av4_pool\x18\x04 \x01(\v2\x18.flavor.netd.v1.IpPrefixR\x06v4Pool\x12\x10\n" +
 	"\x03mtu\x18\x05 \x01(\rR\x03mtu\x12%\n" +
 	"\x0edns_configured\x18\x06 \x01(\bR\rdnsConfigured\x12'\n" +
-	"\x0frouting_domains\x18\a \x03(\tR\x0eroutingDomains*\xd3\x04\n" +
+	"\x0frouting_domains\x18\a \x03(\tR\x0eroutingDomains\"J\n" +
+	"\x16ConfigureRoutesRequest\x120\n" +
+	"\x06routes\x18\x01 \x03(\v2\x18.flavor.netd.v1.IpPrefixR\x06routes\"t\n" +
+	"\fRefusedRoute\x12.\n" +
+	"\x05route\x18\x01 \x01(\v2\x18.flavor.netd.v1.IpPrefixR\x05route\x124\n" +
+	"\bconflict\x18\x02 \x01(\v2\x18.flavor.netd.v1.IpPrefixR\bconflict\"\x89\x01\n" +
+	"\x17ConfigureRoutesResponse\x126\n" +
+	"\tinstalled\x18\x01 \x03(\v2\x18.flavor.netd.v1.IpPrefixR\tinstalled\x126\n" +
+	"\arefused\x18\x02 \x03(\v2\x1c.flavor.netd.v1.RefusedRouteR\arefused*\xf1\x04\n" +
 	"\tErrorCode\x12\x1a\n" +
 	"\x16ERROR_CODE_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17ERROR_CODE_UNAUTHORIZED\x10\x01\x12$\n" +
@@ -1377,14 +1573,16 @@ const file_flavor_netd_v1_netd_proto_rawDesc = "" +
 	"\x1aERROR_CODE_TUN_UNAVAILABLE\x10\x0e\x12\x1d\n" +
 	"\x19ERROR_CODE_NETLINK_FAILED\x10\x0f\x12!\n" +
 	"\x1dERROR_CODE_FD_TRANSFER_FAILED\x10\x10\x12\x17\n" +
-	"\x13ERROR_CODE_INTERNAL\x10\x11*\x88\x01\n" +
+	"\x13ERROR_CODE_INTERNAL\x10\x11\x12\x1c\n" +
+	"\x18ERROR_CODE_INVALID_ROUTE\x10\x12*\x9f\x01\n" +
 	"\n" +
 	"Capability\x12\x1a\n" +
 	"\x16CAPABILITY_UNSPECIFIED\x10\x00\x12\x13\n" +
 	"\x0fCAPABILITY_IPV6\x10\x01\x12\x13\n" +
 	"\x0fCAPABILITY_IPV4\x10\x02\x12\x1b\n" +
 	"\x17CAPABILITY_RESOLVED_DNS\x10\x03\x12\x17\n" +
-	"\x13CAPABILITY_NRPT_DNS\x10\x04B\xb7\x01\n" +
+	"\x13CAPABILITY_NRPT_DNS\x10\x04\x12\x15\n" +
+	"\x11CAPABILITY_ROUTES\x10\x05B\xb7\x01\n" +
 	"\x12com.flavor.netd.v1B\tNetdProtoP\x01Z<git.lunarlabs.dev/flavor/flavor/gen/go/flavor/netd/v1;netdv1\xa2\x02\x03FNX\xaa\x02\x0eFlavor.Netd.V1\xca\x02\x0eFlavor\\Netd\\V1\xe2\x02\x1aFlavor\\Netd\\V1\\GPBMetadata\xea\x02\x10Flavor::Netd::V1b\x06proto3"
 
 var (
@@ -1400,7 +1598,7 @@ func file_flavor_netd_v1_netd_proto_rawDescGZIP() []byte {
 }
 
 var file_flavor_netd_v1_netd_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_flavor_netd_v1_netd_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_flavor_netd_v1_netd_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_flavor_netd_v1_netd_proto_goTypes = []any{
 	(ErrorCode)(0),                            // 0: flavor.netd.v1.ErrorCode
 	(Capability)(0),                           // 1: flavor.netd.v1.Capability
@@ -1421,6 +1619,9 @@ var file_flavor_netd_v1_netd_proto_goTypes = []any{
 	(*StatusRequest)(nil),                     // 16: flavor.netd.v1.StatusRequest
 	(*StatusResponse)(nil),                    // 17: flavor.netd.v1.StatusResponse
 	(*Instance)(nil),                          // 18: flavor.netd.v1.Instance
+	(*ConfigureRoutesRequest)(nil),            // 19: flavor.netd.v1.ConfigureRoutesRequest
+	(*RefusedRoute)(nil),                      // 20: flavor.netd.v1.RefusedRoute
+	(*ConfigureRoutesResponse)(nil),           // 21: flavor.netd.v1.ConfigureRoutesResponse
 }
 var file_flavor_netd_v1_netd_proto_depIdxs = []int32{
 	6,  // 0: flavor.netd.v1.Request.hello:type_name -> flavor.netd.v1.HelloRequest
@@ -1429,25 +1630,32 @@ var file_flavor_netd_v1_netd_proto_depIdxs = []int32{
 	12, // 3: flavor.netd.v1.Request.configure_dns:type_name -> flavor.netd.v1.ConfigureDnsRequest
 	14, // 4: flavor.netd.v1.Request.clear_dns:type_name -> flavor.netd.v1.ClearDnsRequest
 	16, // 5: flavor.netd.v1.Request.status:type_name -> flavor.netd.v1.StatusRequest
-	4,  // 6: flavor.netd.v1.Response.error:type_name -> flavor.netd.v1.Error
-	7,  // 7: flavor.netd.v1.Response.hello:type_name -> flavor.netd.v1.HelloResponse
-	9,  // 8: flavor.netd.v1.Response.create_synthetic_interface:type_name -> flavor.netd.v1.CreateSyntheticInterfaceResponse
-	11, // 9: flavor.netd.v1.Response.destroy_synthetic_interface:type_name -> flavor.netd.v1.DestroySyntheticInterfaceResponse
-	13, // 10: flavor.netd.v1.Response.configure_dns:type_name -> flavor.netd.v1.ConfigureDnsResponse
-	15, // 11: flavor.netd.v1.Response.clear_dns:type_name -> flavor.netd.v1.ClearDnsResponse
-	17, // 12: flavor.netd.v1.Response.status:type_name -> flavor.netd.v1.StatusResponse
-	0,  // 13: flavor.netd.v1.Error.code:type_name -> flavor.netd.v1.ErrorCode
-	1,  // 14: flavor.netd.v1.HelloResponse.capabilities:type_name -> flavor.netd.v1.Capability
-	5,  // 15: flavor.netd.v1.CreateSyntheticInterfaceRequest.v6_install_prefix:type_name -> flavor.netd.v1.IpPrefix
-	5,  // 16: flavor.netd.v1.CreateSyntheticInterfaceRequest.v4_pool:type_name -> flavor.netd.v1.IpPrefix
-	18, // 17: flavor.netd.v1.StatusResponse.instance:type_name -> flavor.netd.v1.Instance
-	5,  // 18: flavor.netd.v1.Instance.v6_install_prefix:type_name -> flavor.netd.v1.IpPrefix
-	5,  // 19: flavor.netd.v1.Instance.v4_pool:type_name -> flavor.netd.v1.IpPrefix
-	20, // [20:20] is the sub-list for method output_type
-	20, // [20:20] is the sub-list for method input_type
-	20, // [20:20] is the sub-list for extension type_name
-	20, // [20:20] is the sub-list for extension extendee
-	0,  // [0:20] is the sub-list for field type_name
+	19, // 6: flavor.netd.v1.Request.configure_routes:type_name -> flavor.netd.v1.ConfigureRoutesRequest
+	4,  // 7: flavor.netd.v1.Response.error:type_name -> flavor.netd.v1.Error
+	7,  // 8: flavor.netd.v1.Response.hello:type_name -> flavor.netd.v1.HelloResponse
+	9,  // 9: flavor.netd.v1.Response.create_synthetic_interface:type_name -> flavor.netd.v1.CreateSyntheticInterfaceResponse
+	11, // 10: flavor.netd.v1.Response.destroy_synthetic_interface:type_name -> flavor.netd.v1.DestroySyntheticInterfaceResponse
+	13, // 11: flavor.netd.v1.Response.configure_dns:type_name -> flavor.netd.v1.ConfigureDnsResponse
+	15, // 12: flavor.netd.v1.Response.clear_dns:type_name -> flavor.netd.v1.ClearDnsResponse
+	17, // 13: flavor.netd.v1.Response.status:type_name -> flavor.netd.v1.StatusResponse
+	21, // 14: flavor.netd.v1.Response.configure_routes:type_name -> flavor.netd.v1.ConfigureRoutesResponse
+	0,  // 15: flavor.netd.v1.Error.code:type_name -> flavor.netd.v1.ErrorCode
+	1,  // 16: flavor.netd.v1.HelloResponse.capabilities:type_name -> flavor.netd.v1.Capability
+	5,  // 17: flavor.netd.v1.CreateSyntheticInterfaceRequest.v6_install_prefix:type_name -> flavor.netd.v1.IpPrefix
+	5,  // 18: flavor.netd.v1.CreateSyntheticInterfaceRequest.v4_pool:type_name -> flavor.netd.v1.IpPrefix
+	18, // 19: flavor.netd.v1.StatusResponse.instance:type_name -> flavor.netd.v1.Instance
+	5,  // 20: flavor.netd.v1.Instance.v6_install_prefix:type_name -> flavor.netd.v1.IpPrefix
+	5,  // 21: flavor.netd.v1.Instance.v4_pool:type_name -> flavor.netd.v1.IpPrefix
+	5,  // 22: flavor.netd.v1.ConfigureRoutesRequest.routes:type_name -> flavor.netd.v1.IpPrefix
+	5,  // 23: flavor.netd.v1.RefusedRoute.route:type_name -> flavor.netd.v1.IpPrefix
+	5,  // 24: flavor.netd.v1.RefusedRoute.conflict:type_name -> flavor.netd.v1.IpPrefix
+	5,  // 25: flavor.netd.v1.ConfigureRoutesResponse.installed:type_name -> flavor.netd.v1.IpPrefix
+	20, // 26: flavor.netd.v1.ConfigureRoutesResponse.refused:type_name -> flavor.netd.v1.RefusedRoute
+	27, // [27:27] is the sub-list for method output_type
+	27, // [27:27] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_flavor_netd_v1_netd_proto_init() }
@@ -1462,6 +1670,7 @@ func file_flavor_netd_v1_netd_proto_init() {
 		(*Request_ConfigureDns)(nil),
 		(*Request_ClearDns)(nil),
 		(*Request_Status)(nil),
+		(*Request_ConfigureRoutes)(nil),
 	}
 	file_flavor_netd_v1_netd_proto_msgTypes[1].OneofWrappers = []any{
 		(*Response_Hello)(nil),
@@ -1470,6 +1679,7 @@ func file_flavor_netd_v1_netd_proto_init() {
 		(*Response_ConfigureDns)(nil),
 		(*Response_ClearDns)(nil),
 		(*Response_Status)(nil),
+		(*Response_ConfigureRoutes)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1477,7 +1687,7 @@ func file_flavor_netd_v1_netd_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_flavor_netd_v1_netd_proto_rawDesc), len(file_flavor_netd_v1_netd_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   17,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -4,6 +4,7 @@ package netd
 
 import (
 	"net/netip"
+	"slices"
 	"strings"
 
 	netdv1 "git.lunarlabs.dev/flavor/flavor/gen/go/flavor/netd/v1"
@@ -15,12 +16,14 @@ const (
 	MaxMTU         = 9000
 	maxDomains     = 128
 	maxRoutedBytes = 3072
+	maxRoutes      = 64
 	FlavorDomain   = "flavor.internal"
 )
 
 var (
 	compatibilityRange = netip.MustParsePrefix("198.18.0.0/15")
 	specialUse         = []string{"localhost", "local", "arpa", "invalid", "onion", "test"}
+	tailnetRanges      = []netip.Prefix{netip.MustParsePrefix("100.64.0.0/10"), netip.MustParsePrefix("fd7a:115c:a1e0::/48")}
 )
 
 type ranges struct {
@@ -133,4 +136,35 @@ func reserved(d string) bool {
 		}
 	}
 	return false
+}
+
+func validateRoutes(in []*netdv1.IpPrefix, r ranges) ([]netip.Prefix, netdv1.ErrorCode) {
+	if len(in) > maxRoutes {
+		return nil, netdv1.ErrorCode_ERROR_CODE_INVALID_ROUTE
+	}
+	var out []netip.Prefix
+	for _, w := range in {
+		p, ok := prefixOf(w, len(w.GetAddress()))
+		if !ok || (len(w.GetAddress()) != 4 && len(w.GetAddress()) != 16) || p.Bits() == 0 {
+			return nil, netdv1.ErrorCode_ERROR_CODE_INVALID_ROUTE
+		}
+		a := p.Addr()
+		if a.IsLoopback() || a.IsMulticast() || a.IsLinkLocalUnicast() || a.IsUnspecified() || slices.ContainsFunc(tailnetRanges, p.Overlaps) || p.Overlaps(r.v6) || (r.v4.IsValid() && p.Overlaps(r.v4)) {
+			return nil, netdv1.ErrorCode_ERROR_CODE_INVALID_ROUTE
+		}
+		if !slices.Contains(out, p) {
+			out = append(out, p)
+		}
+	}
+	slices.SortFunc(out, netip.Prefix.Compare)
+	return out, netdv1.ErrorCode_ERROR_CODE_UNSPECIFIED
+}
+
+func routeConflict(p netip.Prefix, occupied []netip.Prefix) (netip.Prefix, bool) {
+	for _, o := range occupied {
+		if o.Bits() > 0 && o.Overlaps(p) {
+			return o, true
+		}
+	}
+	return netip.Prefix{}, false
 }

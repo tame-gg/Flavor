@@ -2,15 +2,19 @@
 // @generated from file flavor/v1/routes.proto (package flavor.v1, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
-import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
+import { enumDesc, fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type { Device } from "./device_pb";
+import { file_flavor_v1_device } from "./device_pb";
+import type { NetworkRef } from "./inspector_pb";
+import { file_flavor_v1_inspector } from "./inspector_pb";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file flavor/v1/routes.proto.
  */
 export const file_flavor_v1_routes: GenFile = /*@__PURE__*/
-  fileDesc("ChZmbGF2b3IvdjEvcm91dGVzLnByb3RvEglmbGF2b3IudjEiMwoPQWR2ZXJ0aXNlZFJvdXRlEg4KBnByZWZpeBgBIAEoCRIQCghhcHByb3ZlZBgCIAEoCCImChBHZXRSb3V0ZXNSZXF1ZXN0EhIKCm5ldHdvcmtfaWQYASABKAkiPwoRR2V0Um91dGVzUmVzcG9uc2USKgoGcm91dGVzGAEgAygLMhouZmxhdm9yLnYxLkFkdmVydGlzZWRSb3V0ZSJGChNVcGRhdGVSb3V0ZXNSZXF1ZXN0EhIKCm5ldHdvcmtfaWQYASABKAkSCwoDYWRkGAIgAygJEg4KBnJlbW92ZRgDIAMoCSJCChRVcGRhdGVSb3V0ZXNSZXNwb25zZRIqCgZyb3V0ZXMYASADKAsyGi5mbGF2b3IudjEuQWR2ZXJ0aXNlZFJvdXRlMqcBCgxSb3V0ZVNlcnZpY2USRgoJR2V0Um91dGVzEhsuZmxhdm9yLnYxLkdldFJvdXRlc1JlcXVlc3QaHC5mbGF2b3IudjEuR2V0Um91dGVzUmVzcG9uc2USTwoMVXBkYXRlUm91dGVzEh4uZmxhdm9yLnYxLlVwZGF0ZVJvdXRlc1JlcXVlc3QaHy5mbGF2b3IudjEuVXBkYXRlUm91dGVzUmVzcG9uc2VCnAEKDWNvbS5mbGF2b3IudjFCC1JvdXRlc1Byb3RvUAFaOWdpdC5sdW5hcmxhYnMuZGV2L2ZsYXZvci9mbGF2b3IvZ2VuL2dvL2ZsYXZvci92MTtmbGF2b3J2MaICA0ZYWKoCCUZsYXZvci5WMcoCCUZsYXZvclxWMeICFUZsYXZvclxWMVxHUEJNZXRhZGF0YeoCCkZsYXZvcjo6VjFiBnByb3RvMw");
+  fileDesc("ChZmbGF2b3IvdjEvcm91dGVzLnByb3RvEglmbGF2b3IudjEiMwoPQWR2ZXJ0aXNlZFJvdXRlEg4KBnByZWZpeBgBIAEoCRIQCghhcHByb3ZlZBgCIAEoCCImChBHZXRSb3V0ZXNSZXF1ZXN0EhIKCm5ldHdvcmtfaWQYASABKAkiPwoRR2V0Um91dGVzUmVzcG9uc2USKgoGcm91dGVzGAEgAygLMhouZmxhdm9yLnYxLkFkdmVydGlzZWRSb3V0ZSJGChNVcGRhdGVSb3V0ZXNSZXF1ZXN0EhIKCm5ldHdvcmtfaWQYASABKAkSCwoDYWRkGAIgAygJEg4KBnJlbW92ZRgDIAMoCSJCChRVcGRhdGVSb3V0ZXNSZXNwb25zZRIqCgZyb3V0ZXMYASADKAsyGi5mbGF2b3IudjEuQWR2ZXJ0aXNlZFJvdXRlIsoBCgtTdWJuZXRSb3V0ZRImCgduZXR3b3JrGAEgASgLMhUuZmxhdm9yLnYxLk5ldHdvcmtSZWYSDgoGcHJlZml4GAIgASgJEiIKB3JvdXRlcnMYAyADKAsyES5mbGF2b3IudjEuRGV2aWNlEiYKA3VzZRgEIAEoDjIZLmZsYXZvci52MS5TdWJuZXRSb3V0ZVVzZRIOCgZkZXRhaWwYBSABKAkSJwoIb3ZlcmxhcHMYBiADKAsyFS5mbGF2b3IudjEuTmV0d29ya1JlZiItChdMaXN0U3VibmV0Um91dGVzUmVxdWVzdBISCgpuZXR3b3JrX2lkGAEgASgJIkIKGExpc3RTdWJuZXRSb3V0ZXNSZXNwb25zZRImCgZyb3V0ZXMYASADKAsyFi5mbGF2b3IudjEuU3VibmV0Um91dGUiZAoWVXNlU3VibmV0Um91dGVzUmVxdWVzdBISCgpuZXR3b3JrX2lkGAEgASgJEgsKA2FkZBgCIAMoCRIOCgZyZW1vdmUYAyADKAkSCwoDYWxsGAQgASgIEgwKBG5vbmUYBSABKAgiQQoXVXNlU3VibmV0Um91dGVzUmVzcG9uc2USJgoGcm91dGVzGAEgAygLMhYuZmxhdm9yLnYxLlN1Ym5ldFJvdXRlKtIBCg5TdWJuZXRSb3V0ZVVzZRIgChxTVUJORVRfUk9VVEVfVVNFX1VOU1BFQ0lGSUVEEAASHQoZU1VCTkVUX1JPVVRFX1VTRV9OT1RfVVNFRBABEh4KGlNVQk5FVF9ST1VURV9VU0VfSU5TVEFMTEVEEAISHAoYU1VCTkVUX1JPVVRFX1VTRV9QRU5ESU5HEAMSHAoYU1VCTkVUX1JPVVRFX1VTRV9SRUZVU0VEEAQSIwofU1VCTkVUX1JPVVRFX1VTRV9OT1RfQURWRVJUSVNFRBAFMt4CCgxSb3V0ZVNlcnZpY2USRgoJR2V0Um91dGVzEhsuZmxhdm9yLnYxLkdldFJvdXRlc1JlcXVlc3QaHC5mbGF2b3IudjEuR2V0Um91dGVzUmVzcG9uc2USTwoMVXBkYXRlUm91dGVzEh4uZmxhdm9yLnYxLlVwZGF0ZVJvdXRlc1JlcXVlc3QaHy5mbGF2b3IudjEuVXBkYXRlUm91dGVzUmVzcG9uc2USWwoQTGlzdFN1Ym5ldFJvdXRlcxIiLmZsYXZvci52MS5MaXN0U3VibmV0Um91dGVzUmVxdWVzdBojLmZsYXZvci52MS5MaXN0U3VibmV0Um91dGVzUmVzcG9uc2USWAoPVXNlU3VibmV0Um91dGVzEiEuZmxhdm9yLnYxLlVzZVN1Ym5ldFJvdXRlc1JlcXVlc3QaIi5mbGF2b3IudjEuVXNlU3VibmV0Um91dGVzUmVzcG9uc2VCnAEKDWNvbS5mbGF2b3IudjFCC1JvdXRlc1Byb3RvUAFaOWdpdC5sdW5hcmxhYnMuZGV2L2ZsYXZvci9mbGF2b3IvZ2VuL2dvL2ZsYXZvci92MTtmbGF2b3J2MaICA0ZYWKoCCUZsYXZvci5WMcoCCUZsYXZvclxWMeICFUZsYXZvclxWMVxHUEJNZXRhZGF0YeoCCkZsYXZvcjo6VjFiBnByb3RvMw", [file_flavor_v1_device, file_flavor_v1_inspector]);
 
 /**
  * @generated from message flavor.v1.AdvertisedRoute
@@ -113,6 +117,177 @@ export const UpdateRoutesResponseSchema: GenMessage<UpdateRoutesResponse> = /*@_
   messageDesc(file_flavor_v1_routes, 4);
 
 /**
+ * @generated from message flavor.v1.SubnetRoute
+ */
+export type SubnetRoute = Message<"flavor.v1.SubnetRoute"> & {
+  /**
+   * @generated from field: flavor.v1.NetworkRef network = 1;
+   */
+  network?: NetworkRef | undefined;
+
+  /**
+   * @generated from field: string prefix = 2;
+   */
+  prefix: string;
+
+  /**
+   * @generated from field: repeated flavor.v1.Device routers = 3;
+   */
+  routers: Device[];
+
+  /**
+   * @generated from field: flavor.v1.SubnetRouteUse use = 4;
+   */
+  use: SubnetRouteUse;
+
+  /**
+   * @generated from field: string detail = 5;
+   */
+  detail: string;
+
+  /**
+   * @generated from field: repeated flavor.v1.NetworkRef overlaps = 6;
+   */
+  overlaps: NetworkRef[];
+};
+
+/**
+ * Describes the message flavor.v1.SubnetRoute.
+ * Use `create(SubnetRouteSchema)` to create a new message.
+ */
+export const SubnetRouteSchema: GenMessage<SubnetRoute> = /*@__PURE__*/
+  messageDesc(file_flavor_v1_routes, 5);
+
+/**
+ * @generated from message flavor.v1.ListSubnetRoutesRequest
+ */
+export type ListSubnetRoutesRequest = Message<"flavor.v1.ListSubnetRoutesRequest"> & {
+  /**
+   * @generated from field: string network_id = 1;
+   */
+  networkId: string;
+};
+
+/**
+ * Describes the message flavor.v1.ListSubnetRoutesRequest.
+ * Use `create(ListSubnetRoutesRequestSchema)` to create a new message.
+ */
+export const ListSubnetRoutesRequestSchema: GenMessage<ListSubnetRoutesRequest> = /*@__PURE__*/
+  messageDesc(file_flavor_v1_routes, 6);
+
+/**
+ * @generated from message flavor.v1.ListSubnetRoutesResponse
+ */
+export type ListSubnetRoutesResponse = Message<"flavor.v1.ListSubnetRoutesResponse"> & {
+  /**
+   * @generated from field: repeated flavor.v1.SubnetRoute routes = 1;
+   */
+  routes: SubnetRoute[];
+};
+
+/**
+ * Describes the message flavor.v1.ListSubnetRoutesResponse.
+ * Use `create(ListSubnetRoutesResponseSchema)` to create a new message.
+ */
+export const ListSubnetRoutesResponseSchema: GenMessage<ListSubnetRoutesResponse> = /*@__PURE__*/
+  messageDesc(file_flavor_v1_routes, 7);
+
+/**
+ * @generated from message flavor.v1.UseSubnetRoutesRequest
+ */
+export type UseSubnetRoutesRequest = Message<"flavor.v1.UseSubnetRoutesRequest"> & {
+  /**
+   * @generated from field: string network_id = 1;
+   */
+  networkId: string;
+
+  /**
+   * @generated from field: repeated string add = 2;
+   */
+  add: string[];
+
+  /**
+   * @generated from field: repeated string remove = 3;
+   */
+  remove: string[];
+
+  /**
+   * @generated from field: bool all = 4;
+   */
+  all: boolean;
+
+  /**
+   * @generated from field: bool none = 5;
+   */
+  none: boolean;
+};
+
+/**
+ * Describes the message flavor.v1.UseSubnetRoutesRequest.
+ * Use `create(UseSubnetRoutesRequestSchema)` to create a new message.
+ */
+export const UseSubnetRoutesRequestSchema: GenMessage<UseSubnetRoutesRequest> = /*@__PURE__*/
+  messageDesc(file_flavor_v1_routes, 8);
+
+/**
+ * @generated from message flavor.v1.UseSubnetRoutesResponse
+ */
+export type UseSubnetRoutesResponse = Message<"flavor.v1.UseSubnetRoutesResponse"> & {
+  /**
+   * @generated from field: repeated flavor.v1.SubnetRoute routes = 1;
+   */
+  routes: SubnetRoute[];
+};
+
+/**
+ * Describes the message flavor.v1.UseSubnetRoutesResponse.
+ * Use `create(UseSubnetRoutesResponseSchema)` to create a new message.
+ */
+export const UseSubnetRoutesResponseSchema: GenMessage<UseSubnetRoutesResponse> = /*@__PURE__*/
+  messageDesc(file_flavor_v1_routes, 9);
+
+/**
+ * @generated from enum flavor.v1.SubnetRouteUse
+ */
+export enum SubnetRouteUse {
+  /**
+   * @generated from enum value: SUBNET_ROUTE_USE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: SUBNET_ROUTE_USE_NOT_USED = 1;
+   */
+  NOT_USED = 1,
+
+  /**
+   * @generated from enum value: SUBNET_ROUTE_USE_INSTALLED = 2;
+   */
+  INSTALLED = 2,
+
+  /**
+   * @generated from enum value: SUBNET_ROUTE_USE_PENDING = 3;
+   */
+  PENDING = 3,
+
+  /**
+   * @generated from enum value: SUBNET_ROUTE_USE_REFUSED = 4;
+   */
+  REFUSED = 4,
+
+  /**
+   * @generated from enum value: SUBNET_ROUTE_USE_NOT_ADVERTISED = 5;
+   */
+  NOT_ADVERTISED = 5,
+}
+
+/**
+ * Describes the enum flavor.v1.SubnetRouteUse.
+ */
+export const SubnetRouteUseSchema: GenEnum<SubnetRouteUse> = /*@__PURE__*/
+  enumDesc(file_flavor_v1_routes, 0);
+
+/**
  * @generated from service flavor.v1.RouteService
  */
 export const RouteService: GenService<{
@@ -131,6 +306,22 @@ export const RouteService: GenService<{
     methodKind: "unary";
     input: typeof UpdateRoutesRequestSchema;
     output: typeof UpdateRoutesResponseSchema;
+  },
+  /**
+   * @generated from rpc flavor.v1.RouteService.ListSubnetRoutes
+   */
+  listSubnetRoutes: {
+    methodKind: "unary";
+    input: typeof ListSubnetRoutesRequestSchema;
+    output: typeof ListSubnetRoutesResponseSchema;
+  },
+  /**
+   * @generated from rpc flavor.v1.RouteService.UseSubnetRoutes
+   */
+  useSubnetRoutes: {
+    methodKind: "unary";
+    input: typeof UseSubnetRoutesRequestSchema;
+    output: typeof UseSubnetRoutesResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_flavor_v1_routes, 0);

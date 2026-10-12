@@ -112,6 +112,8 @@ func (s *Service) UseSubnetRoutes(ctx context.Context, rawNetwork string, add, r
 		return nil, err
 	}
 	defer release()
+	s.routesMu.Lock()
+	defer s.routesMu.Unlock()
 	nets, _, err := s.liveNetworks(ctx)
 	if err != nil {
 		return nil, err

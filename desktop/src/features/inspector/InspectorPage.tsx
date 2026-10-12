@@ -139,6 +139,11 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
             <h2 id="decision-title">{summary.title}</h2>
             <p className="muted">{summary.detail}</p>
             {note && <p className="muted">{note}</p>}
+            {result.systemRoute && (
+              <p className="muted">
+                Every program on this computer reaches it through <span className="mono">{result.systemRoute}</span>.
+              </p>
+            )}
             {result.preference && canPrefer && (
               <div className="row">
                 <span className="badge">Flavor preference: {result.preference.network?.displayName}</span>

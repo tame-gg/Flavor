@@ -699,6 +699,14 @@ func TestConfigureRoutesInstallsOnlyFreeSafeRoutes(t *testing.T) {
 	if !slices.Equal(routes(), []netip.Prefix{ula, pool, v6}) {
 		t.Fatalf("a rejected request must not change the routes: %v", routes())
 	}
+	h.with(func() { h.kernel.failAt = "delroute" })
+	if _, _, err := c.ConfigureRoutes(nil); err != nil || !slices.Contains(routes(), v6) {
+		t.Fatalf("%v %v", err, routes())
+	}
+	h.with(func() { h.kernel.failAt = "" })
+	if _, _, err := c.ConfigureRoutes(nil); err != nil || slices.Contains(routes(), v6) {
+		t.Fatalf("a route whose removal failed must be retried: %v %v", err, routes())
+	}
 }
 
 func TestConfigureRoutesNeedsAnInstance(t *testing.T) {

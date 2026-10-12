@@ -531,14 +531,16 @@ func (s *Server) configureRoutes(cn *conn, req *netdv1.ConfigureRoutesRequest) *
 		}
 		installed = append(installed, p)
 	}
+	tracked := slices.Clone(installed)
 	for _, p := range o.routes {
 		if !slices.Contains(installed, p) {
 			if err := s.cfg.Kernel.DeleteRoute(o.index, p); err != nil {
 				s.cfg.Log.Warn("removing route failed", "route", p.String(), "err", err.Error())
+				tracked = append(tracked, p)
 			}
 		}
 	}
-	o.routes = installed
+	o.routes = tracked
 	for _, p := range installed {
 		out.Installed = append(out.Installed, wirePrefix(p))
 	}

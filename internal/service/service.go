@@ -67,6 +67,7 @@ type Service struct {
 	warned       map[string]time.Time
 	splitDNS     map[string]splitAnswer
 	routes       installedRoutes
+	routesMu     sync.Mutex
 	routesNudge  chan struct{}
 }
 

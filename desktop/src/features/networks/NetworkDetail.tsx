@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { NetworkConnectionState as S, ProviderType } from "@gen/flavor/v1/common_pb";
 import type { NetworkDNS } from "@gen/flavor/v1/dns_pb";
 import { SubnetRouteUse, type SubnetRoute } from "@gen/flavor/v1/routes_pb";
@@ -20,6 +20,7 @@ import {
 } from "../../lib/api/daemon";
 import { useCanMutate, useDaemon } from "../../app/sync/useDaemon";
 import { useAction } from "../../app/useAction";
+import { errorMessage } from "../../lib/api/errors";
 import { controlHost, providerName } from "./format";
 
 const active = new Set([S.CONNECTING, S.AUTHENTICATING, S.AWAITING_APPROVAL, S.CONNECTED, S.DEGRADED, S.RECONNECTING]);
@@ -136,22 +137,43 @@ function SubnetRoutesCard({ networkId }: { networkId: string }) {
   const { sequence, status } = useDaemon();
   const canMutate = useCanMutate();
   const [routes, setRoutes] = useState<SubnetRoute[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
+  const generation = useRef(0);
   const toggle = useAction(async (prefix: string, on: boolean) => {
+    generation.current++;
     const r = await chooseSubnetRoutes(networkId, on ? [prefix] : [], on ? [] : [prefix]);
+    generation.current++;
     setRoutes(r.routes);
   });
 
   useEffect(() => {
     if (status !== "ready") return;
     let cancelled = false;
+    const started = generation.current;
     listSubnetRoutes(networkId)
-      .then((r) => !cancelled && setRoutes(r.routes))
-      .catch(() => !cancelled && setRoutes(null));
+      .then((r) => {
+        if (cancelled || started !== generation.current) return;
+        setRoutes(r.routes);
+        setLoadError(null);
+      })
+      .catch((e) => !cancelled && setLoadError(errorMessage(e)));
     return () => {
       cancelled = true;
     };
-  }, [networkId, sequence, status]);
+  }, [networkId, sequence, status, reload]);
 
+  if (loadError && !routes) {
+    return (
+      <div className="card stack-sm">
+        <h3>Subnet routes</h3>
+        <Banner tone="danger">{loadError}</Banner>
+        <div className="row">
+          <Button onClick={() => setReload((n) => n + 1)}>Try again</Button>
+        </div>
+      </div>
+    );
+  }
   if (!routes || routes.length === 0) return null;
   return (
     <div className="card stack">

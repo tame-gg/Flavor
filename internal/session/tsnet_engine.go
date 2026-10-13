@@ -122,6 +122,10 @@ func (e *tsnetEngine) Start() error {
 		_ = e.srv.Close()
 		return err
 	}
+	if _, err := lc.EditPrefs(context.Background(), &ipn.MaskedPrefs{Prefs: ipn.Prefs{RouteAll: true}, RouteAllSet: true}); err != nil {
+		_ = e.srv.Close()
+		return fmt.Errorf("accept subnet routes: %w", err)
+	}
 	e.lc = lc
 	return nil
 }

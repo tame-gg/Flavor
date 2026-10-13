@@ -29,13 +29,13 @@ const usage = `usage: flavorctl [--runtime-dir DIR] [--json] <command> [args]
 commands:
   info                                 daemon version and protocol
   list                                 configured networks and their state
-  devices [network-id]                 devices, optionally for one network
+  devices [network]                    devices, optionally for one network
   add --name NAME [--headscale URL] [--auto-connect]
-  connect <network-id>
-  disconnect <network-id>
-  enroll <network-id>                  reads a pre-auth key from stdin
-  rename <network-id> <name>
-  remove [--delete-identity] <network-id>
+  connect <network>
+  disconnect <network>
+  enroll <network>                     reads a pre-auth key from stdin
+  rename <network> <name>
+  remove [--delete-identity] <network>
   diag                                 safe diagnostics summary
   explain <destination>                which network an address or name belongs to, and why
   forward [--network N] [--listen ADDR] <destination:port>
@@ -174,7 +174,11 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSO
 	case "devices":
 		req := &v1.ListDevicesRequest{}
 		if len(args) > 0 {
-			req.NetworkId = args[0]
+			id, err := networkID(ctx, c, args[0])
+			if err != nil {
+				return err
+			}
+			req.NetworkId = id
 		}
 		res, err := c.Devices.ListDevices(ctx, connect.NewRequest(req))
 		if err != nil {
@@ -210,13 +214,21 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSO
 		if err := need(1); err != nil {
 			return err
 		}
-		_, err := c.Networks.ConnectNetwork(ctx, connect.NewRequest(&v1.ConnectNetworkRequest{NetworkId: args[0]}))
+		id, err := networkID(ctx, c, args[0])
+		if err != nil {
+			return err
+		}
+		_, err = c.Networks.ConnectNetwork(ctx, connect.NewRequest(&v1.ConnectNetworkRequest{NetworkId: id}))
 		return err
 	case "disconnect":
 		if err := need(1); err != nil {
 			return err
 		}
-		_, err := c.Networks.DisconnectNetwork(ctx, connect.NewRequest(&v1.DisconnectNetworkRequest{NetworkId: args[0]}))
+		id, err := networkID(ctx, c, args[0])
+		if err != nil {
+			return err
+		}
+		_, err = c.Networks.DisconnectNetwork(ctx, connect.NewRequest(&v1.DisconnectNetworkRequest{NetworkId: id}))
 		return err
 	case "enroll":
 		if err := need(1); err != nil {
@@ -226,8 +238,12 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSO
 		if err != nil && !errors.Is(err, io.EOF) {
 			return err
 		}
+		id, err := networkID(ctx, c, args[0])
+		if err != nil {
+			return err
+		}
 		_, err = c.Networks.EnrollNetwork(ctx, connect.NewRequest(&v1.EnrollNetworkRequest{
-			NetworkId:  args[0],
+			NetworkId:  id,
 			Enrollment: &v1.EnrollmentCredential{Credential: &v1.EnrollmentCredential_PreAuthKey{PreAuthKey: strings.TrimSpace(key)}},
 		}))
 		return err
@@ -235,7 +251,11 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSO
 		if err := need(2); err != nil {
 			return err
 		}
-		_, err := c.Networks.UpdateNetwork(ctx, connect.NewRequest(&v1.UpdateNetworkRequest{NetworkId: args[0], DisplayName: &args[1]}))
+		id, err := networkID(ctx, c, args[0])
+		if err != nil {
+			return err
+		}
+		_, err = c.Networks.UpdateNetwork(ctx, connect.NewRequest(&v1.UpdateNetworkRequest{NetworkId: id, DisplayName: &args[1]}))
 		return err
 	case "remove":
 		fs := flag.NewFlagSet("remove", flag.ContinueOnError)
@@ -244,13 +264,17 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSO
 			return err
 		}
 		if fs.NArg() != 1 {
-			return fmt.Errorf("remove: expected a network id\n\n%s", usage)
+			return fmt.Errorf("remove: expected a network\n\n%s", usage)
 		}
-		if *hard {
-			_, err := c.Networks.DeleteNetworkIdentity(ctx, connect.NewRequest(&v1.DeleteNetworkIdentityRequest{NetworkId: fs.Arg(0)}))
+		id, err := networkID(ctx, c, fs.Arg(0))
+		if err != nil {
 			return err
 		}
-		_, err := c.Networks.RemoveNetwork(ctx, connect.NewRequest(&v1.RemoveNetworkRequest{NetworkId: fs.Arg(0)}))
+		if *hard {
+			_, err := c.Networks.DeleteNetworkIdentity(ctx, connect.NewRequest(&v1.DeleteNetworkIdentityRequest{NetworkId: id}))
+			return err
+		}
+		_, err = c.Networks.RemoveNetwork(ctx, connect.NewRequest(&v1.RemoveNetworkRequest{NetworkId: id}))
 		return err
 	case "diag":
 		res, err := c.Diagnostics.RunDiagnostics(ctx, connect.NewRequest(&v1.RunDiagnosticsRequest{}))
@@ -745,4 +769,16 @@ func runSocks(ctx context.Context, c *client.Client, args []string, out io.Write
 		return err
 	}
 	return nil
+}
+
+func networkID(ctx context.Context, c *client.Client, ref string) (string, error) {
+	nets, err := c.Networks.ListNetworks(ctx, connect.NewRequest(&v1.ListNetworksRequest{}))
+	if err != nil {
+		return "", err
+	}
+	n, err := findNetwork(nets.Msg.Networks, ref)
+	if err != nil {
+		return "", err
+	}
+	return n.Id, nil
 }

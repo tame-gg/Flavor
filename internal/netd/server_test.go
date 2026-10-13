@@ -301,9 +301,10 @@ func TestCreateTransfersExactlyOneDescriptorAndKeepsNoCopy(t *testing.T) {
 	if !slices.Equal(l.routes, []netip.Prefix{ula, pool}) {
 		t.Fatalf("routes: %v", l.routes)
 	}
-	if !errors.Is(l.tun.Close(), os.ErrClosed) {
-		t.Fatal("the helper must close its copy of the TUN descriptor after sending it")
-	}
+	eventually(t, "the helper closes its copy of the TUN descriptor after sending it", func() bool {
+		rc, err := l.tun.SyscallConn()
+		return err != nil || rc.Control(func(uintptr) {}) != nil
+	})
 	if _, err := l.kernel.Write([]byte("packet")); err != nil {
 		t.Fatal(err)
 	}

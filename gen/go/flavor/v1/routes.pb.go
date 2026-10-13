@@ -176,10 +176,12 @@ func (x *GetRoutesRequest) GetNetworkId() string {
 }
 
 type GetRoutesResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Routes        []*AdvertisedRoute     `protobuf:"bytes,1,rep,name=routes,proto3" json:"routes,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Routes           []*AdvertisedRoute     `protobuf:"bytes,1,rep,name=routes,proto3" json:"routes,omitempty"`
+	ExitNodeOffered  bool                   `protobuf:"varint,2,opt,name=exit_node_offered,json=exitNodeOffered,proto3" json:"exit_node_offered,omitempty"`
+	ExitNodeApproved bool                   `protobuf:"varint,3,opt,name=exit_node_approved,json=exitNodeApproved,proto3" json:"exit_node_approved,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *GetRoutesResponse) Reset() {
@@ -217,6 +219,20 @@ func (x *GetRoutesResponse) GetRoutes() []*AdvertisedRoute {
 		return x.Routes
 	}
 	return nil
+}
+
+func (x *GetRoutesResponse) GetExitNodeOffered() bool {
+	if x != nil {
+		return x.ExitNodeOffered
+	}
+	return false
+}
+
+func (x *GetRoutesResponse) GetExitNodeApproved() bool {
+	if x != nil {
+		return x.ExitNodeApproved
+	}
+	return false
 }
 
 type UpdateRoutesRequest struct {
@@ -625,9 +641,11 @@ const file_flavor_v1_routes_proto_rawDesc = "" +
 	"\bapproved\x18\x02 \x01(\bR\bapproved\"1\n" +
 	"\x10GetRoutesRequest\x12\x1d\n" +
 	"\n" +
-	"network_id\x18\x01 \x01(\tR\tnetworkId\"G\n" +
+	"network_id\x18\x01 \x01(\tR\tnetworkId\"\xa1\x01\n" +
 	"\x11GetRoutesResponse\x122\n" +
-	"\x06routes\x18\x01 \x03(\v2\x1a.flavor.v1.AdvertisedRouteR\x06routes\"^\n" +
+	"\x06routes\x18\x01 \x03(\v2\x1a.flavor.v1.AdvertisedRouteR\x06routes\x12*\n" +
+	"\x11exit_node_offered\x18\x02 \x01(\bR\x0fexitNodeOffered\x12,\n" +
+	"\x12exit_node_approved\x18\x03 \x01(\bR\x10exitNodeApproved\"^\n" +
 	"\x13UpdateRoutesRequest\x12\x1d\n" +
 	"\n" +
 	"network_id\x18\x01 \x01(\tR\tnetworkId\x12\x10\n" +

@@ -56,8 +56,12 @@ func newTsnetEngine(cfg provider.ResolvedSessionConfig, authKey string, log *slo
 }
 
 func (e *tsnetEngine) forward(_, dst netip.AddrPort) (func(net.Conn), bool) {
+	local, err := hostAddrs()
+	if err != nil {
+		return nil, false
+	}
 	e.mu.Lock()
-	ok := forwardable(dst.Addr(), e.advertised)
+	ok := forwardable(dst.Addr(), e.advertised, func() []netip.Addr { return local })
 	e.mu.Unlock()
 	if !ok {
 		return nil, false
@@ -75,6 +79,31 @@ func (e *tsnetEngine) forward(_, dst netip.AddrPort) (func(net.Conn), bool) {
 }
 
 const forwardDialTimeout = 30 * time.Second
+
+func hostAddrs() ([]netip.Addr, error) {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return nil, err
+	}
+	var out []netip.Addr
+	for _, a := range addrs {
+		var ip net.IP
+		switch v := a.(type) {
+		case *net.IPNet:
+			ip = v.IP
+		case *net.IPAddr:
+			ip = v.IP
+		default:
+			return nil, fmt.Errorf("unexpected interface address %T", a)
+		}
+		addr, ok := netip.AddrFromSlice(ip)
+		if !ok {
+			return nil, fmt.Errorf("invalid interface address %v", a)
+		}
+		out = append(out, addr.Unmap())
+	}
+	return out, nil
+}
 
 var tsnetSecrets = regexp.MustCompile(`(?i)[a-z][a-z0-9+.-]*://\S+|\b(?:tskey|hskey)-\S+|\b(?:[a-z]+key|nlpriv|nlpub|chalpriv):[0-9a-f]+|\b[0-9a-f]{32,}\b|[a-z0-9_-]{40,}`)
 

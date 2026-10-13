@@ -25,6 +25,8 @@
     "allow-clear-exit-node",
     "allow-list-subnet-routes",
     "allow-use-subnet-routes",
+    "allow-get-routes",
+    "allow-offer-exit-node",
     "allow-create-workspace",
     "allow-update-workspace",
     "allow-delete-workspace",

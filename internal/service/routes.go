@@ -50,7 +50,7 @@ func (s *Service) UpdateRoutes(ctx context.Context, rawNetwork string, add, remo
 	}
 	current := routePrefixes(sess.LocalNode())
 	next := mergeRoutes(current, toAdd, toRemove)
-	if len(next) > maxAdvertisedRoutes {
+	if subnetRoutes(next) > maxAdvertisedRoutes {
 		return domain.LocalNode{}, fail(CodeInvalidArgument, "too many advertised routes", false)
 	}
 	if !slices.Equal(current, next) {
@@ -96,10 +96,62 @@ func mergeRoutes(current, add, remove []netip.Prefix) []netip.Prefix {
 	return next
 }
 
+func subnetRoutes(routes []netip.Prefix) int {
+	n := 0
+	for _, p := range routes {
+		if p.Bits() > 0 {
+			n++
+		}
+	}
+	return n
+}
+
+var exitRoutes = []netip.Prefix{netip.MustParsePrefix("0.0.0.0/0"), netip.MustParsePrefix("::/0")}
+
 func routePrefixes(n domain.LocalNode) []netip.Prefix {
-	out := make([]netip.Prefix, 0, len(n.Routes))
+	out := make([]netip.Prefix, 0, len(n.Routes)+2)
 	for _, r := range n.Routes {
 		out = append(out, r.Prefix)
 	}
+	if n.OffersExitNode {
+		out = append(out, exitRoutes...)
+	}
+	slices.SortFunc(out, netip.Prefix.Compare)
 	return out
+}
+
+func (s *Service) OfferExitNode(ctx context.Context, rawNetwork string, offer bool) (domain.LocalNode, error) {
+	id, err := parseID(rawNetwork)
+	if err != nil {
+		return domain.LocalNode{}, err
+	}
+	release, err := s.acquire(id, opRoutes)
+	if err != nil {
+		return domain.LocalNode{}, err
+	}
+	defer release()
+	sess, err := s.connectedSession(ctx, id)
+	if err != nil {
+		return domain.LocalNode{}, err
+	}
+	current := routePrefixes(sess.LocalNode())
+	var next []netip.Prefix
+	if offer {
+		next = mergeRoutes(current, exitRoutes, nil)
+	} else {
+		next = mergeRoutes(current, nil, exitRoutes)
+	}
+	if subnetRoutes(next) > maxAdvertisedRoutes {
+		return domain.LocalNode{}, fail(CodeInvalidArgument, "too many advertised routes", false)
+	}
+	if !slices.Equal(current, next) {
+		err := sess.SetAdvertisedRoutes(ctx, next)
+		if err = s.sessionError(sess, err, "changing the exit node offer failed", "could not change the exit node offer"); err != nil {
+			return domain.LocalNode{}, err
+		}
+		if err := s.cfg.Store.Networks().SetAdvertisedRoutes(ctx, id, next); err != nil {
+			return domain.LocalNode{}, s.storeErr(err)
+		}
+	}
+	return sess.LocalNode(), nil
 }

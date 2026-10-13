@@ -7,7 +7,12 @@ All notable changes to Flavor are listed here. The format follows [Keep a Change
 ### Added
 
 - The desktop app can pick an exit node: open a device that offers itself as an exit node and choose **Use as exit node**, or **Stop using as exit node** to clear it. Devices in use as an exit node show an **Exit node** badge ([#43](https://github.com/tame-gg/Flavor/issues/43)).
+- You can offer this machine as an exit node on a network with `flavorctl exit-node offer <network>` and `exit-node stop-offering <network>`, or the **Exit node** switch on the network page. The control server has to approve it. Flavor forwards TCP from devices that use it to public internet addresses only, never to private ranges, the local network or this machine's own addresses; UDP is not forwarded, so games and calls do not go through it. `flavorctl routes list` shows the offer, and changing advertised subnet routes keeps it ([#43](https://github.com/tame-gg/Flavor/issues/43)).
 - Subnet routes that other devices advertise can be used system-wide. `flavorctl routes available [network]` lists them, `flavorctl routes use <network> <cidr>...` or `--all` picks them and `routes unuse` drops them; the desktop app has a **Subnet routes** section on the network page. With `flavor-netd` running, Flavor adds the chosen routes to its network adapter, so every program reaches those addresses over TCP and UDP; ping does not work through them. Nothing is used until you pick it. Default routes and Tailscale ranges are never offered, a route can be used from one network at a time, and `flavor-netd` refuses any route that overlaps one this computer already has, such as your LAN. The choice is kept per network. `flavorctl explain <address>` says when every program can reach an address ([#62](https://github.com/tame-gg/Flavor/issues/62)).
+
+### Changed
+
+- Subnet routes this machine advertises no longer forward connections to this machine's own addresses, so devices on the network cannot reach services that listen on this computer through them.
 
 ### Fixed
 

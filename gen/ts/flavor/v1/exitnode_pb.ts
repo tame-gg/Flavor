@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file flavor/v1/exitnode.proto.
  */
 export const file_flavor_v1_exitnode: GenFile = /*@__PURE__*/
-  fileDesc("ChhmbGF2b3IvdjEvZXhpdG5vZGUucHJvdG8SCWZsYXZvci52MSI5ChJTZXRFeGl0Tm9kZVJlcXVlc3QSEgoKbmV0d29ya19pZBgBIAEoCRIPCgdub2RlX2lkGAIgASgJIjgKE1NldEV4aXROb2RlUmVzcG9uc2USIQoGZGV2aWNlGAEgASgLMhEuZmxhdm9yLnYxLkRldmljZSIqChRDbGVhckV4aXROb2RlUmVxdWVzdBISCgpuZXR3b3JrX2lkGAEgASgJIhcKFUNsZWFyRXhpdE5vZGVSZXNwb25zZTKzAQoPRXhpdE5vZGVTZXJ2aWNlEkwKC1NldEV4aXROb2RlEh0uZmxhdm9yLnYxLlNldEV4aXROb2RlUmVxdWVzdBoeLmZsYXZvci52MS5TZXRFeGl0Tm9kZVJlc3BvbnNlElIKDUNsZWFyRXhpdE5vZGUSHy5mbGF2b3IudjEuQ2xlYXJFeGl0Tm9kZVJlcXVlc3QaIC5mbGF2b3IudjEuQ2xlYXJFeGl0Tm9kZVJlc3BvbnNlQp4BCg1jb20uZmxhdm9yLnYxQg1FeGl0bm9kZVByb3RvUAFaOWdpdC5sdW5hcmxhYnMuZGV2L2ZsYXZvci9mbGF2b3IvZ2VuL2dvL2ZsYXZvci92MTtmbGF2b3J2MaICA0ZYWKoCCUZsYXZvci5WMcoCCUZsYXZvclxWMeICFUZsYXZvclxWMVxHUEJNZXRhZGF0YeoCCkZsYXZvcjo6VjFiBnByb3RvMw", [file_flavor_v1_device]);
+  fileDesc("ChhmbGF2b3IvdjEvZXhpdG5vZGUucHJvdG8SCWZsYXZvci52MSI5ChJTZXRFeGl0Tm9kZVJlcXVlc3QSEgoKbmV0d29ya19pZBgBIAEoCRIPCgdub2RlX2lkGAIgASgJIjgKE1NldEV4aXROb2RlUmVzcG9uc2USIQoGZGV2aWNlGAEgASgLMhEuZmxhdm9yLnYxLkRldmljZSIqChRDbGVhckV4aXROb2RlUmVxdWVzdBISCgpuZXR3b3JrX2lkGAEgASgJIhcKFUNsZWFyRXhpdE5vZGVSZXNwb25zZSI5ChRPZmZlckV4aXROb2RlUmVxdWVzdBISCgpuZXR3b3JrX2lkGAEgASgJEg0KBW9mZmVyGAIgASgIIjoKFU9mZmVyRXhpdE5vZGVSZXNwb25zZRIPCgdvZmZlcmVkGAEgASgIEhAKCGFwcHJvdmVkGAIgASgIMocCCg9FeGl0Tm9kZVNlcnZpY2USTAoLU2V0RXhpdE5vZGUSHS5mbGF2b3IudjEuU2V0RXhpdE5vZGVSZXF1ZXN0Gh4uZmxhdm9yLnYxLlNldEV4aXROb2RlUmVzcG9uc2USUgoNQ2xlYXJFeGl0Tm9kZRIfLmZsYXZvci52MS5DbGVhckV4aXROb2RlUmVxdWVzdBogLmZsYXZvci52MS5DbGVhckV4aXROb2RlUmVzcG9uc2USUgoNT2ZmZXJFeGl0Tm9kZRIfLmZsYXZvci52MS5PZmZlckV4aXROb2RlUmVxdWVzdBogLmZsYXZvci52MS5PZmZlckV4aXROb2RlUmVzcG9uc2VCngEKDWNvbS5mbGF2b3IudjFCDUV4aXRub2RlUHJvdG9QAVo5Z2l0Lmx1bmFybGFicy5kZXYvZmxhdm9yL2ZsYXZvci9nZW4vZ28vZmxhdm9yL3YxO2ZsYXZvcnYxogIDRlhYqgIJRmxhdm9yLlYxygIJRmxhdm9yXFYx4gIVRmxhdm9yXFYxXEdQQk1ldGFkYXRh6gIKRmxhdm9yOjpWMWIGcHJvdG8z", [file_flavor_v1_device]);
 
 /**
  * @generated from message flavor.v1.SetExitNodeRequest
@@ -84,6 +84,50 @@ export const ClearExitNodeResponseSchema: GenMessage<ClearExitNodeResponse> = /*
   messageDesc(file_flavor_v1_exitnode, 3);
 
 /**
+ * @generated from message flavor.v1.OfferExitNodeRequest
+ */
+export type OfferExitNodeRequest = Message<"flavor.v1.OfferExitNodeRequest"> & {
+  /**
+   * @generated from field: string network_id = 1;
+   */
+  networkId: string;
+
+  /**
+   * @generated from field: bool offer = 2;
+   */
+  offer: boolean;
+};
+
+/**
+ * Describes the message flavor.v1.OfferExitNodeRequest.
+ * Use `create(OfferExitNodeRequestSchema)` to create a new message.
+ */
+export const OfferExitNodeRequestSchema: GenMessage<OfferExitNodeRequest> = /*@__PURE__*/
+  messageDesc(file_flavor_v1_exitnode, 4);
+
+/**
+ * @generated from message flavor.v1.OfferExitNodeResponse
+ */
+export type OfferExitNodeResponse = Message<"flavor.v1.OfferExitNodeResponse"> & {
+  /**
+   * @generated from field: bool offered = 1;
+   */
+  offered: boolean;
+
+  /**
+   * @generated from field: bool approved = 2;
+   */
+  approved: boolean;
+};
+
+/**
+ * Describes the message flavor.v1.OfferExitNodeResponse.
+ * Use `create(OfferExitNodeResponseSchema)` to create a new message.
+ */
+export const OfferExitNodeResponseSchema: GenMessage<OfferExitNodeResponse> = /*@__PURE__*/
+  messageDesc(file_flavor_v1_exitnode, 5);
+
+/**
  * @generated from service flavor.v1.ExitNodeService
  */
 export const ExitNodeService: GenService<{
@@ -102,6 +146,14 @@ export const ExitNodeService: GenService<{
     methodKind: "unary";
     input: typeof ClearExitNodeRequestSchema;
     output: typeof ClearExitNodeResponseSchema;
+  },
+  /**
+   * @generated from rpc flavor.v1.ExitNodeService.OfferExitNode
+   */
+  offerExitNode: {
+    methodKind: "unary";
+    input: typeof OfferExitNodeRequestSchema;
+    output: typeof OfferExitNodeResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_flavor_v1_exitnode, 0);

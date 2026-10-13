@@ -6,7 +6,10 @@ import { RunDiagnosticsResponseSchema, type RunDiagnosticsResponse } from "@gen/
 import { ListConflictsResponseSchema, type ListConflictsResponse } from "@gen/flavor/v1/conflicts_pb";
 import { DaemonEventSchema } from "@gen/flavor/v1/events_pb";
 import { ListDNSResponseSchema, type ListDNSResponse } from "@gen/flavor/v1/dns_pb";
+import { OfferExitNodeResponseSchema, type OfferExitNodeResponse } from "@gen/flavor/v1/exitnode_pb";
 import {
+  GetRoutesResponseSchema,
+  type GetRoutesResponse,
   ListSubnetRoutesResponseSchema,
   UseSubnetRoutesResponseSchema,
   type ListSubnetRoutesResponse,
@@ -94,6 +97,14 @@ export async function listSubnetRoutes(networkId: string): Promise<ListSubnetRou
 
 export async function chooseSubnetRoutes(networkId: string, add: string[], remove: string[]): Promise<UseSubnetRoutesResponse> {
   return fromJson(UseSubnetRoutesResponseSchema, await invoke<JsonValue>("use_subnet_routes", { networkId, add, remove }), options);
+}
+
+export async function getRoutes(networkId: string): Promise<GetRoutesResponse> {
+  return fromJson(GetRoutesResponseSchema, await invoke<JsonValue>("get_routes", { networkId }), options);
+}
+
+export async function offerExitNode(networkId: string, offer: boolean): Promise<OfferExitNodeResponse> {
+  return fromJson(OfferExitNodeResponseSchema, await invoke<JsonValue>("offer_exit_node", { networkId, offer }), options);
 }
 
 export async function createWorkspace(input: { name: string; description: string; networkIds: string[] }): Promise<Workspace> {

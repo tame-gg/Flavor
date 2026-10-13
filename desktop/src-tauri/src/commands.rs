@@ -234,6 +234,26 @@ pub async fn use_subnet_routes(
 }
 
 #[tauri::command]
+pub async fn get_routes(daemon: State<'_, Daemon>, network_id: String) -> Result<GetRoutesResponse> {
+    Ok(daemon
+        .client()?
+        .routes
+        .get_routes(GetRoutesRequest { network_id, ..Default::default() })
+        .await?
+        .into_owned())
+}
+
+#[tauri::command]
+pub async fn offer_exit_node(daemon: State<'_, Daemon>, network_id: String, offer: bool) -> Result<OfferExitNodeResponse> {
+    Ok(daemon
+        .client()?
+        .exit_nodes
+        .offer_exit_node(OfferExitNodeRequest { network_id, offer, ..Default::default() })
+        .await?
+        .into_owned())
+}
+
+#[tauri::command]
 pub async fn create_workspace(
     daemon: State<'_, Daemon>,
     name: String,

@@ -48,6 +48,8 @@ fn main() {
             commands::clear_exit_node,
             commands::list_subnet_routes,
             commands::use_subnet_routes,
+            commands::get_routes,
+            commands::offer_exit_node,
             commands::create_workspace,
             commands::update_workspace,
             commands::delete_workspace,

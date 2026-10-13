@@ -83,6 +83,29 @@ func runExitNode(ctx context.Context, c *client.Client, args []string, asJSON bo
 			return emit(out, res.Msg)
 		}
 		fmt.Fprintf(out, "%s no longer has an exit node\n", n.DisplayName)
+	case "offer", "stop-offering":
+		if len(rest) != 1 {
+			return fmt.Errorf("exit-node %s: expected a network\n\n%s", sub, usage)
+		}
+		n, err := findNetwork(nets.Msg.Networks, rest[0])
+		if err != nil {
+			return err
+		}
+		res, err := c.ExitNodes.OfferExitNode(ctx, connect.NewRequest(&v1.OfferExitNodeRequest{NetworkId: n.Id, Offer: sub == "offer"}))
+		if err != nil {
+			return err
+		}
+		if asJSON {
+			return emit(out, res.Msg)
+		}
+		switch {
+		case !res.Msg.Offered:
+			fmt.Fprintf(out, "this machine is no longer an exit node on %s\n", n.DisplayName)
+		case res.Msg.Approved:
+			fmt.Fprintf(out, "this machine is an exit node on %s; it forwards TCP to public internet addresses only\n", n.DisplayName)
+		default:
+			fmt.Fprintf(out, "offering this machine as an exit node on %s; approve it on the control server. It forwards TCP to public internet addresses only\n", n.DisplayName)
+		}
 	default:
 		return fmt.Errorf("unknown exit-node command %q\n\n%s", sub, usage)
 	}

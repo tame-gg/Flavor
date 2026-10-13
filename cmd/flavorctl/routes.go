@@ -52,6 +52,9 @@ func runRoutes(ctx context.Context, c *client.Client, args []string, asJSON bool
 				return err
 			}
 			rows = append(rows, routeRows(n.DisplayName, res.Msg.Routes)...)
+			if res.Msg.ExitNodeOffered {
+				rows = append(rows, routeRow{n.DisplayName, "exit node", res.Msg.ExitNodeApproved})
+			}
 			all = append(all, networkRoutes{NetworkID: n.Id, Response: res.Msg})
 		}
 		if asJSON {

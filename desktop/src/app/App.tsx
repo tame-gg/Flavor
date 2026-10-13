@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { Capability, NetworkConnectionState } from "@gen/flavor/v1/common_pb";
 import logo from "../logo.svg";
-import { Button } from "../components/ui/Button";
+import { Button } from "@/ui/button";
 import { ConflictsPage } from "../features/conflicts/ConflictsPage";
 import { DevicesPage } from "../features/devices/DevicesPage";
 import { DiagnosticsPage } from "../features/diagnostics/DiagnosticsPage";
@@ -99,8 +100,8 @@ export function App() {
         title="The Flavor daemon is not running"
         action={<Button onClick={() => void controller.resync()}>Try again</Button>}
       >
-        Start it with <code className="mono">systemctl --user start flavord</code>, or run{" "}
-        <code className="mono">flavord</code> in a terminal. Flavor keeps retrying in the background.
+        Start it with <code className="font-mono text-foreground">systemctl --user start flavord</code>, or run{" "}
+        <code className="font-mono text-foreground">flavord</code> in a terminal. Flavor keeps retrying in the background.
       </Gate>
     ) : (
       <Gate title="Connecting to the Flavor daemon" busy />
@@ -149,7 +150,7 @@ export function App() {
         status={status}
         onSearch={() => setPaletteOpen(true)}
       />
-      <main className="main min-w-0 flex-1">
+      <main className="min-w-0 flex-1 overflow-auto px-8 pt-6 pb-8">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={page}
@@ -246,15 +247,15 @@ function Gate({
   busy?: boolean;
 }) {
   return (
-    <main className="center-screen">
-      <div className="center-card" aria-busy={busy || undefined}>
-        <img className="logo" src={logo} alt="" />
-        <div className="row">
-          {busy && <span className="spinner" aria-hidden="true" />}
-          <h1>{title}</h1>
-        </div>
-        {children && <p className="muted">{children}</p>}
-        {action && <div className="row">{action}</div>}
+    <main className="flex h-full items-center justify-center bg-background p-6 text-foreground">
+      <div className="flex w-full max-w-md flex-col gap-4 rounded-xl border bg-card p-6 shadow-sm" aria-busy={busy || undefined}>
+        <img className="size-10" src={logo} alt="" />
+        <h1 className="flex items-center gap-2 text-lg font-semibold">
+          {busy && <Loader2 className="size-4 animate-spin text-muted-foreground" aria-hidden="true" />}
+          {title}
+        </h1>
+        {children && <p className="text-sm text-muted-foreground">{children}</p>}
+        {action && <div className="flex gap-2">{action}</div>}
       </div>
     </main>
   );

@@ -9,7 +9,14 @@ export const typeLabel: Record<ConflictType, string> = {
 };
 
 export type SeverityFilter = "all" | "ambiguous" | "expected" | "resolved";
+export type Kind = Exclude<SeverityFilter, "all">;
 export type TypeFilter = "all" | ConflictType;
+
+export const kindLabel: Record<Kind, string> = {
+  ambiguous: "Ambiguous",
+  expected: "Expected overlap",
+  resolved: "Resolved by preference",
+};
 
 export function networkCount(c: Conflict): number {
   return new Set(c.members.map((m) => m.network?.id)).size;
@@ -35,7 +42,7 @@ export function describe(c: Conflict): string {
   return `${c.value} exists on ${n} networks, and not every device has a network-specific name that tells it apart.`;
 }
 
-export function category(c: Conflict): Exclude<SeverityFilter, "all"> {
+export function category(c: Conflict): Kind {
   if (c.preferredNetworkId) return "resolved";
   return c.severity === ConflictSeverity.AMBIGUOUS ? "ambiguous" : "expected";
 }
@@ -48,4 +55,10 @@ export function counts(list: readonly Conflict[]): { ambiguous: number; expected
   const out = { ambiguous: 0, expected: 0, resolved: 0 };
   for (const c of list) out[category(c)]++;
   return out;
+}
+
+export function groupByKind(list: readonly Conflict[]): [Kind, Conflict[]][] {
+  return (["ambiguous", "expected", "resolved"] as const)
+    .map((k): [Kind, Conflict[]] => [k, list.filter((c) => category(c) === k)])
+    .filter(([, group]) => group.length > 0);
 }

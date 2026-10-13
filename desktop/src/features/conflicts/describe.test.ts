@@ -1,7 +1,7 @@
 import { create } from "@bufbuild/protobuf";
 import { ConflictSchema, ConflictScope, ConflictSeverity, ConflictType } from "@gen/flavor/v1/conflicts_pb";
 import { describe as suite, expect, it } from "vitest";
-import { counts, describe, filterConflicts } from "./describe";
+import { counts, describe, filterConflicts, groupByKind } from "./describe";
 
 const member = (networkId: string, network: string, nodeId: string) => ({
   network: { id: networkId, displayName: network },
@@ -70,5 +70,17 @@ suite("conflict descriptions", () => {
     expect(counts([expected, settled])).toEqual({ ambiguous: 0, expected: 1, resolved: 1 });
     expect(filterConflicts([expected, settled], "resolved", "all")).toEqual([settled]);
     expect(filterConflicts([expected, settled], "ambiguous", "all")).toEqual([]);
+  });
+
+  it("groups conflicts by kind with the ambiguous ones first and skips empty kinds", () => {
+    const settled = create(ConflictSchema, { ...dns, id: "dns:settled", preferredNetworkId: "a" });
+    const groups = groupByKind([expected, settled, within, dns]);
+    expect(groups.map(([kind, list]) => [kind, list.map((c) => c.id)])).toEqual([
+      ["ambiguous", ["address:100.64.0.7", "dns:db.example.com"]],
+      ["expected", ["address:100.64.0.1"]],
+      ["resolved", ["dns:settled"]],
+    ]);
+    expect(groupByKind([expected]).map(([kind]) => kind)).toEqual(["expected"]);
+    expect(groupByKind([])).toEqual([]);
   });
 });

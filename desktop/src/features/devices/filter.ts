@@ -80,3 +80,12 @@ export function deviceRows(
   rows.sort((a, b) => a.rank - b.rank || a.device.hostname.localeCompare(b.device.hostname) || a.key.localeCompare(b.key));
   return rows.map(({ rank: _rank, ...row }) => row);
 }
+
+export function countByNetwork(rows: readonly DeviceRow[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const { device } of rows) {
+    const id = device.id?.networkId ?? "";
+    counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+  return counts;
+}

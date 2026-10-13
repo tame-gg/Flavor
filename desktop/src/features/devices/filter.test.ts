@@ -4,7 +4,7 @@ import { DeviceSchema, type Device } from "@gen/flavor/v1/device_pb";
 import { NetworkSchema } from "@gen/flavor/v1/network_pb";
 import { describe, expect, it } from "vitest";
 import { deviceKey } from "../../app/sync/controller";
-import { deviceRows, parseSearch } from "./filter";
+import { countByNetwork, deviceRows, parseSearch } from "./filter";
 
 const networks = new Map([
   ["a", create(NetworkSchema, { id: "a", displayName: "LunarLabs", provider: ProviderType.HEADSCALE })],
@@ -64,6 +64,13 @@ describe("device search", () => {
     const rows = deviceRows(fixture, networks, "", "");
     expect(new Set(rows.map((r) => r.key)).size).toBe(rows.length);
     expect(rows.every((r) => !r.key.includes("100.64"))).toBe(true);
+  });
+
+  it("counts matching devices per network", () => {
+    const counts = countByNetwork(deviceRows(fixture, networks, "", "os:linux"));
+    expect(counts.get("a")).toBe(2);
+    expect(counts.get("b")).toBe(1);
+    expect(countByNetwork([]).size).toBe(0);
   });
 
   it("handles a thousand synthetic devices quickly", () => {

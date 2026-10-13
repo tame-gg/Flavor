@@ -159,7 +159,7 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
           { name: "database", status: "ok", safeDetail: "schema version 6" },
           {
             name: `network/${networks[1].id}`,
-            status: "warn",
+            status: "warning",
             safeDetail:
               "headscale, control hs.darkless.example, state degraded; control server reports: DERP region fra is unreachable",
           },
@@ -191,9 +191,10 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   inspect_destination: (a) => {
     const q = String(a.destination).toLowerCase();
     const matches = devices.filter(
-      (d) => !d.local && (d.addresses.includes(q) || d.hostname === q || d.dnsName.startsWith(`${q}.`)),
+      (d) =>
+        !d.local && (d.addresses.includes(q) || d.hostname === q || d.dnsName === q || d.dnsName.startsWith(`${q}.`)),
     );
-    const byRecord = q.startsWith("git.intra") ? [deviceAt(0, "2")] : [];
+    const byRecord = q === "git.intra" || q === "git.intra.lunarlabs.internal" ? [deviceAt(0, "2")] : [];
     const found = matches.length > 0 ? matches : byRecord;
     const decision =
       found.length === 0

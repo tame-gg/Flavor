@@ -85,6 +85,7 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
   const [pending, setPending] = useState<string | null>(null);
   const [result, setResult] = useState<InspectDestinationResponse | null>(null);
   const [lastQuery, setLastQuery] = useState("");
+  const [announcement, setAnnouncement] = useState("");
   const [refocus, setRefocus] = useState<{ to: RefObject<HTMLElement | null> } | null>(null);
   const run = useAction(inspectDestination);
   const input = useRef<HTMLInputElement>(null);
@@ -103,9 +104,11 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
     if (!t) return;
     const id = ++seq.current;
     setLastQuery(t);
+    setAnnouncement(`Inspecting ${t}`);
     const r = await run.run(t);
     if (id !== seq.current) return;
     if (r.ok) setResult(r.value);
+    setAnnouncement(r.ok ? `${t}: ${explain(r.value).title}` : `Could not inspect ${t}`);
     setRefocus({ to: r.ok ? heading : input });
   };
 
@@ -195,7 +198,7 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
         </p>
       </header>
       <p role="status" className="sr-only">
-        {run.pending ? `Inspecting ${lastQuery}` : summary ? `${lastQuery}: ${summary.title}` : ""}
+        {announcement}
       </p>
 
       <form

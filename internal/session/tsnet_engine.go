@@ -87,11 +87,20 @@ func hostAddrs() ([]netip.Addr, error) {
 	}
 	var out []netip.Addr
 	for _, a := range addrs {
-		p, err := netip.ParsePrefix(a.String())
-		if err != nil {
-			return nil, err
+		var ip net.IP
+		switch v := a.(type) {
+		case *net.IPNet:
+			ip = v.IP
+		case *net.IPAddr:
+			ip = v.IP
+		default:
+			return nil, fmt.Errorf("unexpected interface address %T", a)
 		}
-		out = append(out, p.Addr().Unmap())
+		addr, ok := netip.AddrFromSlice(ip)
+		if !ok {
+			return nil, fmt.Errorf("invalid interface address %v", a)
+		}
+		out = append(out, addr.Unmap())
 	}
 	return out, nil
 }

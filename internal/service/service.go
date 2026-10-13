@@ -53,6 +53,7 @@ type Config struct {
 	InstanceID   string
 	NodeHostname string
 	StopTimeout  time.Duration
+	TrafficTick  time.Duration
 }
 
 type Service struct {
@@ -69,6 +70,10 @@ type Service struct {
 	routes       installedRoutes
 	routesMu     sync.Mutex
 	routesNudge  chan struct{}
+	traffic      map[domain.NetworkID]*trafficRing
+	trafficAsked time.Time
+	trafficStop  context.CancelFunc
+	trafficDone  sync.WaitGroup
 }
 
 func New(cfg Config) *Service {
@@ -80,6 +85,9 @@ func New(cfg Config) *Service {
 	}
 	if cfg.NodeHostname == "" {
 		cfg.NodeHostname = DefaultNodeHostname()
+	}
+	if cfg.TrafficTick <= 0 {
+		cfg.TrafficTick = time.Second
 	}
 	return &Service{
 		cfg:         cfg,
@@ -140,7 +148,11 @@ func (s *Service) Shutdown(ctx context.Context) error {
 	for _, cancel := range s.forwards {
 		cancel()
 	}
+	if s.trafficStop != nil {
+		s.trafficStop()
+	}
 	s.mu.Unlock()
+	s.trafficDone.Wait()
 	return s.cfg.Sessions.StopAll(ctx)
 }
 

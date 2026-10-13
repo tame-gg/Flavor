@@ -254,6 +254,11 @@ pub async fn offer_exit_node(daemon: State<'_, Daemon>, network_id: String, offe
 }
 
 #[tauri::command]
+pub async fn get_traffic_stats(daemon: State<'_, Daemon>) -> Result<GetTrafficStatsResponse> {
+    Ok(daemon.client()?.traffic.get_traffic_stats(Default::default()).await?.into_owned())
+}
+
+#[tauri::command]
 pub async fn create_workspace(
     daemon: State<'_, Daemon>,
     name: String,

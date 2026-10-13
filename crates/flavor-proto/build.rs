@@ -16,6 +16,7 @@ fn main() {
             "flavor/v1/network.proto",
             "flavor/v1/preferences.proto",
             "flavor/v1/routes.proto",
+            "flavor/v1/traffic.proto",
             "flavor/v1/workspaces.proto",
         ])
         .include_file("_connectrpc.rs")

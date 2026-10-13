@@ -77,8 +77,10 @@ func TestProjectPeerCarriesOSAndTags(t *testing.T) {
 		DNSName:  "postgres.example.ts.net.",
 		OS:       "linux",
 		Tags:     &tags,
+		RxBytes:  4096,
+		TxBytes:  512,
 	})
-	if p.OS != "linux" || len(p.Tags) != 2 || p.Tags[1] != "tag:prod" || p.DNSName != "postgres.example.ts.net" {
+	if p.OS != "linux" || len(p.Tags) != 2 || p.Tags[1] != "tag:prod" || p.DNSName != "postgres.example.ts.net" || p.RxBytes != 4096 || p.TxBytes != 512 {
 		t.Fatalf("%+v", p)
 	}
 	primary := views.SliceOf([]netip.Prefix{netip.MustParsePrefix("10.10.20.7/24"), netip.MustParsePrefix("0.0.0.0/0"), netip.MustParsePrefix("fd00:1::/64")})

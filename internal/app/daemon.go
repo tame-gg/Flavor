@@ -36,6 +36,7 @@ type Options struct {
 	OnDNSReady      func(net.Addr)
 	TUN             io.ReadWriteCloser
 	SyntheticHelper string
+	TrafficTick     time.Duration
 }
 
 func Run(ctx context.Context, opts Options) error {
@@ -94,13 +95,14 @@ func Run(ctx context.Context, opts Options) error {
 		sessions = session.NewManagerWithFactory(bus, log, opts.EngineFactory)
 	}
 	svc := service.New(service.Config{
-		Store:      db,
-		Paths:      paths,
-		Sessions:   sessions,
-		Bus:        bus,
-		Secrets:    secrets,
-		Log:        log,
-		InstanceID: instanceID,
+		Store:       db,
+		Paths:       paths,
+		Sessions:    sessions,
+		Bus:         bus,
+		Secrets:     secrets,
+		Log:         log,
+		InstanceID:  instanceID,
+		TrafficTick: opts.TrafficTick,
 	})
 
 	l, err := transport.Listen(paths.Socket)

@@ -7,6 +7,8 @@
   "permissions": [
     "core:event:allow-listen",
     "core:event:allow-unlisten",
+    "core:window:allow-is-visible",
+    "core:window:allow-is-minimized",
     "allow-get-snapshot",
     "allow-watch-events",
     "allow-add-network",
@@ -27,6 +29,7 @@
     "allow-use-subnet-routes",
     "allow-get-routes",
     "allow-offer-exit-node",
+    "allow-get-traffic-stats",
     "allow-create-workspace",
     "allow-update-workspace",
     "allow-delete-workspace",

@@ -4,6 +4,12 @@ All notable changes to Flavor are listed here. The format follows [Keep a Change
 
 ## [Unreleased]
 
+### Added
+
+- `flavorctl traffic` shows the current download and upload rate of each connected network, also with `--json`. Flavor measures the rates once a second while something asks for them and keeps the last two minutes.
+- The desktop app shows live traffic: Download and Upload on the Overview, a chart of the last two minutes with one line per network, a small graph and the current rate on each network, and a chart per network on its Overview tab. Polling stops while the window is hidden or minimized, and the daemon stops measuring when nothing asks.
+- A redesigned desktop app. The new Overview page leads with a health line and a Needs you list that shows why a network is degraded or failed, with one button to fix each item. Each network has its own colour, used throughout the app. Ctrl/Cmd+K opens a palette that jumps to pages, networks and devices and shows which network a name or address goes to as you type. Every page is rebuilt: networks with tabs, a device explorer with keyboard navigation, the connection inspector with suggestions and a path from this computer to the device, conflicts with an overlap matrix between networks, workspaces, diagnostics and settings. Light and dark follow the system or your choice, and animations respect reduced motion.
+
 ### Fixed
 
 - On Linux and macOS, subnet routes that other devices advertise are reachable again through `flavorctl forward`, the SOCKS5 proxy and system-wide routes. The embedded Tailscale client only accepts subnet routes by default on Windows, so connections to those addresses timed out everywhere else.

@@ -263,6 +263,7 @@ const (
 	Capability_CAPABILITY_SOCKS_PROXY             Capability = 8
 	Capability_CAPABILITY_EXIT_NODES              Capability = 9
 	Capability_CAPABILITY_ROUTES                  Capability = 10
+	Capability_CAPABILITY_TRAFFIC_STATS           Capability = 11
 )
 
 // Enum value maps for Capability.
@@ -279,6 +280,7 @@ var (
 		8:  "CAPABILITY_SOCKS_PROXY",
 		9:  "CAPABILITY_EXIT_NODES",
 		10: "CAPABILITY_ROUTES",
+		11: "CAPABILITY_TRAFFIC_STATS",
 	}
 	Capability_value = map[string]int32{
 		"CAPABILITY_UNSPECIFIED":             0,
@@ -292,6 +294,7 @@ var (
 		"CAPABILITY_SOCKS_PROXY":             8,
 		"CAPABILITY_EXIT_NODES":              9,
 		"CAPABILITY_ROUTES":                  10,
+		"CAPABILITY_TRAFFIC_STATS":           11,
 	}
 )
 
@@ -431,7 +434,7 @@ const file_flavor_v1_common_proto_rawDesc = "" +
 	"'FLAVOR_ERROR_CODE_DESTINATION_AMBIGUOUS\x10\x12\x12+\n" +
 	"'FLAVOR_ERROR_CODE_DESTINATION_NOT_FOUND\x10\x13\x12-\n" +
 	")FLAVOR_ERROR_CODE_DESTINATION_UNREACHABLE\x10\x14\x12&\n" +
-	"\"FLAVOR_ERROR_CODE_NOT_AN_EXIT_NODE\x10\x15*\xd4\x02\n" +
+	"\"FLAVOR_ERROR_CODE_NOT_AN_EXIT_NODE\x10\x15*\xf2\x02\n" +
 	"\n" +
 	"Capability\x12\x1a\n" +
 	"\x16CAPABILITY_UNSPECIFIED\x10\x00\x12\x18\n" +
@@ -445,7 +448,8 @@ const file_flavor_v1_common_proto_rawDesc = "" +
 	"\x16CAPABILITY_SOCKS_PROXY\x10\b\x12\x19\n" +
 	"\x15CAPABILITY_EXIT_NODES\x10\t\x12\x15\n" +
 	"\x11CAPABILITY_ROUTES\x10\n" +
-	"B\x9c\x01\n" +
+	"\x12\x1c\n" +
+	"\x18CAPABILITY_TRAFFIC_STATS\x10\vB\x9c\x01\n" +
 	"\rcom.flavor.v1B\vCommonProtoP\x01Z9git.lunarlabs.dev/flavor/flavor/gen/go/flavor/v1;flavorv1\xa2\x02\x03FXX\xaa\x02\tFlavor.V1\xca\x02\tFlavor\\V1\xe2\x02\x15Flavor\\V1\\GPBMetadata\xea\x02\n" +
 	"Flavor::V1b\x06proto3"
 

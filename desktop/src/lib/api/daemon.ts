@@ -22,6 +22,7 @@ import {
   type InspectDestinationResponse,
 } from "@gen/flavor/v1/inspector_pb";
 import { NetworkSchema, type Network } from "@gen/flavor/v1/network_pb";
+import { GetTrafficStatsResponseSchema, type GetTrafficStatsResponse } from "@gen/flavor/v1/traffic_pb";
 import {
   ActivateWorkspaceResponseSchema,
   WorkspaceSchema,
@@ -105,6 +106,10 @@ export async function getRoutes(networkId: string): Promise<GetRoutesResponse> {
 
 export async function offerExitNode(networkId: string, offer: boolean): Promise<OfferExitNodeResponse> {
   return fromJson(OfferExitNodeResponseSchema, await invoke<JsonValue>("offer_exit_node", { networkId, offer }), options);
+}
+
+export async function getTrafficStats(): Promise<GetTrafficStatsResponse> {
+  return fromJson(GetTrafficStatsResponseSchema, await invoke<JsonValue>("get_traffic_stats"), options);
 }
 
 export async function createWorkspace(input: { name: string; description: string; networkIds: string[] }): Promise<Workspace> {

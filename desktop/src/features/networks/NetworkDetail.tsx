@@ -49,6 +49,8 @@ import { Label } from "@/ui/label";
 import { Skeleton } from "@/ui/skeleton";
 import { Switch } from "@/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/ui/tabs";
+import { ThroughputChart } from "../traffic/ThroughputChart";
+import { useTraffic } from "../traffic/useTraffic";
 import {
   controlHost,
   deviceSummary,
@@ -162,6 +164,7 @@ export function NetworkDetail({ network: n, deviceCount, notice, onShowDevices, 
           {(n.state === S.AUTHENTICATING || n.state === S.DISCONNECTED || n.state === S.ERROR) && (
             <EnrollPanel network={n} />
           )}
+          {live && <TrafficPanel network={n} color={color} />}
           <Callout
             icon={Monitor}
             title="Devices"
@@ -310,6 +313,16 @@ function Panel({ title, description, children }: { title: string; description: s
       </div>
       {children}
     </Card>
+  );
+}
+
+function TrafficPanel({ network: n, color }: { network: Network; color: string }) {
+  const traffic = useTraffic();
+  if (!traffic) return null;
+  return (
+    <Panel title="Traffic" description="Download and upload rates over the last 2 minutes.">
+      <ThroughputChart series={[{ id: n.id, name: n.displayName, color, samples: traffic.get(n.id) ?? [] }]} />
+    </Panel>
   );
 }
 

@@ -16,7 +16,7 @@ case "$arch" in
 esac
 
 [ "$arch" = "$(./scripts/go.sh env GOHOSTARCH)" ] || { echo "the desktop app builds natively only" >&2; exit 1; }
-rm -rf "$stage" "dist/$name.zip" "dist/$name-setup.exe" desktop/src-tauri/binaries
+rm -rf "$stage" "dist/$name.zip" "dist/$name-setup.exe" "dist/$name-setup.exe.sig" desktop/src-tauri/binaries
 mkdir -p "$stage/bin" desktop/src-tauri/binaries
 
 pkg=git.lunarlabs.dev/flavor/flavor/internal/version
@@ -30,10 +30,17 @@ for bin in flavord flavorctl flavor-netd; do
 done
 cp "$stage/bin/wintun.dll" desktop/src-tauri/binaries/wintun.dll
 
+# UPDATER=1 also signs the installer for the Tauri updater, using TAURI_SIGNING_PRIVATE_KEY.
+updater=false
+[ "${UPDATER:-0}" = 1 ] && updater=true
+
 (cd desktop && npm ci && npm run tauri build -- --runner "$ROOT/scripts/cargo-auditable.cmd" --bundles nsis \
-	--config '{"bundle":{"active":true,"publisher":"tame-gg","externalBin":["binaries/flavord","binaries/flavorctl","binaries/flavor-netd"],"resources":{"binaries/wintun.dll":"wintun.dll"},"windows":{"nsis":{"installMode":"currentUser","installerHooks":"../../packaging/windows/hooks.nsh"}}}}')
+	--config '{"bundle":{"active":true,"createUpdaterArtifacts":'"$updater"',"publisher":"tame-gg","externalBin":["binaries/flavord","binaries/flavorctl","binaries/flavor-netd"],"resources":{"binaries/wintun.dll":"wintun.dll"},"windows":{"nsis":{"installMode":"currentUser","installerHooks":"../../packaging/windows/hooks.nsh"}}}}')
 cp target/release/flavor-desktop.exe "$stage/Flavor.exe"
 cp target/release/bundle/nsis/*-setup.exe "dist/$name-setup.exe"
+if [ "$updater" = true ]; then
+	cp target/release/bundle/nsis/*-setup.exe.sig "dist/$name-setup.exe.sig"
+fi
 cp LICENSE README.md "$stage/"
 
 (cd dist && "$(cygpath -u "$SYSTEMROOT")/System32/tar.exe" -a -cf "$name.zip" "$name")

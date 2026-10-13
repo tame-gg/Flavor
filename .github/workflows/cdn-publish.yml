@@ -1,0 +1,116 @@
+name: cdn-publish
+
+# Pushes a release's desktop updater files to the CDN only once the release is published, so a tag build
+# (which stops at a draft) never reaches the desktop app on its own.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Published release tag to (re)upload, e.g. v0.1.0. Its latest.json replaces the live one."
+        required: true
+
+permissions:
+  contents: read
+
+# Two runs racing each other could leave latest.json pointing at the older release.
+concurrency:
+  group: cdn-publish
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ubuntu-24.04
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - name: download and verify release assets
+        id: fetch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$TAG" =~ ^v[0-9A-Za-z.+-]+$ ]]; then
+            echo "::error::'$TAG' is not a release tag"
+            exit 1
+          fi
+          version="${TAG#v}"
+          # workflow_dispatch can name any tag; refuse drafts so the CDN never runs ahead of the release.
+          state="$(gh release view "$TAG" --json isDraft,isPrerelease --jq '"\(.isDraft) \(.isPrerelease)"')"
+          if [ "${state% *}" != false ]; then
+            echo "::error::release $TAG is still a draft. Publish it first."
+            exit 1
+          fi
+          # Prereleases stay off the CDN so they never reach the desktop app through latest.json.
+          if [ "${state#* }" != false ]; then
+            echo "::notice::release $TAG is a prerelease, skipping the CDN upload."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Only the updater files; the Linux tarballs, zips and SBOMs never go to the CDN.
+          gh release download "$TAG" --dir release --pattern latest.json --pattern '*.sig' --pattern '*.app.tar.gz' --pattern '*-setup.exe'
+          if [ ! -f release/latest.json ]; then
+            echo "::error::release $TAG has no latest.json asset"
+            exit 1
+          fi
+          got="$(jq -r .version release/latest.json)"
+          if [ "$got" != "$version" ]; then
+            echo "::error::latest.json version '$got' does not match tag $TAG"
+            exit 1
+          fi
+          # Stage exactly what latest.json references, each with its .sig.
+          mkdir -p "stage/flavor-desktop/$version"
+          prefix="https://cdn.tame.gg/flavor-desktop/$version/"
+          count=0
+          while IFS=$'\t' read -r key url signature; do
+            file="${url#"$prefix"}"
+            # Plain names only: no percent-encoding to undo, no path tricks.
+            if [ "$file" = "$url" ] || [[ ! "$file" =~ ^[A-Za-z0-9._-]+$ ]]; then
+              echo "::error::$key points at $url, expected ${prefix}<file>"
+              exit 1
+            fi
+            for f in "$file" "$file.sig"; do
+              if [ ! -f "release/$f" ]; then
+                echo "::error::$key: release $TAG is missing $f"
+                exit 1
+              fi
+            done
+            if [ "$(tr -d '[:space:]' < "release/$file.sig")" != "$signature" ]; then
+              echo "::error::$key: $file.sig does not match the signature in latest.json"
+              exit 1
+            fi
+            cp -f "release/$file" "release/$file.sig" "stage/flavor-desktop/$version/"
+            count=$((count + 1))
+          done < <(jq -r '.platforms | to_entries[] | [.key, .value.url, .value.signature] | @tsv' release/latest.json)
+          if [ "$count" -eq 0 ]; then
+            echo "::error::latest.json lists no platforms"
+            exit 1
+          fi
+          cp release/latest.json latest.json
+          ls -l "stage/flavor-desktop/$version"
+
+      # Versioned files go up first and latest.json last, so the app never sees it point at missing files.
+      - name: upload to CDN
+        if: steps.fetch.outputs.skip != 'true'
+        env:
+          CDN_SSH_KEY: ${{ secrets.CDN_SSH_KEY }}
+          CDN_KNOWN_HOSTS: ${{ secrets.CDN_KNOWN_HOSTS }}
+          CDN_HOST: ${{ secrets.CDN_HOST }}
+          CDN_PATH: ${{ secrets.CDN_PATH }}
+        run: |
+          if [ -z "$CDN_SSH_KEY" ] || [ -z "$CDN_KNOWN_HOSTS" ] || [ -z "$CDN_HOST" ] || [ -z "$CDN_PATH" ]; then
+            echo "::notice::CDN_SSH_KEY / CDN_KNOWN_HOSTS / CDN_HOST / CDN_PATH not set, skipping the CDN upload. The files are still on the $TAG release."
+            exit 0
+          fi
+          set -euo pipefail
+          mkdir -p -m 700 ~/.ssh
+          trap 'rm -f ~/.ssh/cdn_key' EXIT
+          (umask 077 && printf '%s\n' "$CDN_SSH_KEY" > ~/.ssh/cdn_key)
+          # Pinned host keys from the secret; no ssh-keyscan, so a spoofed host can't slip in.
+          printf '%s\n' "$CDN_KNOWN_HOSTS" > ~/.ssh/cdn_known_hosts
+          ssh="ssh -p 22 -i $HOME/.ssh/cdn_key -o UserKnownHostsFile=$HOME/.ssh/cdn_known_hosts -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o BatchMode=yes"
+          # CDN_PATH is the updates root. Staging flavor-desktop/<version>/ lets rsync create the nested dirs without a remote shell.
+          rsync -O -rtv -e "$ssh" --chmod=D755,F644 stage/ "cdn-ci@$CDN_HOST:${CDN_PATH%/}/"
+          rsync -O -tv -e "$ssh" --chmod=D755,F644 latest.json "cdn-ci@$CDN_HOST:${CDN_PATH%/}/flavor-desktop/latest.json"

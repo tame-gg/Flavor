@@ -91,6 +91,43 @@ jobs:
           cp release/latest.json latest.json
           ls -l "stage/flavor-desktop/$version"
 
+      - name: checkout tauri config
+        if: steps.fetch.outputs.skip != 'true'
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          path: src
+          persist-credentials: false
+          sparse-checkout: desktop/src-tauri/tauri.conf.json
+          sparse-checkout-cone-mode: false
+
+      # Checks every staged bundle against the updater pubkey the app ships with, so a bad signature never
+      # reaches the CDN (the app would refuse the update anyway, but only after downloading it).
+      - name: verify updater signatures
+        if: steps.fetch.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq minisign
+          # Tauri stores the minisign public key file and each .sig base64-encoded; decode them to minisign format.
+          mkdir -p minisign
+          jq -er '.plugins.updater.pubkey' src/desktop/src-tauri/tauri.conf.json | base64 -d > minisign/flavor.pub
+          version="${TAG#v}"
+          count=0
+          for sig in "stage/flavor-desktop/$version"/*.sig; do
+            file="${sig%.sig}"
+            name="$(basename "$file")"
+            base64 -d < "$sig" > "minisign/$name.minisig"
+            if ! minisign -V -p minisign/flavor.pub -m "$file" -x "minisign/$name.minisig"; then
+              echo "::error::$name does not verify against the updater pubkey in tauri.conf.json"
+              exit 1
+            fi
+            count=$((count + 1))
+          done
+          if [ "$count" -eq 0 ]; then
+            echo "::error::no updater bundles to verify"
+            exit 1
+          fi
+
       # Versioned files go up first and latest.json last, so the app never sees it point at missing files.
       - name: upload to CDN
         if: steps.fetch.outputs.skip != 'true'

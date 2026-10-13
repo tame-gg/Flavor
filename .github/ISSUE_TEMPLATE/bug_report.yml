@@ -30,7 +30,7 @@ body:
     attributes:
       label: Flavor version
       description: The first line of `flavorctl info`.
-      placeholder: flavord 0.1.0-beta.10 (commit 0de2000...)
+      placeholder: flavord 0.1.0-beta.11 (commit 0de2000...)
     validations:
       required: true
   - type: input

@@ -35,6 +35,7 @@ type Network struct {
 	CreatedAt      *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt      *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	Label          string                 `protobuf:"bytes,11,opt,name=label,proto3" json:"label,omitempty"`
+	StatusMessage  string                 `protobuf:"bytes,12,opt,name=status_message,json=statusMessage,proto3" json:"status_message,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -142,6 +143,13 @@ func (x *Network) GetUpdatedAt() *timestamppb.Timestamp {
 func (x *Network) GetLabel() string {
 	if x != nil {
 		return x.Label
+	}
+	return ""
+}
+
+func (x *Network) GetStatusMessage() string {
+	if x != nil {
+		return x.StatusMessage
 	}
 	return ""
 }
@@ -1116,7 +1124,7 @@ var File_flavor_v1_network_proto protoreflect.FileDescriptor
 
 const file_flavor_v1_network_proto_rawDesc = "" +
 	"\n" +
-	"\x17flavor/v1/network.proto\x12\tflavor.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x16flavor/v1/common.proto\"\xe8\x03\n" +
+	"\x17flavor/v1/network.proto\x12\tflavor.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x16flavor/v1/common.proto\"\x8f\x04\n" +
 	"\aNetwork\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\x123\n" +
@@ -1132,7 +1140,8 @@ const file_flavor_v1_network_proto_rawDesc = "" +
 	"\n" +
 	"updated_at\x18\n" +
 	" \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x14\n" +
-	"\x05label\x18\v \x01(\tR\x05label\"\xce\x01\n" +
+	"\x05label\x18\v \x01(\tR\x05label\x12%\n" +
+	"\x0estatus_message\x18\f \x01(\tR\rstatusMessage\"\xce\x01\n" +
 	"\x14AuthenticationPrompt\x12\x17\n" +
 	"\aflow_id\x18\x01 \x01(\tR\x06flowId\x12\x12\n" +
 	"\x04kind\x18\x02 \x01(\tR\x04kind\x12\x19\n" +

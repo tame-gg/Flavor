@@ -21,68 +21,23 @@
   --radius-sm: 6px;
   --ease: cubic-bezier(0.2, 0, 0, 1);
 
-  --bg: #f6f8fa;
-  --surface: #ffffff;
-  --surface-2: #eef2f6;
-  --border: #d9e0e7;
-  --text: #0f1419;
-  --text-muted: #4f5b67;
-  --accent: #2c6a91;
-  --accent-text: #ffffff;
-  --accent-soft: #e2eef5;
-  --ok: #1f7a4a;
-  --ok-soft: #e1f2e8;
-  --warn: #8a5a00;
-  --warn-soft: #fbf0d9;
-  --danger: #b4282e;
-  --danger-soft: #fbe5e5;
-  --focus: #2c6a91;
-  --shadow: 0 1px 2px rgb(15 20 25 / 6%), 0 8px 24px rgb(15 20 25 / 8%);
-  color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0f1419;
-    --surface: #161d24;
-    --surface-2: #1d262f;
-    --border: #2a3540;
-    --text: #e8eef4;
-    --text-muted: #9aa7b4;
-    --accent: #6ba3c7;
-    --accent-text: #0f1419;
-    --accent-soft: #1c3343;
-    --ok: #5fc48d;
-    --ok-soft: #173126;
-    --warn: #e3b25a;
-    --warn-soft: #352a14;
-    --danger: #f07a7f;
-    --danger-soft: #3a1c1e;
-    --focus: #6ba3c7;
-    --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 8px 24px rgb(0 0 0 / 35%);
-    color-scheme: dark;
-  }
-}
-
-:root[data-theme="dark"] {
-  --bg: #0f1419;
-  --surface: #161d24;
-  --surface-2: #1d262f;
-  --border: #2a3540;
-  --text: #e8eef4;
-  --text-muted: #9aa7b4;
-  --accent: #6ba3c7;
-  --accent-text: #0f1419;
-  --accent-soft: #1c3343;
-  --ok: #5fc48d;
-  --ok-soft: #173126;
-  --warn: #e3b25a;
-  --warn-soft: #352a14;
-  --danger: #f07a7f;
-  --danger-soft: #3a1c1e;
-  --focus: #6ba3c7;
-  --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 8px 24px rgb(0 0 0 / 35%);
-  color-scheme: dark;
+  --bg: var(--ui-background);
+  --surface: var(--ui-surface);
+  --surface-2: var(--ui-surface-2);
+  --border: var(--ui-border);
+  --text: var(--ui-foreground);
+  --text-muted: var(--ui-muted-foreground);
+  --accent: var(--ui-primary);
+  --accent-text: var(--ui-primary-foreground);
+  --accent-soft: color-mix(in srgb, var(--ui-primary) 14%, transparent);
+  --ok: var(--ui-success);
+  --ok-soft: color-mix(in srgb, var(--ui-success) 14%, transparent);
+  --warn: var(--ui-warning);
+  --warn-soft: color-mix(in srgb, var(--ui-warning) 16%, transparent);
+  --danger: var(--ui-destructive);
+  --danger-soft: color-mix(in srgb, var(--ui-destructive) 14%, transparent);
+  --focus: var(--ui-ring);
+  --shadow: 0 1px 2px rgb(0 0 0 / 8%), 0 8px 24px rgb(0 0 0 / 10%);
 }
 
 *,

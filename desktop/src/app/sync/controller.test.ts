@@ -1,6 +1,10 @@
 import { create } from "@bufbuild/protobuf";
 import { NetworkConnectionState, ProviderType } from "@gen/flavor/v1/common_pb";
-import { GetDaemonInfoResponseSchema, GetStateSnapshotResponseSchema, type GetStateSnapshotResponse } from "@gen/flavor/v1/daemon_pb";
+import {
+  GetDaemonInfoResponseSchema,
+  GetStateSnapshotResponseSchema,
+  type GetStateSnapshotResponse,
+} from "@gen/flavor/v1/daemon_pb";
 import { DeviceSchema, type Device } from "@gen/flavor/v1/device_pb";
 import { DaemonEventSchema, type DaemonEvent } from "@gen/flavor/v1/events_pb";
 import { AuthenticationPromptSchema, NetworkSchema, type Network } from "@gen/flavor/v1/network_pb";
@@ -10,16 +14,30 @@ import type { StreamMessage, UiError } from "../../lib/api/types";
 import { DaemonSyncController, deviceKey, type SyncTransport } from "./controller";
 
 const net = (id: string, state = NetworkConnectionState.CONNECTED) =>
-  create(NetworkSchema, { id, displayName: id, provider: ProviderType.HEADSCALE, controlUrl: "https://hs.example.com", state });
+  create(NetworkSchema, {
+    id,
+    displayName: id,
+    provider: ProviderType.HEADSCALE,
+    controlUrl: "https://hs.example.com",
+    state,
+  });
 
 const dev = (networkId: string, nodeId: string, ip: string) =>
   create(DeviceSchema, { id: { networkId, nodeId }, hostname: nodeId, addresses: [ip], online: true });
 
-const snapshot = (instance: string, seq: bigint, extra: { networks?: Network[]; devices?: Device[]; workspaces?: Workspace[]; activeWorkspaceId?: string } = {}) =>
+const snapshot = (
+  instance: string,
+  seq: bigint,
+  extra: { networks?: Network[]; devices?: Device[]; workspaces?: Workspace[]; activeWorkspaceId?: string } = {},
+) =>
   create(GetStateSnapshotResponseSchema, {
     daemonInstanceId: instance,
     snapshotSequence: seq,
-    daemon: create(GetDaemonInfoResponseSchema, { protocolMajor: 1, daemonInstanceId: instance, daemonVersion: "test" }),
+    daemon: create(GetDaemonInfoResponseSchema, {
+      protocolMajor: 1,
+      daemonInstanceId: instance,
+      daemonVersion: "test",
+    }),
     ...extra,
   });
 
@@ -99,7 +117,10 @@ describe("DaemonSyncController", () => {
   });
 
   it("resyncs on a sequence gap", async () => {
-    const { t, c } = setup(snapshot("i1", 1n, { networks: [net("a")] }), snapshot("i1", 9n, { networks: [net("a"), net("b")] }));
+    const { t, c } = setup(
+      snapshot("i1", 1n, { networks: [net("a")] }),
+      snapshot("i1", 9n, { networks: [net("a"), net("b")] }),
+    );
     await c.start();
     t.emit(event("i1", 3n, { case: "networkRemoved", value: { networkId: "a" } as never }));
     await flush();
@@ -179,14 +200,29 @@ describe("DaemonSyncController", () => {
   it("tracks auth prompts from events and clears them on completion or stop", async () => {
     const { t, c } = setup(snapshot("i1", 1n, { networks: [net("a", NetworkConnectionState.CONNECTING)] }));
     await c.start();
-    t.emit(event("i1", 2n, { case: "authenticationRequired", value: { networkId: "a", flowId: "f2", authUrl: "https://idp.example.org/x" } as never }));
+    t.emit(
+      event("i1", 2n, {
+        case: "authenticationRequired",
+        value: { networkId: "a", flowId: "f2", authUrl: "https://idp.example.org/x" } as never,
+      }),
+    );
     expect(c.getState().networks.get("a")?.authentication?.flowId).toBe("f2");
     t.emit(event("i1", 3n, { case: "authenticationCompleted", value: { networkId: "a" } as never }));
     expect(c.getState().networks.get("a")?.authentication).toBeUndefined();
 
-    t.emit(event("i1", 4n, { case: "authenticationRequired", value: { networkId: "a", flowId: "f3", authUrl: "https://idp.example.org/y" } as never }));
+    t.emit(
+      event("i1", 4n, {
+        case: "authenticationRequired",
+        value: { networkId: "a", flowId: "f3", authUrl: "https://idp.example.org/y" } as never,
+      }),
+    );
     t.emit(event("i1", 5n, { case: "peerAdded", value: { device: dev("a", "n1", "100.64.0.9") } as never }));
-    t.emit(event("i1", 6n, { case: "networkStateChanged", value: { networkId: "a", state: NetworkConnectionState.DISCONNECTED } as never }));
+    t.emit(
+      event("i1", 6n, {
+        case: "networkStateChanged",
+        value: { networkId: "a", state: NetworkConnectionState.DISCONNECTED } as never,
+      }),
+    );
     expect(c.getState().networks.get("a")?.authentication).toBeUndefined();
     expect(c.getState().devices.size).toBe(0);
   });
@@ -197,14 +233,25 @@ describe("DaemonSyncController", () => {
     const renamed = net("a", NetworkConnectionState.UNSPECIFIED);
     renamed.displayName = "Renamed";
     t.emit(event("i1", 2n, { case: "networkUpdated", value: { network: renamed } as never }));
-    expect(c.getState().networks.get("a")).toMatchObject({ displayName: "Renamed", state: NetworkConnectionState.CONNECTED });
+    expect(c.getState().networks.get("a")).toMatchObject({
+      displayName: "Renamed",
+      state: NetworkConnectionState.CONNECTED,
+    });
   });
 
   it("keeps workspaces and the active workspace correct across events and snapshots", async () => {
     const ws = (id: string, name: string, networkIds: string[]) => create(WorkspaceSchema, { id, name, networkIds });
     const { t, c } = setup(
-      snapshot("i1", 1n, { networks: [net("a"), net("b")], workspaces: [ws("w1", "Work", ["a", "b"])], activeWorkspaceId: "w1" }),
-      snapshot("i1", 9n, { networks: [net("a")], workspaces: [ws("w1", "Work", ["a"]), ws("w2", "Home", [])], activeWorkspaceId: "w2" }),
+      snapshot("i1", 1n, {
+        networks: [net("a"), net("b")],
+        workspaces: [ws("w1", "Work", ["a", "b"])],
+        activeWorkspaceId: "w1",
+      }),
+      snapshot("i1", 9n, {
+        networks: [net("a")],
+        workspaces: [ws("w1", "Work", ["a"]), ws("w2", "Home", [])],
+        activeWorkspaceId: "w2",
+      }),
     );
     await c.start();
     expect(c.getState().activeWorkspaceId).toBe("w1");
@@ -236,11 +283,35 @@ describe("DaemonSyncController", () => {
     );
     await c.start();
     expect(c.getState().preferences.get("100.64.0.1")?.networkId).toBe("a");
-    t.emit(event("i1", 2n, { case: "destinationPreferenceChanged", value: { preference: { destination: "100.64.0.1", networkId: "b" } } as never }));
-    t.emit(event("i1", 3n, { case: "destinationPreferenceChanged", value: { preference: { destination: "postgres", networkId: "a" } } as never }));
+    t.emit(
+      event("i1", 2n, {
+        case: "destinationPreferenceChanged",
+        value: { preference: { destination: "100.64.0.1", networkId: "b" } } as never,
+      }),
+    );
+    t.emit(
+      event("i1", 3n, {
+        case: "destinationPreferenceChanged",
+        value: { preference: { destination: "postgres", networkId: "a" } } as never,
+      }),
+    );
     expect(c.getState().preferences.get("100.64.0.1")?.networkId).toBe("b");
     t.emit(event("i1", 4n, { case: "destinationPreferenceRemoved", value: { destination: "100.64.0.1" } as never }));
     expect([...c.getState().preferences.keys()]).toEqual(["postgres"]);
   });
-});
 
+  it("keeps the reason for degraded and failed networks only", async () => {
+    const { t, c } = setup(snapshot("i1", 1n, { networks: [net("a")] }));
+    await c.start();
+    const state = (seq: bigint, s: NetworkConnectionState, safeMessage: string) =>
+      t.emit(
+        event("i1", seq, { case: "networkStateChanged", value: { networkId: "a", state: s, safeMessage } as never }),
+      );
+    state(2n, NetworkConnectionState.DEGRADED, "DERP region fra is unreachable");
+    expect(c.getState().networks.get("a")?.statusMessage).toBe("DERP region fra is unreachable");
+    state(3n, NetworkConnectionState.DEGRADED, "control server unreachable");
+    expect(c.getState().networks.get("a")?.statusMessage).toBe("control server unreachable");
+    state(4n, NetworkConnectionState.DISCONNECTED, "stopped");
+    expect(c.getState().networks.get("a")?.statusMessage).toBe("");
+  });
+});

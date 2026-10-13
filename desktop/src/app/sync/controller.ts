@@ -187,7 +187,10 @@ export class DaemonSyncController {
         const n = p.value.network;
         if (!n) break;
         const prev = networks.get(n.id);
-        networks.set(n.id, prev && p.case === "networkUpdated" ? { ...n, state: prev.state, authentication: prev.authentication } : n);
+        networks.set(
+          n.id,
+          prev && p.case === "networkUpdated" ? { ...n, state: prev.state, authentication: prev.authentication } : n,
+        );
         break;
       }
       case "networkRemoved": {
@@ -198,11 +201,16 @@ export class DaemonSyncController {
       case "networkStateChanged": {
         const prev = networks.get(p.value.networkId);
         if (!prev) break;
-        const next = { ...prev, state: p.value.state };
+        const reasoned =
+          p.value.state === NetworkConnectionState.ERROR || p.value.state === NetworkConnectionState.DEGRADED;
+        const next = { ...prev, state: p.value.state, statusMessage: reasoned ? p.value.safeMessage : "" };
         if (stopped.has(p.value.state)) {
           next.authentication = undefined;
           dropDevices(editDevices(), p.value.networkId);
-        } else if (prev.authentication?.kind === "approval" && p.value.state !== NetworkConnectionState.AWAITING_APPROVAL) {
+        } else if (
+          prev.authentication?.kind === "approval" &&
+          p.value.state !== NetworkConnectionState.AWAITING_APPROVAL
+        ) {
           next.authentication = undefined;
         } else if (p.value.state === NetworkConnectionState.CONNECTED) {
           next.authentication = undefined;

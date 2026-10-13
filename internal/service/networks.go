@@ -15,9 +15,10 @@ import (
 )
 
 type NetworkView struct {
-	Network domain.Network
-	State   domain.NetworkConnectionState
-	Prompt  *domain.AuthPrompt
+	Network       domain.Network
+	State         domain.NetworkConnectionState
+	Prompt        *domain.AuthPrompt
+	StatusMessage string
 }
 
 type AddInput struct {
@@ -32,6 +33,7 @@ func (s *Service) view(n domain.Network) NetworkView {
 	if sess, ok := s.cfg.Sessions.Get(n.ID); ok {
 		v.State = sess.State()
 		v.Prompt = sess.AuthPrompt()
+		v.StatusMessage = sess.StatusMessage()
 	}
 	if op := s.pendingOp(n.ID); op == opRemove || op == opDelete {
 		v.State = domain.StateRemoving

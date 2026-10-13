@@ -1,5 +1,10 @@
+@layer theme, base, legacy, components, utilities;
+
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./styles.css" layer(legacy);
+
+@source not inline("table table-row");
 
 @custom-variant dark {
   &:where([data-theme="dark"], [data-theme="dark"] *) {
@@ -154,5 +159,11 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
 }

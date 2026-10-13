@@ -4,7 +4,7 @@ import { visiblePages } from "./navigation";
 
 describe("visiblePages", () => {
   it("hides the Connection Inspector when the daemon does not support it", () => {
-    expect(visiblePages([Capability.HEADSCALE]).map(([id]) => id)).toEqual(["networks", "devices", "diagnostics", "settings"]);
+    expect(visiblePages([Capability.HEADSCALE]).map(([id]) => id)).toEqual(["overview", "networks", "devices", "diagnostics", "settings"]);
   });
 
   it("shows it once the daemon advertises the capability", () => {

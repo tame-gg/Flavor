@@ -132,7 +132,7 @@ export function SettingsPage({ settings, error, onChange }: Props) {
             <Fact term="Protocol" mono>
               {info ? `${info.protocolMajor}.${info.protocolMinor}` : "…"}
             </Fact>
-            <Fact term="Keyring">{keyring === undefined ? <Skeleton className="h-4 w-40" /> : (keyring ?? "Unknown")}</Fact>
+            <Fact term="Keyring">{keyring === undefined && status === "ready" ? <Skeleton className="h-4 w-40" /> : (keyring ?? "Unknown")}</Fact>
           </dl>
           <details className="group border-t border-border px-4 py-3">
             <summary className="flex w-fit cursor-pointer list-none items-center gap-1 rounded-md text-sm text-muted-foreground outline-none select-none hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 [&::-webkit-details-marker]:hidden">

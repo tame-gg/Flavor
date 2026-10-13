@@ -5,8 +5,8 @@ import { ArrowRight, ChevronRight, Copy, Loader2, Route, Terminal, X } from "luc
 import { toast } from "sonner";
 import { stateLabel } from "@/lib/networkState";
 import { useCanMutate, useDaemon } from "../../app/sync/useDaemon";
+import { useAction } from "../../app/useAction";
 import { clearExitNode, describeDevice, setExitNode } from "../../lib/api/daemon";
-import { errorMessage } from "../../lib/api/errors";
 import { cn } from "@/lib/cn";
 import { networkColorIndex, networkColorVar } from "@/lib/networkColor";
 import { Badge } from "@/ui/badge";
@@ -52,7 +52,7 @@ export function DeviceDetails({ deviceKey, onClose, onInspect, onOpenNetwork, ca
   const [names, setNames] = useState<DescribeDeviceResponse | null>(null);
   const [namesError, setNamesError] = useState<{ cause: unknown } | null>(null);
   const [attempt, setAttempt] = useState(0);
-  const [exitPending, setExitPending] = useState(false);
+  const exit = useAction((stop: boolean) => (stop ? clearExitNode(networkId!) : setExitNode(networkId!, nodeId!)));
 
   useEffect(() => {
     if (!networkId || !nodeId) return;
@@ -95,15 +95,9 @@ export function DeviceDetails({ deviceKey, onClose, onInspect, onOpenNetwork, ca
   const namesRetry = namesError !== null && canRetryDescribe(namesError.cause, status);
 
   const toggleExit = async () => {
-    setExitPending(true);
-    try {
-      await (stopping ? clearExitNode(id.networkId) : setExitNode(id.networkId, id.nodeId));
-      toast.success(stopping ? `Stopped using ${name} as exit node` : `Using ${name} as exit node`);
-    } catch (e) {
-      toast.error(errorMessage(e));
-    } finally {
-      setExitPending(false);
-    }
+    const r = await exit.run(stopping);
+    if (r.ok) toast.success(stopping ? `Stopped using ${name} as exit node` : `Using ${name} as exit node`);
+    else toast.error(r.error);
   };
 
   return (
@@ -263,10 +257,10 @@ export function DeviceDetails({ deviceKey, onClose, onInspect, onOpenNetwork, ca
               variant="outline"
               size="sm"
               className="self-start"
-              disabled={!canMutate || exitPending}
+              disabled={!canMutate || exit.pending}
               onClick={() => void toggleExit()}
             >
-              {exitPending && <Loader2 className="animate-spin" />}
+              {exit.pending && <Loader2 className="animate-spin" />}
               {stopping ? "Stop using as exit node" : "Use as exit node"}
             </Button>
           </section>

@@ -22,7 +22,7 @@ export function Welcome({ onAdd, onLater }: { onAdd: () => void; onLater: () => 
         </div>
         <div className="flex flex-wrap justify-center gap-2">
           <Button onClick={onAdd}>
-            <Plus />
+            <Plus aria-hidden="true" />
             Add network
           </Button>
           <Button variant="ghost" onClick={onLater}>

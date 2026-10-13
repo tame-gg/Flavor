@@ -159,6 +159,7 @@ const deviceAt = (n: number, node: string) =>
   devices.find((d) => d.id?.networkId === networks[n].id && d.id?.nodeId === node)!;
 
 let settings = { theme: "system", closeBehavior: "tray" };
+const preferences = new Map<string, string>();
 
 const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   get_snapshot: () => json(GetStateSnapshotResponseSchema, snapshot),
@@ -223,10 +224,12 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     );
     const byRecord = q === "git.intra" || q === "git.intra.lunarlabs.internal" ? [deviceAt(0, "2")] : [];
     const found = matches.length > 0 ? matches : byRecord;
+    const preferred = preferences.get(q);
+    const chosen = preferred ? found.find((d) => d.id?.networkId === preferred) : undefined;
     const decision =
       found.length === 0
         ? ResolutionDecision.NO_MATCH
-        : found.length === 1
+        : found.length === 1 || chosen
           ? ResolutionDecision.UNIQUE
           : ResolutionDecision.AMBIGUOUS;
     const match =
@@ -243,8 +246,9 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
         query: q,
         normalized: q,
         decision,
-        reason:
-          decision === ResolutionDecision.AMBIGUOUS
+        reason: chosen
+          ? DecisionReason.DESTINATION_PREFERENCE
+          : decision === ResolutionDecision.AMBIGUOUS
             ? DecisionReason.MULTIPLE_MATCHES
             : decision === ResolutionDecision.NO_MATCH
               ? DecisionReason.NO_MATCH
@@ -255,7 +259,13 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
           device: d,
           match,
           matchedValue: d.addresses[0],
-          status: decision === ResolutionDecision.UNIQUE ? CandidateStatus.SELECTED : CandidateStatus.TIED,
+          status: chosen
+            ? d === chosen
+              ? CandidateStatus.SELECTED
+              : CandidateStatus.OUTRANKED
+            : decision === ResolutionDecision.UNIQUE
+              ? CandidateStatus.SELECTED
+              : CandidateStatus.TIED,
         })),
       }),
     );
@@ -304,8 +314,14 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
             : [],
       }),
     ),
-  set_destination_preference: () => ({}),
-  delete_destination_preference: () => null,
+  set_destination_preference: (a) => {
+    preferences.set(String(a.destination), String(a.networkId));
+    return { destination: a.destination, networkId: a.networkId };
+  },
+  delete_destination_preference: (a) => {
+    preferences.delete(String(a.destination));
+    return null;
+  },
   activate_workspace: (a) =>
     json(
       ActivateWorkspaceResponseSchema,

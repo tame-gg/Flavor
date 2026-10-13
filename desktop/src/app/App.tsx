@@ -112,6 +112,7 @@ export function App() {
       <Welcome
         onAdd={() => {
           setWelcomeDone(true);
+          setPage("networks");
           setAddOpen(true);
         }}
         onLater={() => setWelcomeDone(true)}

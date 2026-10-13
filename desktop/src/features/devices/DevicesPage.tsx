@@ -95,13 +95,19 @@ export function DevicesPage({
     el.focus({ preventScroll: true });
   });
 
+  const revealed = useRef<string | null>(null);
   useEffect(() => {
-    if (!selected) return;
+    if (!selected) {
+      revealed.current = null;
+      return;
+    }
+    if (revealed.current === selected) return;
     const i = rows.findIndex((r) => r.key === selected);
     if (i < 0) return;
+    revealed.current = selected;
     setCursor(i);
     virtual.scrollToIndex(i);
-  }, [selected]);
+  }, [selected, rows]);
 
   const close = () => {
     const i = rows.findIndex((r) => r.key === selected);
@@ -144,7 +150,7 @@ export function DevicesPage({
       : `${rows.length} of ${devices.size} devices`;
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh_-_var(--space-5)_-_var(--space-6))] min-h-96 w-full max-w-5xl flex-col gap-6">
+    <div className="mx-auto flex h-[calc(100dvh-3.5rem)] min-h-96 w-full max-w-5xl flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold">Devices</h1>
         <p className="text-sm text-muted-foreground">

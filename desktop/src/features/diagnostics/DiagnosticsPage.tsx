@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toJsonString } from "@bufbuild/protobuf";
 import {
   CircleAlert,
@@ -45,6 +45,7 @@ export function DiagnosticsPage() {
   const { networks, status } = useDaemon();
   const [result, setResult] = useState<{ response: RunDiagnosticsResponse; at: Date } | null>(null);
   const run = useAction(runDiagnostics);
+  const heading = useRef<HTMLHeadingElement>(null);
   const names = useMemo(() => new Map([...networks.values()].map((n) => [n.id, n.displayName])), [networks]);
   const colors = useMemo(() => networkColorIndex(networks.values()), [networks]);
 
@@ -73,7 +74,9 @@ export function DiagnosticsPage() {
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <header className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-xl font-semibold">Diagnostics</h1>
+          <h1 ref={heading} tabIndex={-1} className="text-xl font-semibold outline-none">
+            Diagnostics
+          </h1>
           <p className="text-sm text-muted-foreground">
             A safe summary of the daemon and each network, without keys or sign-in links.
           </p>
@@ -95,6 +98,9 @@ export function DiagnosticsPage() {
           </Button>
         </div>
       </header>
+      <p role="status" className="sr-only">
+        {run.pending ? "Running checks" : result ? `${result.response.checks.length} checks finished` : ""}
+      </p>
 
       {run.error && (
         <Alert variant="destructive">
@@ -107,7 +113,10 @@ export function DiagnosticsPage() {
               variant="outline"
               className="text-foreground"
               disabled={status !== "ready"}
-              onClick={() => void refresh()}
+              onClick={() => {
+                heading.current?.focus();
+                void refresh();
+              }}
             >
               Try again
             </Button>

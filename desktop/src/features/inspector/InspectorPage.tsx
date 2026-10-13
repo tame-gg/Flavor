@@ -183,7 +183,8 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
       `Removed your preference for ${destination}`,
     );
 
-  const [decisionText, decisionTone, decisionIcon] = decisionBadge[result?.decision ?? ResolutionDecision.UNSPECIFIED];
+  const [decisionText, decisionTone, decisionIcon] =
+    decisionBadge[result?.decision ?? ResolutionDecision.UNSPECIFIED] ?? decisionBadge[ResolutionDecision.UNSPECIFIED];
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -193,6 +194,9 @@ export function InspectorPage({ query, onQueryChange, onOpenNetwork, onShowDevic
           See which of your networks a destination belongs to, and why.
         </p>
       </header>
+      <p role="status" className="sr-only">
+        {run.pending ? `Inspecting ${lastQuery}` : summary ? `${lastQuery}: ${summary.title}` : ""}
+      </p>
 
       <form
         className="flex flex-col gap-2"

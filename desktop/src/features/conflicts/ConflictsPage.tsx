@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
   CircleAlert,
@@ -99,7 +99,10 @@ export function ConflictsPage({ onInspect, onOpenNetwork, onShowDevice, canPrefe
   const [pending, setPending] = useState<Pending | null>(null);
 
   useEffect(() => {
-    if (status !== "ready") return;
+    if (status !== "ready") {
+      setPending((p) => (p?.sent ? null : p));
+      return;
+    }
     let cancelled = false;
     const t = setTimeout(() => {
       setLoading(true);
@@ -111,7 +114,11 @@ export function ConflictsPage({ onInspect, onOpenNetwork, onShowDevice, canPrefe
           }
         })
         .catch((e) => !cancelled && setError(errorMessage(e)))
-        .finally(() => !cancelled && setLoading(false));
+        .finally(() => {
+          if (cancelled) return;
+          setLoading(false);
+          setPending((p) => (p?.sent ? null : p));
+        });
     }, 250);
     return () => {
       cancelled = true;
@@ -119,19 +126,24 @@ export function ConflictsPage({ onInspect, onOpenNetwork, onShowDevice, canPrefe
     };
   }, [sequence, status, attempt]);
 
+  const refocus = useRef<string | null>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (!pending?.sent) return;
-    setPending(null);
+    const id = refocus.current;
+    if (!id || pending) return;
+    refocus.current = null;
     if (!document.activeElement || document.activeElement === document.body) {
-      document.getElementById(`conflict-${pending.id}`)?.focus();
+      document.getElementById(`conflict-${id}`)?.focus();
     }
-  }, [data]);
+  }, [pending]);
 
   const prefer = async (c: Conflict, networkId: string, name: string) => {
     setPending({ id: c.id, networkId, sent: false });
     try {
       await setDestinationPreference(c.value, networkId);
       setPending({ id: c.id, networkId, sent: true });
+      refocus.current = c.id;
+      setAttempt((a) => a + 1);
       toast.success(`Flavor now prefers ${name} for ${c.value}`);
     } catch (e) {
       setPending(null);
@@ -166,7 +178,9 @@ export function ConflictsPage({ onInspect, onOpenNetwork, onShowDevice, canPrefe
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <header className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold">Conflicts</h1>
+          <h1 ref={heading} tabIndex={-1} className="text-xl font-semibold outline-none">
+            Conflicts
+          </h1>
           <p className="text-sm text-muted-foreground">
             Addresses and names that exist more than once across your connected networks.
           </p>
@@ -190,7 +204,10 @@ export function ConflictsPage({ onInspect, onOpenNetwork, onShowDevice, canPrefe
               variant="outline"
               className="mt-2 text-foreground"
               disabled={loading}
-              onClick={() => setAttempt((a) => a + 1)}
+              onClick={() => {
+                heading.current?.focus();
+                setAttempt((a) => a + 1);
+              }}
             >
               {loading && <LoaderCircle className="animate-spin" aria-hidden="true" />}
               Try again

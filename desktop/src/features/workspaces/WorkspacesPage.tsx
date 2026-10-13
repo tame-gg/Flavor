@@ -13,7 +13,6 @@ import {
   deleteWorkspace,
   updateWorkspace,
 } from "../../lib/api/daemon";
-import { errorMessage } from "../../lib/api/errors";
 import { useCanMutate, useDaemon } from "../../app/sync/useDaemon";
 import { useAction } from "../../app/useAction";
 import { providerName } from "../networks/format";
@@ -60,22 +59,16 @@ export function WorkspacesPage({ onOpenNetwork }: { onOpenNetwork: (id: string) 
   const [editing, setEditing] = useState<Workspace | "new" | null>(null);
   const [activating, setActivating] = useState<Workspace | null>(null);
   const [deleting, setDeleting] = useState<Workspace | null>(null);
-  const [deactivating, setDeactivating] = useState(false);
+  const deactivation = useAction(deactivateWorkspace);
   const colors = useMemo(() => networkColorIndex(networks.values()), [networks]);
   const list = [...workspaces.values()].sort(
     (a, b) => Number(b.id === activeWorkspaceId) - Number(a.id === activeWorkspaceId) || a.name.localeCompare(b.name),
   );
 
   const deactivate = async (ws: Workspace) => {
-    setDeactivating(true);
-    try {
-      await deactivateWorkspace();
-      toast.success(`Deactivated ${ws.name}`);
-    } catch (e) {
-      toast.error(`Couldn't deactivate ${ws.name}`, { description: errorMessage(e) });
-    } finally {
-      setDeactivating(false);
-    }
+    const r = await deactivation.run();
+    if (r.ok) toast.success(`Deactivated ${ws.name}`);
+    else toast.error(`Couldn't deactivate ${ws.name}`, { description: r.error });
   };
 
   return (
@@ -136,10 +129,10 @@ export function WorkspacesPage({ onOpenNetwork }: { onOpenNetwork: (id: string) 
                         <Button
                           size="sm"
                           variant="ghost"
-                          disabled={!canMutate || deactivating}
+                          disabled={!canMutate || deactivation.pending}
                           onClick={() => void deactivate(ws)}
                         >
-                          {deactivating && <Loader2 className="animate-spin" />}
+                          {deactivation.pending && <Loader2 className="animate-spin" />}
                           Deactivate
                         </Button>
                       )}
@@ -395,6 +388,13 @@ function ActivateDialog({ workspace, colors, onClose }: { workspace: Workspace; 
           void submit();
         }}
       >
+        <p role="status" className="sr-only">
+          {activate.pending
+            ? `Activating ${workspace.name}`
+            : result
+              ? `${workspace.name} is active. ${result.results.filter((r) => r.outcome === ActivationOutcome.FAILED).length} of ${result.results.length} networks failed.`
+              : ""}
+        </p>
         <DialogHeader>
           <DialogTitle>{result ? `${workspace.name} is active` : `Activate ${workspace.name}`}</DialogTitle>
           <DialogDescription>
@@ -409,7 +409,7 @@ function ActivateDialog({ workspace, colors, onClose }: { workspace: Workspace; 
           ) : (
             <ul className="rounded-md border border-border">
               {result.results.map((r, i) => {
-                const [label, tone] = outcomes[r.outcome];
+                const [label, tone] = outcomes[r.outcome] ?? outcomes[ActivationOutcome.UNSPECIFIED];
                 return (
                   <li
                     key={r.network?.id ?? i}

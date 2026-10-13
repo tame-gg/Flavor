@@ -93,7 +93,10 @@ export function NetworksPage({ selectedId, onSelect, onShowDevices, addOpen, set
                       <button
                         type="button"
                         aria-current={current ? "true" : undefined}
-                        onClick={() => onSelect(n.id)}
+                        onClick={() => {
+                          if (n.id !== selectedId) setTab("overview");
+                          onSelect(n.id);
+                        }}
                         className={cn(
                           "flex w-full items-start gap-3 px-4 py-3 text-left transition-colors outline-none hover:bg-accent/60 focus-visible:inset-ring-2 focus-visible:inset-ring-ring/60",
                           current && "bg-accent hover:bg-accent",

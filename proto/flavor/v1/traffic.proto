@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package flavor.v1;
+
+service TrafficService {
+  rpc GetTrafficStats(GetTrafficStatsRequest) returns (GetTrafficStatsResponse);
+}
+
+message TrafficSample {
+  int64 at_unix_ms = 1;
+  uint64 rx_bytes_per_second = 2;
+  uint64 tx_bytes_per_second = 3;
+}
+
+message NetworkTraffic {
+  string network_id = 1;
+  repeated TrafficSample samples = 2;
+}
+
+message GetTrafficStatsRequest {}
+
+message GetTrafficStatsResponse {
+  repeated NetworkTraffic networks = 1;
+  uint32 interval_ms = 2;
+}

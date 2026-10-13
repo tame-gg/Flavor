@@ -228,14 +228,17 @@ describe("DaemonSyncController", () => {
   });
 
   it("keeps runtime state when a network's config is updated", async () => {
-    const { t, c } = setup(snapshot("i1", 1n, { networks: [net("a", NetworkConnectionState.CONNECTED)] }));
+    const degraded = net("a", NetworkConnectionState.DEGRADED);
+    degraded.statusMessage = "DERP region fra is unreachable";
+    const { t, c } = setup(snapshot("i1", 1n, { networks: [degraded] }));
     await c.start();
     const renamed = net("a", NetworkConnectionState.UNSPECIFIED);
     renamed.displayName = "Renamed";
     t.emit(event("i1", 2n, { case: "networkUpdated", value: { network: renamed } as never }));
     expect(c.getState().networks.get("a")).toMatchObject({
       displayName: "Renamed",
-      state: NetworkConnectionState.CONNECTED,
+      state: NetworkConnectionState.DEGRADED,
+      statusMessage: "DERP region fra is unreachable",
     });
   });
 

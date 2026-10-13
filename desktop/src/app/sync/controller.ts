@@ -189,7 +189,7 @@ export class DaemonSyncController {
         const prev = networks.get(n.id);
         networks.set(
           n.id,
-          prev && p.case === "networkUpdated" ? { ...n, state: prev.state, authentication: prev.authentication } : n,
+          prev && p.case === "networkUpdated" ? { ...n, state: prev.state, authentication: prev.authentication, statusMessage: prev.statusMessage } : n,
         );
         break;
       }

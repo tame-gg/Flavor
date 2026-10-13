@@ -19,7 +19,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/ui/dialog";
 import type { Page } from "./navigation";
 import { deviceKey } from "./sync/controller";
-import { useDaemon } from "./sync/useDaemon";
+import { useCanMutate, useDaemon } from "./sync/useDaemon";
 
 type Props = {
   open: boolean;
@@ -46,6 +46,7 @@ export function CommandPalette({
   onInspect,
 }: Props) {
   const { networks, devices } = useDaemon();
+  const canMutate = useCanMutate();
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState("");
   const [inspection, setInspection] = useState<InspectDestinationResponse | null>(null);
@@ -93,7 +94,7 @@ export function CommandPalette({
       : undefined;
   const inspectLabel =
     inspection?.decision === ResolutionDecision.UNIQUE && winner
-      ? `${winner.network?.displayName} · ${winner.device?.hostname || winner.matchedValue}`
+      ? `${winner.network?.displayName ?? "Unknown network"} · ${winner.device?.hostname || winner.matchedValue}`
       : inspection?.decision === ResolutionDecision.AMBIGUOUS
         ? `Ambiguous: ${new Set(inspection.candidates.map((c) => c.network?.displayName)).size} networks`
         : inspection?.decision === ResolutionDecision.NO_MATCH
@@ -166,6 +167,7 @@ export function CommandPalette({
                   <CommandItem
                     key={`toggle:${n.id}`}
                     value={`toggle:${n.id} ${on ? "disconnect" : "connect"} ${n.displayName}`}
+                    disabled={!canMutate}
                     onSelect={() => run(() => void toggle(n.id, !on, n.displayName))}
                   >
                     {on ? <Plug /> : <PlugZap />}

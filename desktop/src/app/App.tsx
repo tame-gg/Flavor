@@ -151,7 +151,7 @@ export function App() {
         status={status}
         onSearch={() => setPaletteOpen(true)}
       />
-      <main className="min-w-0 flex-1 overflow-auto px-8 pt-6 pb-8">
+      <main className="relative min-w-0 flex-1 overflow-auto px-8 pt-6 pb-8">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={page}

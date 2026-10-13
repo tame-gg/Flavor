@@ -25,6 +25,7 @@ type Client struct {
 	ExitNodes   flavorv1connect.ExitNodeServiceClient
 	Routes      flavorv1connect.RouteServiceClient
 	DNS         flavorv1connect.DNSServiceClient
+	Traffic     flavorv1connect.TrafficServiceClient
 }
 
 func HTTPClient(socket string) *http.Client {
@@ -54,5 +55,6 @@ func New(socket string) *Client {
 		ExitNodes:   flavorv1connect.NewExitNodeServiceClient(h, BaseURL),
 		Routes:      flavorv1connect.NewRouteServiceClient(h, BaseURL),
 		DNS:         flavorv1connect.NewDNSServiceClient(h, BaseURL),
+		Traffic:     flavorv1connect.NewTrafficServiceClient(h, BaseURL),
 	}
 }

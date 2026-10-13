@@ -66,8 +66,9 @@ commands:
   routes use <network> <cidr>...|--all
   routes unuse <network> <cidr>...|--all
                                        with flavor-netd, programs on this computer reach the routes you use
+  traffic                              current download and upload rate of each connected network
 
---json prints the daemon response as JSON for info, list, devices, diag, explain, conflicts, dns, workspace list, preference list, exit-node and routes.
+--json prints the daemon response as JSON for info, list, devices, diag, explain, conflicts, dns, workspace list, preference list, exit-node, routes and traffic.
 `
 
 func main() {
@@ -324,6 +325,8 @@ func run(ctx context.Context, c *client.Client, cmd string, args []string, asJSO
 		return runRoutes(ctx, c, args, asJSON, out)
 	case "dns":
 		return runDNS(ctx, c, args, asJSON, out)
+	case "traffic":
+		return runTraffic(ctx, c, args, asJSON, out)
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", cmd, usage)
 	}

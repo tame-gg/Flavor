@@ -4,6 +4,7 @@ go 1.27.1
 
 require (
 	connectrpc.com/connect v1.21.0
+	github.com/dustin/go-humanize v1.0.1
 	github.com/godbus/dbus/v5 v5.1.1-0.20230522191255-76236955d466
 	github.com/jsimonetti/rtnetlink v1.4.0
 	github.com/oklog/ulid/v2 v2.1.0
@@ -28,7 +29,6 @@ require (
 	github.com/coder/websocket v1.8.12 // indirect
 	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/dblohm7/wingoes v0.0.0-20240119213807-a09d6be7affa // indirect
-	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/gaissmai/bart v0.18.0 // indirect
 	github.com/go-json-experiment/json v0.0.0-20250813024750-ebf49471dced // indirect

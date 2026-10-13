@@ -51,6 +51,8 @@ func projectPeer(p *ipnstate.PeerStatus) EnginePeer {
 		Tags:           tags(p),
 		Routes:         routes(p),
 		ExitNodeOption: p.ExitNodeOption,
+		RxBytes:        p.RxBytes,
+		TxBytes:        p.TxBytes,
 	}
 }
 

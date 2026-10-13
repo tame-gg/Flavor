@@ -19,6 +19,7 @@ const COMMANDS: &[&str] = &[
     "use_subnet_routes",
     "get_routes",
     "offer_exit_node",
+    "get_traffic_stats",
     "create_workspace",
     "update_workspace",
     "delete_workspace",

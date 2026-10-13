@@ -14,6 +14,11 @@ import { networkColorIndex, networkColorVar } from "@/lib/networkColor";
 import { Button } from "@/ui/button";
 import { Card } from "@/ui/card";
 import { Switch } from "@/ui/switch";
+import { isLive } from "../networks/format";
+import { formatRate, type Sample } from "../traffic/chart";
+import { Sparkline } from "../traffic/Sparkline";
+import { ThroughputChart } from "../traffic/ThroughputChart";
+import { useTraffic } from "../traffic/useTraffic";
 import { summarize, type NeedsYou, type Tone } from "./summary";
 
 const toneDot: Record<Tone, string> = {
@@ -60,6 +65,9 @@ export function OverviewPage({ onOpenNetwork, onConflicts, onAddNetwork }: Props
   const colors = useMemo(() => networkColorIndex(networks.values()), [networks]);
   const sorted = [...networks.values()].sort((a, b) => a.displayName.localeCompare(b.displayName));
   const workspace = workspaces.get(activeWorkspaceId);
+  const traffic = useTraffic();
+  const latest = traffic ? [...traffic.values()].flatMap((s) => s.slice(-1)) : [];
+  const total = (d: "rx" | "tx") => (latest.length ? formatRate(latest.reduce((sum, s) => sum + s[d], 0)) : "—");
 
   const runNeed = (item: NeedsYou) => {
     if (item.action === "conflicts") return onConflicts();
@@ -131,9 +139,38 @@ export function OverviewPage({ onOpenNetwork, onConflicts, onAddNetwork }: Props
       <section aria-label="Summary" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Tile label="Networks connected" value={`${overview.connected} / ${overview.total}`} />
         <Tile label="Devices online" value={`${overview.devicesOnline} / ${overview.devicesTotal}`} />
-        <Tile label="Ambiguous destinations" value={String(ambiguous)} tone={ambiguous > 0 ? "warn" : undefined} />
-        <Tile label="Active workspace" value={workspace?.name ?? "None"} />
+        {traffic ? (
+          <>
+            <Tile label="Download" value={total("rx")} />
+            <Tile label="Upload" value={total("tx")} />
+          </>
+        ) : (
+          <>
+            <Tile label="Ambiguous destinations" value={String(ambiguous)} tone={ambiguous > 0 ? "warn" : undefined} />
+            <Tile label="Active workspace" value={workspace?.name ?? "None"} />
+          </>
+        )}
       </section>
+
+      {traffic && overview.connected > 0 && (
+        <section aria-labelledby="traffic-heading" className="flex flex-col gap-2">
+          <h2 id="traffic-heading" className="text-sm font-medium text-muted-foreground">
+            Traffic
+          </h2>
+          <Card className="gap-0 py-0">
+            <ThroughputChart
+              series={sorted
+                .filter((n) => isLive(n.state))
+                .map((n) => ({
+                  id: n.id,
+                  name: n.displayName,
+                  color: networkColorVar(colors.get(n.id)),
+                  samples: traffic.get(n.id) ?? [],
+                }))}
+            />
+          </Card>
+        </section>
+      )}
 
       <section aria-labelledby="networks-heading" className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
@@ -160,6 +197,7 @@ export function OverviewPage({ onOpenNetwork, onConflicts, onAddNetwork }: Props
                 online={[...devices.values()].filter((d) => d.id?.networkId === n.id && !d.local && d.online).length}
                 total={[...devices.values()].filter((d) => d.id?.networkId === n.id && !d.local).length}
                 exitNode={[...devices.values()].find((d) => d.id?.networkId === n.id && d.exitNode)?.hostname}
+                samples={traffic?.get(n.id)}
                 onOpen={() => onOpenNetwork(n.id)}
               />
             ))}
@@ -186,6 +224,7 @@ function NetworkRow({
   online,
   total,
   exitNode,
+  samples,
   onOpen,
 }: {
   network: Network;
@@ -194,6 +233,7 @@ function NetworkRow({
   online: number;
   total: number;
   exitNode?: string;
+  samples?: Sample[];
   onOpen: () => void;
 }) {
   const canMutate = useCanMutate();
@@ -242,6 +282,7 @@ function NetworkRow({
           {detail}
         </span>
       </button>
+      {live && samples && samples.length > 0 && <Sparkline samples={samples} color={color} />}
       <Switch
         checked={isOn}
         disabled={!canMutate || pending || n.state === S.REMOVING}

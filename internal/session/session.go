@@ -537,6 +537,23 @@ func (s *Session) Dial(ctx context.Context, network, address string) (net.Conn, 
 	return eng.Dial(ctx, network, address)
 }
 
+func (s *Session) PeerCounters(ctx context.Context) ([]EnginePeer, error) {
+	s.lifeMu.Lock()
+	var eng Engine
+	if g := s.gen; g != nil && g.phase == backendStarted {
+		eng = g.eng
+	}
+	s.lifeMu.Unlock()
+	if eng == nil {
+		return nil, ErrNotRunning
+	}
+	snap, err := eng.Status(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return snap.Peers, nil
+}
+
 func (s *Session) SetExitNode(ctx context.Context, id domain.NodeID) error {
 	s.lifeMu.Lock()
 	g := s.gen

@@ -22,6 +22,7 @@ import {
 } from "@gen/flavor/v1/inspector_pb";
 import { NetworkSchema, type Network } from "@gen/flavor/v1/network_pb";
 import { GetRoutesResponseSchema, ListSubnetRoutesResponseSchema, SubnetRouteUse } from "@gen/flavor/v1/routes_pb";
+import { GetTrafficStatsResponseSchema } from "@gen/flavor/v1/traffic_pb";
 import { ActivateWorkspaceResponseSchema, ActivationOutcome, WorkspaceSchema } from "@gen/flavor/v1/workspaces_pb";
 
 const json = <D extends DescMessage>(schema: D, value: MessageShape<D>) => toJson(schema, value);
@@ -138,6 +139,7 @@ const snapshot = create(GetStateSnapshotResponseSchema, {
       Capability.SOCKS_PROXY,
       Capability.EXIT_NODES,
       Capability.ROUTES,
+      Capability.TRAFFIC_STATS,
     ],
   },
   networks,
@@ -157,6 +159,13 @@ const snapshot = create(GetStateSnapshotResponseSchema, {
 const ref = (n: Network) => ({ id: n.id, displayName: n.displayName, provider: n.provider, state: n.state });
 const deviceAt = (n: number, node: string) =>
   devices.find((d) => d.id?.networkId === networks[n].id && d.id?.nodeId === node)!;
+
+const trafficScale = [2_400_000, 420_000, 150_000];
+const wave = (t: number, phase: number) =>
+  0.55 +
+  0.25 * Math.sin(t / 9_000 + phase) +
+  0.12 * Math.sin(t / 3_100 + phase * 2) +
+  0.06 * Math.sin(t / 1_300 + phase * 3);
 
 let settings = { theme: "system", closeBehavior: "tray" };
 const preferences = new Map<string, string>();
@@ -331,6 +340,28 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
       }),
     ),
   get_routes: () => json(GetRoutesResponseSchema, create(GetRoutesResponseSchema, {})),
+  get_traffic_stats: () => {
+    const now = Math.floor(Date.now() / 1000) * 1000;
+    return json(
+      GetTrafficStatsResponseSchema,
+      create(GetTrafficStatsResponseSchema, {
+        intervalMs: 1000,
+        networks: networks
+          .filter((n) => n.state === S.CONNECTED || n.state === S.DEGRADED)
+          .map((n, i) => ({
+            networkId: n.id,
+            samples: Array.from({ length: 120 }, (_, k) => {
+              const at = now - (119 - k) * 1000;
+              return {
+                atUnixMs: BigInt(at),
+                rxBytesPerSecond: BigInt(Math.round(trafficScale[i] * wave(at, i * 1.7))),
+                txBytesPerSecond: BigInt(Math.round(trafficScale[i] * 0.3 * wave(at, i * 1.7 + 2.3))),
+              };
+            }),
+          })),
+      }),
+    );
+  },
 };
 
 mockIPC(

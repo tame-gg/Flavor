@@ -50,6 +50,7 @@ fn main() {
             commands::use_subnet_routes,
             commands::get_routes,
             commands::offer_exit_node,
+            commands::get_traffic_stats,
             commands::create_workspace,
             commands::update_workspace,
             commands::delete_workspace,

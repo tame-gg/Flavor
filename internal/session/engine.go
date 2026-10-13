@@ -31,6 +31,8 @@ type EnginePeer struct {
 	Tags           []string
 	Routes         []netip.Prefix
 	ExitNodeOption bool
+	RxBytes        int64
+	TxBytes        int64
 }
 
 type EngineStatus struct {

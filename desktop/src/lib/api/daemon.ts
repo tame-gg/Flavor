@@ -142,3 +142,7 @@ export const getSettings = () => invoke<LoadedSettings>("get_settings");
 export const setSettings = (settings: Settings) => invoke<LoadedSettings>("set_settings", { settings });
 export const setTraySummary = (text: string) => invoke<void>("set_tray_summary", { text });
 export const appVersion = () => invoke<string>("app_version");
+export const pendingUpdate = () => invoke<string | null>("update_pending");
+export const installUpdate = () => invoke<void>("update_install");
+export const onUpdate = (handler: (version: string) => void) =>
+  listen<string>("flavor://update", ({ payload }) => handler(payload));

@@ -12,6 +12,7 @@ flavor-ipc = { path = "../../crates/flavor-ipc" }
 tauri = { version = "2", features = ["tray-icon", "image-png"] }
 tauri-plugin-opener = "2"
 tauri-plugin-single-instance = "2"
+tauri-plugin-updater = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 toml = "1"

@@ -31,6 +31,7 @@
   },
   "bundle": {
     "active": false,
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -38,5 +39,13 @@
       "icons/icon.png",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDJFMzA3N0FCQkJGNURFRjQKUldUMDN2VzdxM2N3TGtEbUhpa3M5bDVvZTJDa09xTSt2SGt4cHhtSFQvQkpzLzRZRk9SZHg3eTIK",
+      "endpoints": [
+        "https://cdn.tame.gg/flavor-desktop/latest.json"
+      ]
+    }
   }
 }

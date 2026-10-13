@@ -111,6 +111,12 @@ jobs:
           # Tauri stores the minisign public key file and each .sig base64-encoded; decode them to minisign format.
           mkdir -p minisign
           jq -er '.plugins.updater.pubkey' src/desktop/src-tauri/tauri.conf.json | base64 -d > minisign/flavor.pub
+          # Pin the key ID (bytes 2-9 of the key, little-endian), not the untrusted comment line.
+          key_id="$(sed -n 2p minisign/flavor.pub | base64 -d | od -An -tx1 -j2 -N8 | tr -d ' \n' | fold -w2 | tac | tr -d '\n' | tr a-f A-F)"
+          if [ "$key_id" != "2E3077ABBBF5DEF4" ]; then
+            echo "::error::updater pubkey in tauri.conf.json has key ID '$key_id', expected 2E3077ABBBF5DEF4"
+            exit 1
+          fi
           version="${TAG#v}"
           count=0
           for sig in "stage/flavor-desktop/$version"/*.sig; do

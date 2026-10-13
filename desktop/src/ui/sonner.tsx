@@ -1,9 +1,21 @@
 import { CircleCheckIcon, InfoIcon, Loader2Icon, OctagonXIcon, TriangleAlertIcon } from "lucide-react";
-import type { CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
+const readTheme = () => document.documentElement.dataset.theme;
+
+function useDocumentTheme() {
+  const [theme, setTheme] = useState(readTheme);
+  useEffect(() => {
+    const observer = new MutationObserver(() => setTheme(readTheme()));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
+  return theme;
+}
+
 const Toaster = ({ ...props }: ToasterProps) => {
-  const theme = document.documentElement.dataset.theme;
+  const theme = useDocumentTheme();
   return (
     <Sonner
       theme={theme === "light" || theme === "dark" ? theme : "system"}

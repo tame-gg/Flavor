@@ -137,11 +137,16 @@ const ref = (n: Network) => ({ id: n.id, displayName: n.displayName, provider: n
 const deviceAt = (n: number, node: string) =>
   devices.find((d) => d.id?.networkId === networks[n].id && d.id?.nodeId === node)!;
 
+let settings = { theme: "system", closeBehavior: "tray" };
+
 const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   get_snapshot: () => json(GetStateSnapshotResponseSchema, snapshot),
   watch_events: () => null,
-  get_settings: () => ({ theme: "system", closeBehavior: "tray", warning: null }),
-  set_settings: (a) => ({ ...(a.settings as object), warning: null }),
+  get_settings: () => ({ ...settings, warning: null }),
+  set_settings: (a) => {
+    settings = a.settings as typeof settings;
+    return { ...settings, warning: null };
+  },
   app_version: () => "0.1.0-dev",
   run_diagnostics: () =>
     json(
@@ -183,36 +188,61 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
         ],
       }),
     ),
-  inspect_destination: (a) =>
-    json(
+  inspect_destination: (a) => {
+    const q = String(a.destination).toLowerCase();
+    const matches = devices.filter(
+      (d) => !d.local && (d.addresses.includes(q) || d.hostname === q || d.dnsName.startsWith(`${q}.`)),
+    );
+    const byRecord = q.startsWith("git.intra") ? [deviceAt(0, "2")] : [];
+    const found = matches.length > 0 ? matches : byRecord;
+    const decision =
+      found.length === 0
+        ? ResolutionDecision.NO_MATCH
+        : found.length === 1
+          ? ResolutionDecision.UNIQUE
+          : ResolutionDecision.AMBIGUOUS;
+    const match =
+      byRecord.length && !matches.length
+        ? MatchKind.DNS_RECORD
+        : q.includes(".") || /^\d/.test(q)
+          ? MatchKind.DEVICE_ADDRESS
+          : MatchKind.DEVICE_HOSTNAME;
+    return json(
       InspectDestinationResponseSchema,
       create(InspectDestinationResponseSchema, {
         daemonInstanceId: "fake-instance",
         snapshotSequence: 42n,
-        query: String(a.destination),
-        normalized: String(a.destination),
-        decision: ResolutionDecision.UNIQUE,
-        reason: DecisionReason.DNS_RECORD,
-        decidedBy: MatchKind.DNS_RECORD,
-        candidates: [
-          {
-            network: ref(networks[0]),
-            device: deviceAt(0, "2"),
-            match: MatchKind.DNS_RECORD,
-            matchedValue: "100.64.0.13",
-            status: CandidateStatus.SELECTED,
-          },
-        ],
+        query: q,
+        normalized: q,
+        decision,
+        reason:
+          decision === ResolutionDecision.AMBIGUOUS
+            ? DecisionReason.MULTIPLE_MATCHES
+            : decision === ResolutionDecision.NO_MATCH
+              ? DecisionReason.NO_MATCH
+              : DecisionReason.DNS_RECORD,
+        decidedBy: match,
+        candidates: found.map((d) => ({
+          network: ref(networks.find((n) => n.id === d.id?.networkId)!),
+          device: d,
+          match,
+          matchedValue: d.addresses[0],
+          status: decision === ResolutionDecision.UNIQUE ? CandidateStatus.SELECTED : CandidateStatus.TIED,
+        })),
       }),
-    ),
-  describe_device: () =>
-    json(
+    );
+  },
+  describe_device: (a) => {
+    const d = devices.find((x) => x.id?.networkId === a.networkId && x.id?.nodeId === a.nodeId);
+    const n = networks.find((x) => x.id === a.networkId);
+    return json(
       DescribeDeviceResponseSchema,
       create(DescribeDeviceResponseSchema, {
-        name: "ll-prod-app-01.lunarlabs.flavor.internal",
-        stableName: "id-2.lunarlabs.flavor.internal",
+        name: d && n ? `${d.hostname}.${n.label}.flavor.internal` : "",
+        stableName: d && n ? `id-${d.id?.nodeId}.${n.label}.flavor.internal` : "",
       }),
-    ),
+    );
+  },
   list_dns: (a) =>
     json(
       ListDNSResponseSchema,

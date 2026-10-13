@@ -2,6 +2,14 @@
 
 All notable changes to Flavor are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- On Linux and macOS, subnet routes that other devices advertise are reachable again through `flavorctl forward`, the SOCKS5 proxy and system-wide routes. The embedded Tailscale client only accepts subnet routes by default on Windows, so connections to those addresses timed out everywhere else.
+- `flavorctl devices`, `connect`, `disconnect`, `enroll`, `rename` and `remove` accept a network's name as well as its id.
+- `flavorctl diag` says why a network is degraded: it lists the warnings the control server reports, and marks the network as a warning instead of ok.
+
 ## [0.1.0-beta.10] - 2026-10-12
 
 ### Added
@@ -141,6 +149,7 @@ First public beta, released as Lattice.
 - Experimental system-wide names through the optional `flavor-netd` helper, confined by systemd sandboxing, polkit, AppArmor and SELinux.
 - Release tarballs for x86_64 and arm64 with an installer and uninstaller, SBOMs, and `SHA256SUMS` signed with Sigstore and GPG, plus GitHub build-provenance attestations.
 
+[Unreleased]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.10...HEAD
 [0.1.0-beta.10]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.9...v0.1.0-beta.10
 [0.1.0-beta.9]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.8...v0.1.0-beta.9
 [0.1.0-beta.8]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.7...v0.1.0-beta.8

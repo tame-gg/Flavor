@@ -46,6 +46,7 @@ type Session struct {
 	local   domain.LocalNode
 	devices map[domain.NodeID]domain.Device
 	dns     domain.NetworkDNS
+	health  []string
 	prompt  *domain.AuthPrompt
 	lastErr string
 }
@@ -248,6 +249,7 @@ func (s *Session) retire(g *generation) {
 	s.stateMu.Lock()
 	s.devices = make(map[domain.NodeID]domain.Device)
 	s.dns = domain.NetworkDNS{}
+	s.health = nil
 	s.local = domain.LocalNode{NetworkID: s.cfg.NetworkID}
 	s.prompt = nil
 	s.lastErr = msg
@@ -380,6 +382,7 @@ func (s *Session) applyStatus(snap EngineStatus) {
 	old := s.devices
 	s.devices = newDevices
 	s.dns = snap.DNS.Clone()
+	s.health = redactHealth(snap.Health)
 	s.local = local
 	s.stateMu.Unlock()
 
@@ -606,7 +609,16 @@ func (s *Session) Diagnostics(ctx context.Context) domain.SessionDiagnostics {
 		LocalAddrCount:   len(s.local.Addresses),
 		DeviceCount:      len(s.devices),
 		HasAuthPrompt:    s.prompt != nil,
+		Health:           slices.Clone(s.health),
 	}
+}
+
+func redactHealth(in []string) []string {
+	var out []string
+	for _, h := range in {
+		out = append(out, tsnetSecrets.ReplaceAllString(h, logging.Redacted))
+	}
+	return out
 }
 
 func (s *Session) backendLifecycle() backendLifecycle {

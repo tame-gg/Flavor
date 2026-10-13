@@ -33,4 +33,5 @@ type SessionDiagnostics struct {
 	LocalAddrCount   int
 	DeviceCount      int
 	HasAuthPrompt    bool
+	Health           []string
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
@@ -160,10 +161,16 @@ func (s *Service) Diagnostics(ctx context.Context) Diagnostics {
 		if sess, ok := s.cfg.Sessions.Get(n.ID); ok {
 			sd := sess.Diagnostics(ctx)
 			detail += fmt.Sprintf(", %d devices, %d local addresses", sd.DeviceCount, sd.LocalAddrCount)
+			if len(sd.Health) > 0 {
+				detail += "; control server reports: " + strings.Join(sd.Health, "; ")
+			}
 		}
 		status := "ok"
-		if v.State == domain.StateError {
+		switch v.State {
+		case domain.StateError:
 			status = "error"
+		case domain.StateDegraded:
+			status = "warn"
 		}
 		d.Checks = append(d.Checks, Check{Name: "network/" + string(n.ID), Status: status, Detail: detail})
 	}

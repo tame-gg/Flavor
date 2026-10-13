@@ -1,0 +1,158 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
+:root {
+  --ui-radius: 8px;
+  --ui-background: #f7f8fa;
+  --ui-foreground: #10141a;
+  --ui-surface: #ffffff;
+  --ui-surface-2: #f0f2f5;
+  --ui-muted: #eef1f4;
+  --ui-muted-foreground: #5a6573;
+  --ui-border: #dde2e8;
+  --ui-input: #b6bfca;
+  --ui-ring: #2f6fd6;
+  --ui-primary: #2f6fd6;
+  --ui-primary-foreground: #ffffff;
+  --ui-secondary: #eef1f4;
+  --ui-secondary-foreground: #10141a;
+  --ui-accent: #e9edf2;
+  --ui-accent-foreground: #10141a;
+  --ui-destructive: #c2343a;
+  --ui-destructive-foreground: #ffffff;
+  --ui-success: #1d7a50;
+  --ui-warning: #8f5a00;
+  --ui-net-1: #2f6fd6;
+  --ui-net-2: #8a4fd8;
+  --ui-net-3: #0f8c80;
+  --ui-net-4: #c4407f;
+  --ui-net-5: #4f5bd5;
+  --ui-net-6: #0b7fa8;
+  --ui-net-7: #b04fa6;
+  --ui-net-8: #5f6b7a;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ui-background: #0e1116;
+    --ui-foreground: #e6e9ee;
+    --ui-surface: #161b22;
+    --ui-surface-2: #1c222b;
+    --ui-muted: #1c222b;
+    --ui-muted-foreground: #8d97a5;
+    --ui-border: #29313c;
+    --ui-input: #3a4452;
+    --ui-ring: #5b97f6;
+    --ui-primary: #5b97f6;
+    --ui-primary-foreground: #0b0e13;
+    --ui-secondary: #1f2630;
+    --ui-secondary-foreground: #e6e9ee;
+    --ui-accent: #222a35;
+    --ui-accent-foreground: #e6e9ee;
+    --ui-destructive: #ef6f6c;
+    --ui-destructive-foreground: #0b0e13;
+    --ui-success: #43b98a;
+    --ui-warning: #e3aa45;
+    --ui-net-1: #5b97f6;
+    --ui-net-2: #b088f2;
+    --ui-net-3: #34bfae;
+    --ui-net-4: #ec79b0;
+    --ui-net-5: #8a93f5;
+    --ui-net-6: #40b2db;
+    --ui-net-7: #d58bcd;
+    --ui-net-8: #9aa5b3;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ui-background: #0e1116;
+  --ui-foreground: #e6e9ee;
+  --ui-surface: #161b22;
+  --ui-surface-2: #1c222b;
+  --ui-muted: #1c222b;
+  --ui-muted-foreground: #8d97a5;
+  --ui-border: #29313c;
+  --ui-input: #3a4452;
+  --ui-ring: #5b97f6;
+  --ui-primary: #5b97f6;
+  --ui-primary-foreground: #0b0e13;
+  --ui-secondary: #1f2630;
+  --ui-secondary-foreground: #e6e9ee;
+  --ui-accent: #222a35;
+  --ui-accent-foreground: #e6e9ee;
+  --ui-destructive: #ef6f6c;
+  --ui-destructive-foreground: #0b0e13;
+  --ui-success: #43b98a;
+  --ui-warning: #e3aa45;
+  --ui-net-1: #5b97f6;
+  --ui-net-2: #b088f2;
+  --ui-net-3: #34bfae;
+  --ui-net-4: #ec79b0;
+  --ui-net-5: #8a93f5;
+  --ui-net-6: #40b2db;
+  --ui-net-7: #d58bcd;
+  --ui-net-8: #9aa5b3;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+  --color-background: var(--ui-background);
+  --color-foreground: var(--ui-foreground);
+  --color-card: var(--ui-surface);
+  --color-card-foreground: var(--ui-foreground);
+  --color-popover: var(--ui-surface);
+  --color-popover-foreground: var(--ui-foreground);
+  --color-surface-2: var(--ui-surface-2);
+  --color-muted: var(--ui-muted);
+  --color-muted-foreground: var(--ui-muted-foreground);
+  --color-border: var(--ui-border);
+  --color-input: var(--ui-input);
+  --color-ring: var(--ui-ring);
+  --color-primary: var(--ui-primary);
+  --color-primary-foreground: var(--ui-primary-foreground);
+  --color-secondary: var(--ui-secondary);
+  --color-secondary-foreground: var(--ui-secondary-foreground);
+  --color-accent: var(--ui-accent);
+  --color-accent-foreground: var(--ui-accent-foreground);
+  --color-destructive: var(--ui-destructive);
+  --color-destructive-foreground: var(--ui-destructive-foreground);
+  --color-success: var(--ui-success);
+  --color-warning: var(--ui-warning);
+  --color-net-1: var(--ui-net-1);
+  --color-net-2: var(--ui-net-2);
+  --color-net-3: var(--ui-net-3);
+  --color-net-4: var(--ui-net-4);
+  --color-net-5: var(--ui-net-5);
+  --color-net-6: var(--ui-net-6);
+  --color-net-7: var(--ui-net-7);
+  --color-net-8: var(--ui-net-8);
+  --radius-sm: calc(var(--ui-radius) - 4px);
+  --radius-md: calc(var(--ui-radius) - 2px);
+  --radius-lg: var(--ui-radius);
+  --radius-xl: calc(var(--ui-radius) + 4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

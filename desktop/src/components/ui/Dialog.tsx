@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 
 type Props = {
   open: boolean;
@@ -11,6 +11,7 @@ type Props = {
 
 export function Dialog({ open, title, onClose, children, actions, onSubmit }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
@@ -21,7 +22,7 @@ export function Dialog({ open, title, onClose, children, actions, onSubmit }: Pr
     <dialog
       ref={ref}
       className="dialog"
-      aria-labelledby="dialog-title"
+      aria-labelledby={titleId}
       onCancel={(e) => {
         e.preventDefault();
         onClose();
@@ -35,7 +36,7 @@ export function Dialog({ open, title, onClose, children, actions, onSubmit }: Pr
           }}
         >
           <div className="dialog-body">
-            <h2 id="dialog-title">{title}</h2>
+            <h2 id={titleId}>{title}</h2>
             {children}
           </div>
           <div className="dialog-actions">{actions}</div>

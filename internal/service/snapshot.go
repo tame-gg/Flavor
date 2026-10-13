@@ -170,7 +170,7 @@ func (s *Service) Diagnostics(ctx context.Context) Diagnostics {
 		case domain.StateError:
 			status = "error"
 		case domain.StateDegraded:
-			status = "warn"
+			status = "warning"
 		}
 		d.Checks = append(d.Checks, Check{Name: "network/" + string(n.ID), Status: status, Detail: detail})
 	}

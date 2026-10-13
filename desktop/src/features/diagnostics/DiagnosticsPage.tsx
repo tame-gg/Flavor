@@ -6,7 +6,8 @@ import { runDiagnostics } from "../../lib/api/daemon";
 import { useDaemon } from "../../app/sync/useDaemon";
 import { useAction } from "../../app/useAction";
 
-const tones: Record<string, string> = { ok: "badge-ok", warning: "badge-warn", error: "badge-danger" };
+const tones: Record<string, string> = { ok: "badge-ok", warning: "badge-warn", warn: "badge-warn", error: "badge-danger" };
+const labels: Record<string, string> = { ok: "OK", warning: "Warning", warn: "Warning", error: "Error" };
 
 function checkLabel(name: string, networkNames: Map<string, string>): string {
   if (name.startsWith("network/")) return networkNames.get(name.slice(8)) ?? "Network";
@@ -51,7 +52,7 @@ export function DiagnosticsPage() {
             {result.checks.map((c) => (
               <li key={c.name}>
                 <span>
-                  <span className={`badge ${tones[c.status] ?? ""}`}>{c.status === "ok" ? "OK" : c.status === "warning" ? "Warning" : "Error"}</span>
+                  <span className={`badge ${tones[c.status] ?? ""}`}>{labels[c.status] ?? c.status}</span>
                 </span>
                 <span className="stack-sm">
                   <strong>{checkLabel(c.name, names)}</strong>

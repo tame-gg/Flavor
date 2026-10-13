@@ -62,7 +62,7 @@ reviews:
       instructions: |
         The React webview is untrusted. It must never talk to the daemon socket directly, render control-plane or peer strings as HTML, or open URLs itself. User-facing text is in sentence case and plain English.
     - path: "desktop/src-tauri/**"
-      instructions: "Check that Tauri capabilities stay minimal (no shell, filesystem, HTTP or opener permissions for the webview), the CSP stays self-only, and sign-in URLs are re-fetched from the daemon and validated before opening."
+      instructions: "Check that Tauri capabilities stay minimal (no shell, filesystem, HTTP or opener permissions for the webview), the CSP keeps its current sources: self-only scripts, fonts and defaults, data: images, ipc: and http://ipc.localhost connections for Tauri IPC, and style-src with 'unsafe-inline' (a deliberate choice so Radix, sonner and Motion can inject styles); flag anything broader, and sign-in URLs are re-fetched from the daemon and validated before opening."
     - path: "proto/**"
       instructions: "API changes must be backward compatible within protocol major version 1, and the generated code in gen/ and crates/flavor-proto must be regenerated in the same PR."
     - path: ".github/workflows/**"

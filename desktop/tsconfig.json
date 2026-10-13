@@ -28,6 +28,9 @@
       ],
       "@bufbuild/protobuf/*": [
         "./node_modules/@bufbuild/protobuf/dist/esm/*/index.d.ts"
+      ],
+      "@/*": [
+        "./src/*"
       ]
     }
   },

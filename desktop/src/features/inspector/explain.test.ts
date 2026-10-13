@@ -9,7 +9,7 @@ import {
   ResolutionDecision,
 } from "@gen/flavor/v1/inspector_pb";
 import { describe, expect, it } from "vitest";
-import { candidateLabel, explain, preferenceNote } from "./explain";
+import { candidateLabel, candidatePath, explain, preferenceNote } from "./explain";
 
 const candidate = (networkId: string, network: string, host: string, status: CandidateStatus, match = MatchKind.DEVICE_ADDRESS) => ({
   network: { id: networkId, displayName: network },
@@ -186,3 +186,31 @@ describe("explain", () => {
   });
 });
 
+
+describe("candidatePath", () => {
+  it("goes through the router for a subnet route and lands on the destination", () => {
+    const r = create(InspectDestinationResponseSchema, {
+      normalized: "10.20.5.12",
+      candidates: [{ ...candidate("b", "Customer", "vpn", CandidateStatus.SELECTED, MatchKind.SUBNET_ROUTE), matchedValue: "10.20.0.0/16" }],
+    });
+    expect(candidatePath(r, r.candidates[0])).toEqual([
+      { label: "vpn", caption: "Subnet router" },
+      { label: "10.20.5.12", caption: "Inside 10.20.0.0/16", address: true },
+    ]);
+  });
+
+  it("skips the device for a DNS record without one and uses the first address for a name", () => {
+    const r = create(InspectDestinationResponseSchema, {
+      normalized: "grafana.corp.example",
+      candidates: [
+        { network: { id: "a" }, device: {}, match: MatchKind.DNS_RECORD, matchedValue: "10.0.0.5" },
+        candidate("a", "LunarLabs", "prod-api", CandidateStatus.SELECTED, MatchKind.DEVICE_HOSTNAME),
+      ],
+    });
+    expect(candidatePath(r, r.candidates[0])).toEqual([{ label: "10.0.0.5", caption: "DNS record", address: true }]);
+    expect(candidatePath(r, r.candidates[1])).toEqual([
+      { label: "prod-api", caption: "Device" },
+      { label: "100.64.0.1", caption: "Address", address: true },
+    ]);
+  });
+});

@@ -15,7 +15,7 @@ const pages: [Page, string, Capability?][] = [
   ["networks", "Networks"],
   ["workspaces", "Workspaces", Capability.WORKSPACES],
   ["devices", "Devices"],
-  ["inspector", "Connection Inspector", Capability.CONNECTION_INSPECTOR],
+  ["inspector", "Connection inspector", Capability.CONNECTION_INSPECTOR],
   ["conflicts", "Conflicts", Capability.CONFLICT_CENTER],
   ["diagnostics", "Diagnostics"],
   ["settings", "Settings"],

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Capability, NetworkConnectionState as S } from "@gen/flavor/v1/common_pb";
 import { ConflictSeverity } from "@gen/flavor/v1/conflicts_pb";
 import type { Network } from "@gen/flavor/v1/network_pb";
-import { stateLabel } from "../../components/ui/StatusBadge";
+import { stateLabel } from "@/lib/networkState";
 import { useCanMutate, useDaemon } from "../../app/sync/useDaemon";
 import { connectNetwork, disconnectNetwork, listConflicts, openAuthUrl } from "../../lib/api/daemon";
 import { errorMessage } from "../../lib/api/errors";

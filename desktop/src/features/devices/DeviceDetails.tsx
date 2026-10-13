@@ -1,15 +1,19 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import { timestampDate } from "@bufbuild/protobuf/wkt";
 import type { DescribeDeviceResponse } from "@gen/flavor/v1/inspector_pb";
-import { Banner } from "../../components/ui/Banner";
-import { Button } from "../../components/ui/Button";
-import { CopyButton } from "../../components/ui/CopyButton";
-import { StatusBadge } from "../../components/ui/StatusBadge";
+import { ArrowRight, ChevronRight, Copy, Loader2, Route, Terminal, X } from "lucide-react";
+import { toast } from "sonner";
+import { stateLabel } from "@/lib/networkState";
 import { useCanMutate, useDaemon } from "../../app/sync/useDaemon";
 import { useAction } from "../../app/useAction";
 import { clearExitNode, describeDevice, setExitNode } from "../../lib/api/daemon";
+import { cn } from "@/lib/cn";
+import { networkColorIndex, networkColorVar } from "@/lib/networkColor";
+import { Badge } from "@/ui/badge";
+import { Button } from "@/ui/button";
+import { Skeleton } from "@/ui/skeleton";
 import { providerName } from "../networks/format";
-import { lastSeen, sshTarget } from "./format";
+import { canRetryDescribe, deviceBadges, lastSeen, sshTarget, type DeviceBadge } from "./format";
 
 type Props = {
   deviceKey: string;
@@ -19,164 +23,310 @@ type Props = {
   canInspect: boolean;
 };
 
+const copy = (value: string) =>
+  navigator.clipboard.writeText(value).then(
+    () => toast.success(`Copied ${value}`),
+    () => toast.error("Could not copy to the clipboard"),
+  );
+
+export function DeviceBadges({ badges }: { badges: DeviceBadge[] }) {
+  return badges.map((b) => (
+    <Badge
+      key={b.label}
+      variant={b.active ? "default" : "outline"}
+      className={cn("h-5 rounded-md px-1.5 py-0 font-normal", !b.active && "text-muted-foreground")}
+    >
+      {b.label}
+    </Badge>
+  ));
+}
+
 export function DeviceDetails({ deviceKey, onClose, onInspect, onOpenNetwork, canInspect }: Props) {
-  const { devices, networks, sequence } = useDaemon();
+  const { devices, networks, sequence, status } = useDaemon();
   const d = devices.get(deviceKey);
   const network = d?.id ? networks.get(d.id.networkId) : undefined;
-  const [names, setNames] = useState<DescribeDeviceResponse | null>(null);
   const networkId = d?.id?.networkId;
   const nodeId = d?.id?.nodeId;
   const canMutate = useCanMutate();
-  const exit = useAction(() => (d?.exitNode ? clearExitNode(networkId!) : setExitNode(networkId!, nodeId!)));
+  const colors = useMemo(() => networkColorIndex(networks.values()), [networks]);
+  const [names, setNames] = useState<DescribeDeviceResponse | null>(null);
+  const [namesError, setNamesError] = useState<{ cause: unknown } | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const exit = useAction((stop: boolean) => (stop ? clearExitNode(networkId!) : setExitNode(networkId!, nodeId!)));
+
   useEffect(() => {
     if (!networkId || !nodeId) return;
     let cancelled = false;
     describeDevice(networkId, nodeId)
-      .then((r) => !cancelled && setNames(r))
-      .catch(() => !cancelled && setNames(null));
+      .then((r) => {
+        if (cancelled) return;
+        setNames(r);
+        setNamesError(null);
+      })
+      .catch((cause: unknown) => {
+        if (cancelled) return;
+        setNames(null);
+        setNamesError({ cause });
+      });
     return () => {
       cancelled = true;
     };
-  }, [networkId, nodeId, sequence]);
+  }, [networkId, nodeId, sequence, attempt]);
 
   if (!d || !d.id) {
     return (
-      <aside className="card details" aria-label="Device details">
-        <div className="row">
-          <h2 className="grow">Device unavailable</h2>
-          <Button variant="ghost" onClick={onClose} aria-label="Close device details">
-            Close
-          </Button>
-        </div>
-        <p className="muted">This device is no longer reported. Its network may have disconnected or removed it.</p>
+      <aside aria-label="Device details" className="flex min-h-0 flex-1 flex-col">
+        <Header title="Device unavailable" onClose={onClose} />
+        <p className="px-4 py-3 text-sm text-muted-foreground">
+          This device is no longer reported. Its network may have disconnected or removed it.
+        </p>
       </aside>
     );
   }
 
+  const id = d.id;
   const name = d.hostname || d.dnsName;
   const dns = d.dnsName.replace(/\.$/, "");
-  const seen = !d.online ? lastSeen(d.lastSeen ? timestampDate(d.lastSeen) : undefined) : null;
+  const seen = d.online ? null : lastSeen(d.lastSeen ? timestampDate(d.lastSeen) : undefined);
   const ssh = d.local ? null : sshTarget(d.dnsName, d.addresses);
   const destination = dns || d.addresses[0];
+  const badges = deviceBadges(d);
+  const stopping = d.exitNode;
+  const namesRetry = namesError !== null && canRetryDescribe(namesError.cause, status);
+
+  const toggleExit = async () => {
+    const r = await exit.run(stopping);
+    if (r.ok) toast.success(stopping ? `Stopped using ${name} as exit node` : `Using ${name} as exit node`);
+    else toast.error(r.error);
+  };
 
   return (
-    <aside className="card details stack" aria-label={`Details for ${name}`}>
-      <div className="row">
-        <h2 className="grow details-title">{name}</h2>
-        <Button variant="ghost" onClick={onClose} aria-label="Close device details">
-          Close
-        </Button>
-      </div>
-      <div className="row">
-        <span className={`badge ${d.online ? "badge-ok" : ""}`}>{d.online ? "Online" : "Offline"}</span>
-        {d.local && <span className="badge badge-info">This device</span>}
-        {d.exitNode && <span className="badge badge-info">Exit node</span>}
-        {seen && <span className="muted small">Last seen {seen}</span>}
-      </div>
+    <aside aria-label={`Details for ${name}`} className="flex min-h-0 flex-1 flex-col">
+      <Header title={name} onClose={onClose}>
+        <span className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span
+            className={cn("size-2 shrink-0 rounded-full", d.online ? "bg-success" : "bg-muted-foreground/50")}
+            aria-hidden="true"
+          />
+          {d.online ? "Online" : seen ? `Offline, last seen ${seen}` : "Offline"}
+        </span>
+      </Header>
 
-      <div className="details-network">
-        <div className="stack-sm grow">
-          <span className="hint">Network</span>
-          <strong>{network?.displayName ?? "Unknown network"}</strong>
-          <span className="muted small">{network ? providerName(network.provider) : ""}</span>
-        </div>
-        {network && <StatusBadge state={network.state} />}
-      </div>
-
-      <dl className="dl">
-        {dns && (
-          <>
-            <dt>DNS name</dt>
-            <dd className="row">
-              <span className="mono grow">{dns}</span>
-              <CopyButton value={dns} label="Copy" />
-            </dd>
-          </>
-        )}
-        {d.addresses.map((a, i) => (
-          <div key={a} className="dl-row">
-            <dt>{i === 0 ? "Addresses" : ""}</dt>
-            <dd className="row">
-              <span className="mono grow">{a}</span>
-              <CopyButton value={a} label="Copy" />
-            </dd>
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        <div className="flex flex-col gap-3 px-4 py-3">
+          {badges.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              <DeviceBadges badges={badges} />
+            </div>
+          )}
+          <div className="flex items-center gap-3 rounded-md border border-border bg-muted/40 py-2 pr-1 pl-3">
+            <span
+              className="size-2.5 shrink-0 rounded-[3px]"
+              style={{ background: networkColorVar(colors.get(id.networkId)) }}
+              aria-hidden="true"
+            />
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="truncate text-sm font-medium">{network?.displayName ?? "Unknown network"}</span>
+              {network && (
+                <span className="truncate text-xs text-muted-foreground">
+                  {providerName(network.provider)} · {stateLabel(network.state)}
+                </span>
+              )}
+            </span>
+            {network && (
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={`Open ${network.displayName} network`}
+                onClick={() => onOpenNetwork(network.id)}
+              >
+                Open
+                <ArrowRight />
+              </Button>
+            )}
           </div>
-        ))}
-        {d.routes.map((r, i) => (
-          <div key={r} className="dl-row">
-            <dt>{i === 0 ? "Routes" : ""}</dt>
-            <dd className="row">
-              <span className="mono grow">{r}</span>
-              {canInspect && (
-                <Button variant="ghost" aria-label={`Inspect route ${r}`} onClick={() => onInspect(r.split("/")[0])}>
+          {((canInspect && destination) || ssh) && (
+            <div className="flex flex-wrap gap-2">
+              {canInspect && destination && (
+                <Button size="sm" onClick={() => onInspect(destination)}>
+                  <Route />
                   Inspect
                 </Button>
               )}
-            </dd>
-          </div>
-        ))}
-        {d.os && (
-          <>
-            <dt>OS</dt>
-            <dd>{d.os}</dd>
-          </>
-        )}
-        {d.tags.length > 0 && (
-          <>
-            <dt>Tags</dt>
-            <dd className="row">
-              {d.tags.map((t) => (
-                <span key={t} className="badge tag">
-                  {t}
-                </span>
-              ))}
-            </dd>
-          </>
-        )}
-      </dl>
-
-      <div className="row">
-        {canInspect && destination && (
-          <Button variant="primary" onClick={() => onInspect(destination)}>
-            Inspect
-          </Button>
-        )}
-        {network && <Button onClick={() => onOpenNetwork(network.id)}>Open network</Button>}
-        {ssh && <CopyButton value={ssh} label="Copy SSH command" />}
-        {(d.exitNodeOption || d.exitNode) && !d.local && (
-          <Button loading={exit.pending} disabled={!canMutate} onClick={() => void exit.run()}>
-            {d.exitNode ? "Stop using as exit node" : "Use as exit node"}
-          </Button>
-        )}
-      </div>
-      {exit.error && <Banner tone="danger">{exit.error}</Banner>}
-      {d.exitNodeOption && !d.local && !d.exitNode && (
-        <p className="muted small">
-          Connections through Flavor to addresses and names outside your networks would leave through this device.
-        </p>
-      )}
-
-      <details>
-        <summary className="field-label">Identifiers</summary>
-        <dl className="dl details-body">
-          <dt>Network ID</dt>
-          <dd className="mono">{d.id.networkId}</dd>
-          <dt>Node ID</dt>
-          <dd className="mono">{d.id.nodeId}</dd>
-          {names?.name && (
-            <>
-              <dt>Flavor name</dt>
-              <dd className="mono">{names.name}</dd>
-            </>
+              {ssh && (
+                <Button size="sm" variant="outline" onClick={() => void copy(ssh)}>
+                  <Terminal />
+                  Copy SSH command
+                </Button>
+              )}
+            </div>
           )}
-          {names?.stableName && names.stableName !== names.name && (
-            <>
-              <dt>Stable name</dt>
-              <dd className="mono">{names.stableName}</dd>
-            </>
+        </div>
+
+        <dl className="flex flex-col gap-3 border-t border-border px-4 py-3">
+          {dns && (
+            <Field label="DNS name">
+              <CopyValue value={dns} label="DNS name" />
+            </Field>
+          )}
+          {(names ? names.name : !namesError || namesRetry) && (
+            <Field label="Flavor name">
+              {names?.name ? (
+                <CopyValue value={names.name} label="Flavor name" />
+              ) : namesError ? (
+                <dd className="flex items-center justify-between gap-2 text-sm text-destructive">
+                  Could not load the Flavor name.
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    onClick={() => {
+                      setNamesError(null);
+                      setAttempt((a) => a + 1);
+                    }}
+                  >
+                    Retry
+                  </Button>
+                </dd>
+              ) : (
+                <dd>
+                  <Skeleton className="h-5 w-3/4" />
+                </dd>
+              )}
+            </Field>
+          )}
+          {d.addresses.length > 0 && (
+            <Field label={d.addresses.length === 1 ? "Address" : "Addresses"}>
+              {d.addresses.map((a) => (
+                <CopyValue key={a} value={a} label={`address ${a}`} />
+              ))}
+            </Field>
           )}
         </dl>
-      </details>
+
+        {d.routes.length > 0 && (
+          <dl className="flex flex-col gap-3 border-t border-border px-4 py-3">
+            <Field label="Subnet routes">
+              {d.routes.map((r) => (
+                <dd key={r} className="flex min-h-6 items-center gap-2">
+                  <span className="min-w-0 flex-1 font-mono text-sm wrap-anywhere">{r}</span>
+                  {canInspect && (
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      aria-label={`Inspect route ${r}`}
+                      onClick={() => onInspect(r.split("/")[0])}
+                    >
+                      Inspect
+                    </Button>
+                  )}
+                </dd>
+              ))}
+            </Field>
+          </dl>
+        )}
+
+        {(d.os || d.tags.length > 0) && (
+          <dl className="flex flex-col gap-3 border-t border-border px-4 py-3">
+            {d.os && (
+              <Field label="OS">
+                <dd className="text-sm">{d.os}</dd>
+              </Field>
+            )}
+            {d.tags.length > 0 && (
+              <Field label="Tags">
+                <dd className="flex flex-wrap gap-1">
+                  {d.tags.map((t) => (
+                    <Badge key={t} variant="outline" className="rounded-md px-1.5 font-mono font-normal">
+                      {t}
+                    </Badge>
+                  ))}
+                </dd>
+              </Field>
+            )}
+          </dl>
+        )}
+
+        {(d.exitNodeOption || d.exitNode) && !d.local && (
+          <section aria-label="Exit node" className="flex flex-col gap-2 border-t border-border px-4 py-3">
+            <h3 className="text-xs font-normal text-muted-foreground">Exit node</h3>
+            <p className="text-sm">
+              Connections through Flavor to addresses and names outside your networks{" "}
+              {stopping ? "leave" : "would leave"} through this device.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="self-start"
+              disabled={!canMutate || exit.pending}
+              onClick={() => void toggleExit()}
+            >
+              {exit.pending && <Loader2 className="animate-spin" />}
+              {stopping ? "Stop using as exit node" : "Use as exit node"}
+            </Button>
+          </section>
+        )}
+
+        <details className="group border-t border-border">
+          <summary className="flex cursor-pointer list-none items-center gap-1 px-4 py-3 text-xs text-muted-foreground transition-colors select-none hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none focus-visible:ring-inset [&::-webkit-details-marker]:hidden">
+            <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" aria-hidden="true" />
+            Identifiers
+          </summary>
+          <dl className="flex flex-col gap-3 px-4 pb-4">
+            <Field label="Network ID">
+              <CopyValue value={id.networkId} label="network ID" />
+            </Field>
+            <Field label="Node ID">
+              <CopyValue value={id.nodeId} label="node ID" />
+            </Field>
+            {names?.stableName && names.stableName !== names.name && (
+              <Field label="Stable name">
+                <CopyValue value={names.stableName} label="stable name" />
+              </Field>
+            )}
+          </dl>
+        </details>
+      </div>
     </aside>
+  );
+}
+
+function Header({ title, onClose, children }: { title: string; onClose: () => void; children?: ReactNode }) {
+  return (
+    <header className="flex items-start gap-3 border-b border-border py-3 pr-2 pl-4">
+      <div className="flex min-w-0 flex-1 flex-col gap-1 pt-1">
+        <h2 className="text-sm font-semibold wrap-anywhere">{title}</h2>
+        {children}
+      </div>
+      <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close device details">
+        <X />
+      </Button>
+    </header>
+  );
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      {children}
+    </div>
+  );
+}
+
+function CopyValue({ value, label }: { value: string; label: string }) {
+  return (
+    <dd className="flex min-h-6 items-center gap-2">
+      <span className="min-w-0 flex-1 font-mono text-sm wrap-anywhere">
+        {value.split(/(?<=\.)/).map((part, i) => (
+          <Fragment key={i}>
+            {i > 0 && <wbr />}
+            {part}
+          </Fragment>
+        ))}
+      </span>
+      <Button variant="ghost" size="icon-xs" aria-label={`Copy ${label}`} onClick={() => void copy(value)}>
+        <Copy />
+      </Button>
+    </dd>
   );
 }

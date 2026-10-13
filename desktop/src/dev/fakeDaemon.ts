@@ -22,7 +22,7 @@ import {
 } from "@gen/flavor/v1/inspector_pb";
 import { NetworkSchema, type Network } from "@gen/flavor/v1/network_pb";
 import { GetRoutesResponseSchema, ListSubnetRoutesResponseSchema, SubnetRouteUse } from "@gen/flavor/v1/routes_pb";
-import { WorkspaceSchema } from "@gen/flavor/v1/workspaces_pb";
+import { ActivateWorkspaceResponseSchema, ActivationOutcome, WorkspaceSchema } from "@gen/flavor/v1/workspaces_pb";
 
 const json = <D extends DescMessage>(schema: D, value: MessageShape<D>) => toJson(schema, value);
 
@@ -159,6 +159,7 @@ const deviceAt = (n: number, node: string) =>
   devices.find((d) => d.id?.networkId === networks[n].id && d.id?.nodeId === node)!;
 
 let settings = { theme: "system", closeBehavior: "tray" };
+const preferences = new Map<string, string>();
 
 const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
   get_snapshot: () => json(GetStateSnapshotResponseSchema, snapshot),
@@ -174,10 +175,16 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
       RunDiagnosticsResponseSchema,
       create(RunDiagnosticsResponseSchema, {
         secretStoreBackend: "secret-service",
-        secretStoreState: "ok",
+        secretStoreState: "available",
         checks: [
           { name: "daemon", status: "ok", safeDetail: "flavord 0.1.0-dev" },
           { name: "database", status: "ok", safeDetail: "schema version 6" },
+          { name: "secret_store", status: "ok", safeDetail: "backend secret-service, state available" },
+          {
+            name: `network/${networks[0].id}`,
+            status: "ok",
+            safeDetail: "headscale, control hs.lunarlabs.example, state connected, 5 devices, 2 local addresses",
+          },
           {
             name: `network/${networks[1].id}`,
             status: "warning",
@@ -217,10 +224,12 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
     );
     const byRecord = q === "git.intra" || q === "git.intra.lunarlabs.internal" ? [deviceAt(0, "2")] : [];
     const found = matches.length > 0 ? matches : byRecord;
+    const preferred = preferences.get(q);
+    const chosen = preferred ? found.find((d) => d.id?.networkId === preferred) : undefined;
     const decision =
       found.length === 0
         ? ResolutionDecision.NO_MATCH
-        : found.length === 1
+        : found.length === 1 || chosen
           ? ResolutionDecision.UNIQUE
           : ResolutionDecision.AMBIGUOUS;
     const match =
@@ -237,8 +246,9 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
         query: q,
         normalized: q,
         decision,
-        reason:
-          decision === ResolutionDecision.AMBIGUOUS
+        reason: chosen
+          ? DecisionReason.DESTINATION_PREFERENCE
+          : decision === ResolutionDecision.AMBIGUOUS
             ? DecisionReason.MULTIPLE_MATCHES
             : decision === ResolutionDecision.NO_MATCH
               ? DecisionReason.NO_MATCH
@@ -249,7 +259,13 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
           device: d,
           match,
           matchedValue: d.addresses[0],
-          status: decision === ResolutionDecision.UNIQUE ? CandidateStatus.SELECTED : CandidateStatus.TIED,
+          status: chosen
+            ? d === chosen
+              ? CandidateStatus.SELECTED
+              : CandidateStatus.OUTRANKED
+            : decision === ResolutionDecision.UNIQUE
+              ? CandidateStatus.SELECTED
+              : CandidateStatus.TIED,
         })),
       }),
     );
@@ -296,6 +312,22 @@ const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {
                 },
               ]
             : [],
+      }),
+    ),
+  set_destination_preference: (a) => {
+    preferences.set(String(a.destination), String(a.networkId));
+    return { destination: a.destination, networkId: a.networkId };
+  },
+  delete_destination_preference: (a) => {
+    preferences.delete(String(a.destination));
+    return null;
+  },
+  activate_workspace: (a) =>
+    json(
+      ActivateWorkspaceResponseSchema,
+      create(ActivateWorkspaceResponseSchema, {
+        workspace: snapshot.workspaces.find((w) => w.id === a.workspaceId),
+        results: networks.slice(0, 2).map((n) => ({ network: ref(n), outcome: ActivationOutcome.ALREADY_ACTIVE })),
       }),
     ),
   get_routes: () => json(GetRoutesResponseSchema, create(GetRoutesResponseSchema, {})),

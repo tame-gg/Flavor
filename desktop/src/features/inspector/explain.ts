@@ -6,6 +6,7 @@ import {
   PreferenceState,
   ResolutionDecision,
   type InspectDestinationResponse,
+  type ResolutionCandidate,
 } from "@gen/flavor/v1/inspector_pb";
 
 export const matchLabel: Record<MatchKind, string> = {
@@ -134,4 +135,26 @@ export function preferenceNote(r: InspectDestinationResponse): string | null {
   return p.state === PreferenceState.NETWORK_NOT_CONNECTED
     ? `Your preference for ${net} is not applied because ${net} is not connected.`
     : `Your preference for ${net} is not applied because no device on ${net} matches ${r.normalized}.`;
+}
+
+export type PathHop = { label: string; caption: string; address?: boolean };
+
+export function candidatePath(r: InspectDestinationResponse, c: ResolutionCandidate): PathHop[] {
+  const d = c.device;
+  const name = d?.hostname || d?.dnsName || "";
+  const via = (caption: string): PathHop[] => (name ? [{ label: name, caption }] : []);
+  const at = (label: string | undefined, caption: string): PathHop[] => (label ? [{ label, caption, address: true }] : []);
+  const role = d?.local ? "This computer" : "Device";
+  switch (c.match) {
+    case MatchKind.SUBNET_ROUTE:
+      return [...via("Subnet router"), ...at(r.normalized, `Inside ${c.matchedValue}`)];
+    case MatchKind.EXIT_NODE:
+      return [...via("Exit node"), ...at(r.normalized, "Outside your networks")];
+    case MatchKind.DEVICE_ADDRESS:
+      return [...via(role), ...at(c.matchedValue, "Address")];
+    case MatchKind.DNS_RECORD:
+      return [...via(role), ...at(c.matchedValue, "DNS record")];
+    default:
+      return [...via(role), ...at(d?.addresses[0], "Address")];
+  }
 }

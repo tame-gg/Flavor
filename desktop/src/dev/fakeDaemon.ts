@@ -1,5 +1,5 @@
 import { create, toJson, type DescMessage, type MessageShape } from "@bufbuild/protobuf";
-import { timestampNow } from "@bufbuild/protobuf/wkt";
+import { timestampFromMs, timestampNow } from "@bufbuild/protobuf/wkt";
 import { mockIPC } from "@tauri-apps/api/mocks";
 import { Capability, NetworkConnectionState as S, ProviderType } from "@gen/flavor/v1/common_pb";
 import {
@@ -36,6 +36,7 @@ const networks: Network[] = [
     nodeHostname: "luna-desktop",
     state: S.CONNECTED,
     label: "lunarlabs",
+    createdAt: timestampFromMs(1_760_000_000_000),
   }),
   create(NetworkSchema, {
     id: "01DARKLESS00000000000000000",
@@ -46,6 +47,8 @@ const networks: Network[] = [
     nodeHostname: "luna-desktop",
     state: S.DEGRADED,
     label: "darkless",
+    statusMessage: "DERP region fra is unreachable",
+    createdAt: timestampFromMs(1_760_000_100_000),
   }),
   create(NetworkSchema, {
     id: "01PLUTOFLAVOR00000000000000",
@@ -55,6 +58,24 @@ const networks: Network[] = [
     nodeHostname: "luna-desktop",
     state: S.CONNECTED,
     label: "plutoflavor",
+    createdAt: timestampFromMs(1_760_000_200_000),
+  }),
+  create(NetworkSchema, {
+    id: "01HOMELAB000000000000000000",
+    displayName: "Home lab",
+    provider: ProviderType.HEADSCALE,
+    controlUrl: "https://hs.home.example",
+    autoConnect: false,
+    nodeHostname: "luna-desktop",
+    state: S.AUTHENTICATING,
+    label: "home-lab",
+    authentication: {
+      flowId: "flow-1",
+      kind: "authentication",
+      authUrl: "https://hs.home.example/register/xyz",
+      provider: ProviderType.HEADSCALE,
+    },
+    createdAt: timestampFromMs(1_760_000_300_000),
   }),
 ];
 

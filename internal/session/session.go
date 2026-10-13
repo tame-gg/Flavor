@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/netip"
 	"slices"
+	"strings"
 	"sync"
 
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
@@ -382,7 +383,9 @@ func (s *Session) applyStatus(snap EngineStatus) {
 	old := s.devices
 	s.devices = newDevices
 	s.dns = snap.DNS.Clone()
+	oldHealth := s.health
 	s.health = redactHealth(snap.Health)
+	healthChanged := !slices.Equal(oldHealth, s.health)
 	s.local = local
 	s.stateMu.Unlock()
 
@@ -390,7 +393,11 @@ func (s *Session) applyStatus(snap EngineStatus) {
 	if next == domain.StateConnected || next == domain.StateDegraded {
 		s.clearAuthPrompt(true)
 	}
-	if s.transition(next, "") && next == domain.StateAwaitingApproval {
+	changed := s.transition(next, "")
+	if !changed && next == domain.StateDegraded && healthChanged {
+		s.publish(events.NetworkStateChanged{NetworkID: s.cfg.NetworkID, State: next, SafeMessage: s.StatusMessage()})
+	}
+	if changed && next == domain.StateAwaitingApproval {
 		s.publish(events.ApprovalRequired{
 			NetworkID:   s.cfg.NetworkID,
 			Provider:    s.cfg.Provider,
@@ -479,13 +486,33 @@ func (s *Session) transition(next domain.NetworkConnectionState, safeMsg string)
 	if safeMsg != "" {
 		s.lastErr = safeMsg
 	}
+	msg := safeMsg
+	if msg == "" {
+		msg = s.statusMessageLocked()
+	}
 	s.stateMu.Unlock()
 	s.publish(events.NetworkStateChanged{
 		NetworkID:   s.cfg.NetworkID,
 		State:       next,
-		SafeMessage: safeMsg,
+		SafeMessage: msg,
 	})
 	return true
+}
+
+func (s *Session) StatusMessage() string {
+	s.stateMu.RLock()
+	defer s.stateMu.RUnlock()
+	return s.statusMessageLocked()
+}
+
+func (s *Session) statusMessageLocked() string {
+	switch s.state {
+	case domain.StateError:
+		return s.lastErr
+	case domain.StateDegraded:
+		return strings.Join(s.health, "; ")
+	}
+	return ""
 }
 
 func (s *Session) publish(p events.Payload) {

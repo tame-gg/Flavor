@@ -96,6 +96,7 @@ func networkConfig(n domain.Network) *v1.Network {
 func network(v service.NetworkView) *v1.Network {
 	out := networkConfig(v.Network)
 	out.State = states[v.State]
+	out.StatusMessage = v.StatusMessage
 	switch {
 	case v.Prompt != nil:
 		out.Authentication = &v1.AuthenticationPrompt{

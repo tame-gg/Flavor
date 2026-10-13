@@ -29,6 +29,7 @@ message Network {
   google.protobuf.Timestamp created_at = 9;
   google.protobuf.Timestamp updated_at = 10;
   string label = 11;
+  string status_message = 12;
 }
 
 message AuthenticationPrompt {

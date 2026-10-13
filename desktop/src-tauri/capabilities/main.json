@@ -41,8 +41,6 @@
     "allow-get-settings",
     "allow-set-settings",
     "allow-set-tray-summary",
-    "allow-app-version",
-    "allow-update-pending",
-    "allow-update-install"
+    "allow-app-version"
   ]
 }

@@ -32,8 +32,6 @@ const COMMANDS: &[&str] = &[
     "set_settings",
     "set_tray_summary",
     "app_version",
-    "update_pending",
-    "update_install",
 ];
 
 fn main() {

@@ -32,14 +32,6 @@ jobs:
             jq -e --arg v "$v" '.version == $v' "$f" >/dev/null || { echo "$f is not $v"; exit 1; }
           done
           echo "version=$v" >> "$GITHUB_OUTPUT"
-      # A release signed against a placeholder pubkey could never be verified by the desktop app.
-      - name: updater pubkey
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          if grep -q PLACEHOLDER desktop/src-tauri/tauri.conf.json; then
-            echo "::error file=desktop/src-tauri/tauri.conf.json::plugins.updater.pubkey is still the placeholder. Set the real updater public key before tagging a release."
-            exit 1
-          fi
 
   selinux:
     runs-on: ubuntu-24.04
@@ -129,21 +121,15 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
-      # Release tags sign the updater bundle; other builds skip it so they don't need the key.
       - name: build
         env:
           VERSION: ${{ needs.version.outputs.version }}
           ARCH: ${{ matrix.arch }}
-          UPDATER: ${{ startsWith(github.ref, 'refs/tags/v') && '1' || '0' }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ startsWith(github.ref, 'refs/tags/v') && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ startsWith(github.ref, 'refs/tags/v') && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
         run: ./scripts/release-macos.sh "$VERSION" "$ARCH"
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: tarball-darwin-${{ matrix.arch }}
-          path: |
-            dist/*.tar.gz
-            dist/*.sig
+          path: dist/*.tar.gz
 
   build-windows:
     needs: [version]
@@ -176,14 +162,10 @@ jobs:
         with:
           node-version: 24
           package-manager-cache: false
-      # Release tags sign the installer for the updater; other builds skip it so they don't need the key.
       - name: build
         env:
           VERSION: ${{ needs.version.outputs.version }}
           ARCH: ${{ matrix.arch }}
-          UPDATER: ${{ startsWith(github.ref, 'refs/tags/v') && '1' || '0' }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ startsWith(github.ref, 'refs/tags/v') && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ startsWith(github.ref, 'refs/tags/v') && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
         run: ./scripts/release-windows.sh "$VERSION" "$ARCH"
       - name: installer smoke test
         shell: pwsh
@@ -195,7 +177,6 @@ jobs:
           path: |
             dist/*.zip
             dist/*-setup.exe
-            dist/*.sig
 
   publish:
     needs: [version, build, build-macos, build-windows]
@@ -215,17 +196,11 @@ jobs:
           pattern: tarball-*
           merge-multiple: true
           path: dist
-      # The signed macOS and Windows bundles (each with a .sig) become latest.json; cdn-publish.yml uploads them once the release is published.
-      - if: startsWith(github.ref, 'refs/tags/v')
-        name: updater manifest
-        run: ./scripts/latest-json.sh "$VERSION" dist
       - uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610
       - name: sboms
         run: |
           syft scan dir:. --exclude './dist/**' --source-name flavor --source-version "$VERSION" -o "spdx-json=dist/flavor-$VERSION-source.spdx.json"
           for t in dist/*.tar.gz; do
-            # The updater's Flavor.app is the one in the darwin tarball.
-            case "$t" in *.app.tar.gz) continue ;; esac
             d="$(mktemp -d)"
             tar -xzf "$t" -C "$d"
             syft scan "dir:$d" --source-name "$(basename "$t" .tar.gz)" --source-version "$VERSION" -o "spdx-json=${t%.tar.gz}.spdx.json"
@@ -259,9 +234,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # -rc/-beta/-alpha tags are prereleases, which cdn-publish.yml skips.
-          prerelease=()
-          case "$GITHUB_REF_NAME" in *-rc*|*-beta*|*-alpha*) prerelease=(--prerelease) ;; esac
-          gh release create "$GITHUB_REF_NAME" --verify-tag --draft "${prerelease[@]}" \
+          gh release create "$GITHUB_REF_NAME" --verify-tag --draft --prerelease \
             --title "Flavor $VERSION" --notes "Draft. Add SHA256SUMS.asc before publishing." \
-            dist/*.tar.gz dist/*.zip dist/*-setup.exe dist/*.sig dist/latest.json dist/*.spdx.json dist/SHA256SUMS dist/SHA256SUMS.sigstore.json
+            dist/*.tar.gz dist/*.zip dist/*-setup.exe dist/*.spdx.json dist/SHA256SUMS dist/SHA256SUMS.sigstore.json

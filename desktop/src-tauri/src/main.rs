@@ -4,7 +4,6 @@ mod commands;
 mod events;
 mod settings;
 mod tray;
-mod updater;
 
 use tauri::{Manager, WindowEvent};
 
@@ -12,14 +11,11 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _, _| tray::show_main(app)))
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(commands::Daemon::new(flavor_ipc::default_socket_path()))
         .manage(events::Watcher::default())
         .manage(settings::Store::open(settings::default_path()))
-        .manage(updater::Pending::default())
         .setup(|app| {
             tray::install(app)?;
-            updater::spawn(app.handle().clone());
             if !std::env::args().any(|a| a == "--hidden") {
                 tray::show_main(app.handle());
             }
@@ -68,8 +64,6 @@ fn main() {
             commands::app_version,
             events::watch_events,
             tray::set_tray_summary,
-            updater::update_pending,
-            updater::update_install,
         ])
         .build(tauri::generate_context!())
         .expect("build flavor desktop")

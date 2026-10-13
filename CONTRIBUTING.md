@@ -118,14 +118,6 @@ See [test/integration/headscale/README.md](test/integration/headscale/README.md)
 
 builds a release tarball. It needs `jq` and cargo-auditable; the release workflow also passes `SELINUX_PP` with the SELinux module it builds on Fedora. With the same toolchain versions, two clean builds of a commit produce identical files; if you change the build, check that this still holds.
 
-### Desktop updates
-
-On macOS and Windows, release builds of the desktop app check `https://cdn.tame.gg/flavor-desktop/latest.json` on launch and every 6 hours with the [Tauri updater](https://v2.tauri.app/plugin/updater/), and offer **Restart to update** when a newer version is out. Dev builds and Linux never check; Linux updates come from the tarball or the AUR packages. `plugins.updater.pubkey` in `desktop/src-tauri/tauri.conf.json` is the public half of the updater key (key ID `2E3077ABBBF5DEF4`); the private key lives only in the `TAURI_SIGNING_PRIVATE_KEY` secret. Never commit it.
-
-`scripts/release-macos.sh` and `scripts/release-windows.sh` sign `Flavor.app.tar.gz` and the installer only with `UPDATER=1`, so local builds don't need the key. On a `v*` tag, the release workflow sets it, writes `latest.json` with `scripts/latest-json.sh`, and attaches the bundles, their `.sig` files and `latest.json` to the draft release; -rc, -beta and -alpha tags are marked as prereleases. Tag builds fail early if the pubkey still contains `PLACEHOLDER`.
-
-Publishing a release that is not a prerelease runs `.github/workflows/cdn-publish.yml`. It checks that `latest.json` matches the tag and that every file it lists is attached with a matching `.sig`, then rsyncs the files to `<CDN_PATH>/flavor-desktop/<version>/` and, last, `latest.json` to `<CDN_PATH>/flavor-desktop/latest.json`. Run it by hand with a tag to re-upload a published release. It needs `CDN_SSH_KEY` (the `cdn-ci` user's key), `CDN_KNOWN_HOSTS` (the server's pinned host keys), `CDN_HOST` (hostname only; port 22) and `CDN_PATH` (the updates root), and skips the upload with a notice if any is unset. Signing also needs `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` if the key has a password.
-
 ## Code conventions
 
 - Match the code around your change: its naming, structure and error handling.

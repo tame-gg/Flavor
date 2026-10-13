@@ -5,7 +5,6 @@ import { MotionConfig } from "motion/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./app/App";
-import { UpdatePrompt } from "./app/UpdatePrompt";
 import { DaemonSyncController } from "./app/sync/controller";
 import { DaemonContext } from "./app/sync/useDaemon";
 import { getSnapshot, onStreamMessage, watchEvents } from "./lib/api/daemon";
@@ -24,7 +23,6 @@ createRoot(document.getElementById("root")!).render(
       <DaemonContext.Provider value={controller}>
         <App />
         <Toaster position="bottom-right" />
-        <UpdatePrompt />
       </DaemonContext.Provider>
     </MotionConfig>
   </StrictMode>,

@@ -2,6 +2,12 @@
 
 All notable changes to Flavor are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- In the desktop app, when the window was shorter than the Overview page, the whole window scrolled instead of the page, cutting off the sidebar and the top of the page.
+
 ## [0.1.0-beta.11] - 2026-10-13
 
 ### Added
@@ -155,6 +161,7 @@ First public beta, released as Lattice.
 - Experimental system-wide names through the optional `flavor-netd` helper, confined by systemd sandboxing, polkit, AppArmor and SELinux.
 - Release tarballs for x86_64 and arm64 with an installer and uninstaller, SBOMs, and `SHA256SUMS` signed with Sigstore and GPG, plus GitHub build-provenance attestations.
 
+[Unreleased]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.11...HEAD
 [0.1.0-beta.11]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.10...v0.1.0-beta.11
 [0.1.0-beta.10]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.9...v0.1.0-beta.10
 [0.1.0-beta.9]: https://github.com/tame-gg/Flavor/compare/v0.1.0-beta.8...v0.1.0-beta.9

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"slices"
+	"sync"
 	"time"
 
 	"git.lunarlabs.dev/flavor/flavor/internal/domain"
@@ -122,16 +123,21 @@ func (s *Service) readTraffic(ctx context.Context) (map[domain.NetworkID]traffic
 	if err != nil {
 		return nil, err
 	}
+	rctx, cancel := context.WithTimeout(ctx, s.cfg.TrafficTick)
+	defer cancel()
+	results := make([]trafficRead, len(live))
+	var wg sync.WaitGroup
+	for i, sess := range live {
+		wg.Go(func() {
+			if peers, err := sess.PeerCounters(rctx); err == nil {
+				results[i] = trafficRead{at: time.Now(), peers: peers}
+			}
+		})
+	}
+	wg.Wait()
 	reads := make(map[domain.NetworkID]trafficRead, len(live))
-	for _, sess := range live {
-		rctx, cancel := context.WithTimeout(ctx, s.cfg.TrafficTick)
-		peers, err := sess.PeerCounters(rctx)
-		cancel()
-		if err != nil {
-			reads[sess.ID()] = trafficRead{}
-			continue
-		}
-		reads[sess.ID()] = trafficRead{at: time.Now(), peers: peers}
+	for i, sess := range live {
+		reads[sess.ID()] = results[i]
 	}
 	return reads, nil
 }

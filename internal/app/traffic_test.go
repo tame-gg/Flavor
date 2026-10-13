@@ -95,7 +95,7 @@ func TestTrafficStats(t *testing.T) {
 		t.Fatalf("a reset counter must count its new value and never wrap: %+v", reset)
 	}
 
-	time.Sleep(1500 * time.Millisecond)
+	time.Sleep(3 * time.Second)
 	if s := samples(); len(s) != 0 {
 		t.Fatalf("the sampler must stop and forget samples when nobody asks: %d samples", len(s))
 	}

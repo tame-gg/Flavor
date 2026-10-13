@@ -27,7 +27,11 @@ export function App() {
   const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
   const [inspectorQuery, setInspectorQuery] = useState("");
   const [addOpen, setAddOpen] = useState(false);
-  const [welcomeDone, setWelcomeDone] = useState(false);
+  const [welcomeDone, setWelcomeDoneState] = useState(() => localStorage.getItem("flavor.welcomeDone") === "1");
+  const setWelcomeDone = (done: boolean) => {
+    localStorage.setItem("flavor.welcomeDone", done ? "1" : "0");
+    setWelcomeDoneState(done);
+  };
   const [settings, setSettingsState] = useState<LoadedSettings>({ theme: "system", closeBehavior: "tray", warning: null });
   const [settingsError, setSettingsError] = useState<string | null>(null);
 

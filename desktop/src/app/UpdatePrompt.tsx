@@ -5,9 +5,11 @@ import { errorMessage } from "../lib/api/errors";
 
 const id = "flavor-update";
 
+const later = { label: "Later", onClick: () => {} };
+
 const buttons = (version: string) => ({
   action: { label: "Restart to update", onClick: () => void install(version) },
-  cancel: { label: "Later", onClick: () => {} },
+  cancel: later,
 });
 
 function offer({ version, flavordUpdate }: UpdateOffer) {
@@ -15,7 +17,7 @@ function offer({ version, flavordUpdate }: UpdateOffer) {
     id,
     duration: Infinity,
     description: flavordUpdate ?? undefined,
-    ...buttons(version),
+    ...(flavordUpdate ? { action: undefined, cancel: later } : buttons(version)),
   });
 }
 

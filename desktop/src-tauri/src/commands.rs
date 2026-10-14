@@ -391,8 +391,17 @@ pub fn get_settings(store: State<'_, settings::Store>) -> settings::Loaded {
 }
 
 #[tauri::command]
-pub fn set_settings(store: State<'_, settings::Store>, settings: Settings) -> Result<settings::Loaded> {
-    store.set(settings).map_err(|_| UiError::invalid("Settings could not be saved."))
+pub fn set_settings(
+    store: State<'_, settings::Store>,
+    wake: State<'_, crate::updater::Wake>,
+    settings: Settings,
+) -> Result<settings::Loaded> {
+    let was_on = store.get().settings.update_checks;
+    let loaded = store.set(settings).map_err(|_| UiError::invalid("Settings could not be saved."))?;
+    if !was_on && loaded.settings.update_checks {
+        wake.notify();
+    }
+    Ok(loaded)
 }
 
 #[tauri::command]

@@ -167,7 +167,7 @@ const wave = (t: number, phase: number) =>
   0.12 * Math.sin(t / 3_100 + phase * 2) +
   0.06 * Math.sin(t / 1_300 + phase * 3);
 
-let settings = { theme: "system", closeBehavior: "tray" };
+let settings = { theme: "system", closeBehavior: "tray", updateChecks: true };
 const preferences = new Map<string, string>();
 
 const handlers: Record<string, (args: Record<string, unknown>) => unknown> = {

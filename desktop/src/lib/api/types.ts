@@ -18,7 +18,7 @@ export type StreamMessage =
 
 export type Theme = "system" | "light" | "dark";
 export type CloseBehavior = "tray" | "quit_gui";
-export type Settings = { theme: Theme; closeBehavior: CloseBehavior };
+export type Settings = { theme: Theme; closeBehavior: CloseBehavior; updateChecks: boolean };
 export type LoadedSettings = Settings & { warning: string | null };
 
 export function isUiError(e: unknown): e is UiError {

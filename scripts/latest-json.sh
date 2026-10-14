@@ -16,6 +16,9 @@ cdn="https://cdn.tame.gg/flavor-desktop/$version"
 conf="$(jq -r .version "$ROOT/desktop/src-tauri/tauri.conf.json")"
 [ "$conf" = "$version" ] || { echo "version $version does not match tauri.conf.json ($conf)" >&2; exit 1; }
 
+protocol="$(sed -n 's/^pub const PROTOCOL_MAJOR: u32 = \([0-9][0-9]*\);$/\1/p' "$ROOT/crates/flavor-ipc/src/lib.rs")"
+[ -n "$protocol" ] || { echo "no PROTOCOL_MAJOR in crates/flavor-ipc/src/lib.rs" >&2; exit 1; }
+
 platforms='{}'
 shopt -s nullglob
 for sig in "$dir"/*.sig; do
@@ -39,6 +42,6 @@ for sig in "$dir"/*.sig; do
 done
 [ "$platforms" != '{}' ] || { echo "no signed updater bundles in $dir" >&2; exit 1; }
 
-jq -n --arg version "$version" --arg pub_date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --argjson platforms "$platforms" \
-	'{version: $version, notes: "Flavor \($version)", pub_date: $pub_date, platforms: $platforms}' > "$dir/latest.json"
+jq -n --arg version "$version" --arg pub_date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --argjson protocol_major "$protocol" --argjson platforms "$platforms" \
+	'{version: $version, notes: "Flavor \($version)", pub_date: $pub_date, protocol_major: $protocol_major, platforms: $platforms}' > "$dir/latest.json"
 echo "$dir/latest.json"

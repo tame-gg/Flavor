@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { installUpdate, onUpdate, pendingUpdate } from "../lib/api/daemon";
+import { installUpdate, onUpdate, pendingUpdate, type UpdateOffer } from "../lib/api/daemon";
 import { errorMessage } from "../lib/api/errors";
 
 const id = "flavor-update";
@@ -10,12 +10,23 @@ const buttons = (version: string) => ({
   cancel: { label: "Later", onClick: () => {} },
 });
 
-function offer(version: string) {
-  toast(`Flavor ${version} is available`, { id, duration: Infinity, ...buttons(version) });
+function offer({ version, flavordUpdate }: UpdateOffer) {
+  toast(`Flavor ${version} is available`, {
+    id,
+    duration: Infinity,
+    description: flavordUpdate ?? undefined,
+    ...buttons(version),
+  });
 }
 
 async function install(version: string) {
-  toast.loading(`Installing Flavor ${version}…`, { id, duration: Infinity, action: undefined, cancel: undefined });
+  toast.loading(`Installing Flavor ${version}…`, {
+    id,
+    duration: Infinity,
+    description: undefined,
+    action: undefined,
+    cancel: undefined,
+  });
   try {
     await installUpdate();
   } catch (e) {
@@ -30,7 +41,7 @@ export function UpdatePrompt() {
     let live = true;
     let off: (() => void) | undefined;
     void onUpdate(offer).then((unlisten) => (live ? (off = unlisten) : unlisten()));
-    void pendingUpdate().then((version) => version && offer(version));
+    void pendingUpdate().then((pending) => pending && offer(pending));
     return () => {
       live = false;
       off?.();

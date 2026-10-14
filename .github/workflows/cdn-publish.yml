@@ -11,7 +11,7 @@ on:
         description: "Published release tag to (re)upload, e.g. v0.1.0. Its latest.json replaces the live one."
         required: true
       test_channel:
-        description: "Upload to the flavor-desktop-test channel instead, allowing a prerelease tag."
+        description: "Upload to the flavor-desktop-test channel instead. Requires a -test tag, e.g. v0.3.0-test.1."
         type: boolean
         default: false
 
@@ -39,6 +39,15 @@ jobs:
           set -euo pipefail
           if [[ ! "$TAG" =~ ^v[0-9A-Za-z.+-]+$ ]]; then
             echo "::error::'$TAG' is not a release tag"
+            exit 1
+          fi
+          if [ "$CHANNEL" = flavor-desktop-test ]; then
+            if [[ "$TAG" != *-test* ]]; then
+              echo "::error::test_channel needs a -test tag, e.g. v0.3.0-test.1; $TAG is not one"
+              exit 1
+            fi
+          elif [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] && [[ "$TAG" == *-test* ]]; then
+            echo "::error::$TAG is a -test tag; run with test_channel ticked"
             exit 1
           fi
           version="${TAG#v}"

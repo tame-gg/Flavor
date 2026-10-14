@@ -35,7 +35,7 @@ jobs:
           echo "version=$v" >> "$GITHUB_OUTPUT"
           channel=flavor-desktop
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            case "$GITHUB_REF_NAME" in *-rc*|*-beta*|*-alpha*) channel=flavor-desktop-test ;; esac
+            case "$GITHUB_REF_NAME" in *-test*) channel=flavor-desktop-test ;; esac
           fi
           echo "updater_channel=$channel" >> "$GITHUB_OUTPUT"
       # A release signed against a placeholder pubkey could never be verified by the desktop app.
@@ -268,9 +268,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # -rc/-beta/-alpha tags are prereleases, which cdn-publish.yml skips.
+          # -rc/-beta/-alpha/-test tags are prereleases, which cdn-publish.yml skips.
           prerelease=()
-          case "$GITHUB_REF_NAME" in *-rc*|*-beta*|*-alpha*) prerelease=(--prerelease) ;; esac
+          case "$GITHUB_REF_NAME" in *-rc*|*-beta*|*-alpha*|*-test*) prerelease=(--prerelease) ;; esac
           gh release create "$GITHUB_REF_NAME" --verify-tag --draft "${prerelease[@]}" \
             --title "Flavor $VERSION" --notes "Draft. Add SHA256SUMS.asc before publishing." \
             dist/*.tar.gz dist/*.zip dist/*-setup.exe dist/*.sig dist/latest.json dist/*.spdx.json dist/SHA256SUMS dist/SHA256SUMS.sigstore.json

@@ -10,7 +10,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 version="${1:?usage: scripts/latest-json.sh VERSION DIR}"
 dir="${2:?usage: scripts/latest-json.sh VERSION DIR}"
-cdn="https://cdn.tame.gg/flavor-desktop/$version"
+channel="$("$ROOT/scripts/updater-channel.sh" "$version")"
+cdn="https://cdn.tame.gg/$channel/$version"
 
 # The updater compares this against the running app's version; a mismatch would offer the same build forever.
 conf="$(jq -r .version "$ROOT/desktop/src-tauri/tauri.conf.json")"

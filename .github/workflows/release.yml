@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.v.outputs.version }}
+      updater_channel: ${{ steps.v.outputs.updater_channel }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
@@ -32,6 +33,11 @@ jobs:
             jq -e --arg v "$v" '.version == $v' "$f" >/dev/null || { echo "$f is not $v"; exit 1; }
           done
           echo "version=$v" >> "$GITHUB_OUTPUT"
+          channel=flavor-desktop
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            case "$GITHUB_REF_NAME" in *-rc*|*-beta*|*-alpha*) channel=flavor-desktop-test ;; esac
+          fi
+          echo "updater_channel=$channel" >> "$GITHUB_OUTPUT"
       # A release signed against a placeholder pubkey could never be verified by the desktop app.
       - name: updater pubkey
         if: startsWith(github.ref, 'refs/tags/v')
@@ -135,6 +141,7 @@ jobs:
           VERSION: ${{ needs.version.outputs.version }}
           ARCH: ${{ matrix.arch }}
           UPDATER: ${{ startsWith(github.ref, 'refs/tags/v') && '1' || '0' }}
+          UPDATER_CHANNEL: ${{ needs.version.outputs.updater_channel }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ startsWith(github.ref, 'refs/tags/v') && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ startsWith(github.ref, 'refs/tags/v') && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
         run: ./scripts/release-macos.sh "$VERSION" "$ARCH"
@@ -182,6 +189,7 @@ jobs:
           VERSION: ${{ needs.version.outputs.version }}
           ARCH: ${{ matrix.arch }}
           UPDATER: ${{ startsWith(github.ref, 'refs/tags/v') && '1' || '0' }}
+          UPDATER_CHANNEL: ${{ needs.version.outputs.updater_channel }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ startsWith(github.ref, 'refs/tags/v') && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ startsWith(github.ref, 'refs/tags/v') && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
         run: ./scripts/release-windows.sh "$VERSION" "$ARCH"
@@ -206,6 +214,7 @@ jobs:
       attestations: write
     env:
       VERSION: ${{ needs.version.outputs.version }}
+      UPDATER_CHANNEL: ${{ needs.version.outputs.updater_channel }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:

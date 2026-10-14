@@ -10,6 +10,10 @@ on:
       tag:
         description: "Published release tag to (re)upload, e.g. v0.1.0. Its latest.json replaces the live one."
         required: true
+      test_channel:
+        description: "Upload to the flavor-desktop-test channel instead, allowing a prerelease tag."
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -24,6 +28,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      CHANNEL: ${{ github.event_name == 'workflow_dispatch' && inputs.test_channel && 'flavor-desktop-test' || 'flavor-desktop' }}
     steps:
       - name: download and verify release assets
         id: fetch
@@ -44,7 +49,7 @@ jobs:
             exit 1
           fi
           # Prereleases stay off the CDN so they never reach the desktop app through latest.json.
-          if [ "${state#* }" != false ]; then
+          if [ "${state#* }" != false ] && [ "$CHANNEL" != flavor-desktop-test ]; then
             echo "::notice::release $TAG is a prerelease, skipping the CDN upload."
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
@@ -61,8 +66,8 @@ jobs:
             exit 1
           fi
           # Stage exactly what latest.json references, each with its .sig.
-          mkdir -p "stage/flavor-desktop/$version"
-          prefix="https://cdn.tame.gg/flavor-desktop/$version/"
+          mkdir -p "stage/$CHANNEL/$version"
+          prefix="https://cdn.tame.gg/$CHANNEL/$version/"
           count=0
           while IFS=$'\t' read -r key url signature; do
             file="${url#"$prefix"}"
@@ -81,7 +86,7 @@ jobs:
               echo "::error::$key: $file.sig does not match the signature in latest.json"
               exit 1
             fi
-            cp -f "release/$file" "release/$file.sig" "stage/flavor-desktop/$version/"
+            cp -f "release/$file" "release/$file.sig" "stage/$CHANNEL/$version/"
             count=$((count + 1))
           done < <(jq -r '.platforms | to_entries[] | [.key, .value.url, .value.signature] | @tsv' release/latest.json)
           if [ "$count" -eq 0 ]; then
@@ -89,7 +94,7 @@ jobs:
             exit 1
           fi
           cp release/latest.json latest.json
-          ls -l "stage/flavor-desktop/$version"
+          ls -l "stage/$CHANNEL/$version"
 
       - name: checkout tauri config
         if: steps.fetch.outputs.skip != 'true'
@@ -119,7 +124,7 @@ jobs:
           fi
           version="${TAG#v}"
           count=0
-          for sig in "stage/flavor-desktop/$version"/*.sig; do
+          for sig in "stage/$CHANNEL/$version"/*.sig; do
             file="${sig%.sig}"
             name="$(basename "$file")"
             base64 -d < "$sig" > "minisign/$name.minisig"
@@ -156,4 +161,4 @@ jobs:
           ssh="ssh -p 22 -i $HOME/.ssh/cdn_key -o UserKnownHostsFile=$HOME/.ssh/cdn_known_hosts -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o BatchMode=yes"
           # CDN_PATH is the updates root. Staging flavor-desktop/<version>/ lets rsync create the nested dirs without a remote shell.
           rsync -O -rtv -e "$ssh" --chmod=D755,F644 stage/ "cdn-ci@$CDN_HOST:${CDN_PATH%/}/"
-          rsync -O -tv -e "$ssh" --chmod=D755,F644 latest.json "cdn-ci@$CDN_HOST:${CDN_PATH%/}/flavor-desktop/latest.json"
+          rsync -O -tv -e "$ssh" --chmod=D755,F644 latest.json "cdn-ci@$CDN_HOST:${CDN_PATH%/}/$CHANNEL/latest.json"

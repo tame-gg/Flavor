@@ -33,9 +33,12 @@ cp "$stage/bin/wintun.dll" desktop/src-tauri/binaries/wintun.dll
 # UPDATER=1 also signs the installer for the Tauri updater, using TAURI_SIGNING_PRIVATE_KEY.
 updater=false
 [ "${UPDATER:-0}" = 1 ] && updater=true
+channel="$(./scripts/updater-channel.sh "$version")"
+endpoints=''
+[ "$channel" = flavor-desktop ] || endpoints=',"plugins":{"updater":{"endpoints":["https://cdn.tame.gg/'"$channel"'/latest.json"]}}'
 
 (cd desktop && npm ci && npm run tauri build -- --runner "$ROOT/scripts/cargo-auditable.cmd" --bundles nsis \
-	--config '{"bundle":{"active":true,"createUpdaterArtifacts":'"$updater"',"publisher":"tame-gg","externalBin":["binaries/flavord","binaries/flavorctl","binaries/flavor-netd"],"resources":{"binaries/wintun.dll":"wintun.dll"},"windows":{"nsis":{"installMode":"currentUser","installerHooks":"../../packaging/windows/hooks.nsh"}}}}')
+	--config '{"bundle":{"active":true,"createUpdaterArtifacts":'"$updater"',"publisher":"tame-gg","externalBin":["binaries/flavord","binaries/flavorctl","binaries/flavor-netd"],"resources":{"binaries/wintun.dll":"wintun.dll"},"windows":{"nsis":{"installMode":"currentUser","installerHooks":"../../packaging/windows/hooks.nsh"}}}'"$endpoints"'}')
 cp target/release/flavor-desktop.exe "$stage/Flavor.exe"
 cp target/release/bundle/nsis/*-setup.exe "dist/$name-setup.exe"
 if [ "$updater" = true ]; then

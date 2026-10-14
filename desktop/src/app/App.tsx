@@ -41,6 +41,7 @@ export function App() {
   const [settings, setSettingsState] = useState<LoadedSettings>({
     theme: "system",
     closeBehavior: "tray",
+    updateChecks: true,
     warning: null,
   });
   const [settingsError, setSettingsError] = useState<string | null>(null);

@@ -27,11 +27,12 @@ pub enum CloseBehavior {
 pub struct Settings {
     pub theme: Theme,
     pub close_behavior: CloseBehavior,
+    pub update_checks: bool,
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Self { theme: Theme::System, close_behavior: CloseBehavior::Tray }
+        Self { theme: Theme::System, close_behavior: CloseBehavior::Tray, update_checks: true }
     }
 }
 
@@ -52,6 +53,7 @@ struct RawFile {
 #[derive(Deserialize, Default)]
 struct RawDesktop {
     close_behavior: Option<String>,
+    update_checks: Option<bool>,
 }
 
 #[derive(Deserialize, Default)]
@@ -69,6 +71,7 @@ struct FileOut {
 #[derive(Serialize)]
 struct DesktopOut {
     close_behavior: CloseBehavior,
+    update_checks: bool,
 }
 
 #[derive(Serialize)]
@@ -107,7 +110,9 @@ pub fn load(path: &Path) -> Loaded {
             Theme::System
         }
     };
-    let close_behavior = match raw.desktop.and_then(|d| d.close_behavior).as_deref() {
+    let desktop = raw.desktop.unwrap_or_default();
+    let update_checks = desktop.update_checks.unwrap_or(true);
+    let close_behavior = match desktop.close_behavior.as_deref() {
         None | Some("tray") => CloseBehavior::Tray,
         Some("quit_gui") => CloseBehavior::QuitGui,
         Some(_) => {
@@ -115,7 +120,7 @@ pub fn load(path: &Path) -> Loaded {
             CloseBehavior::Tray
         }
     };
-    Loaded { settings: Settings { theme, close_behavior }, warning }
+    Loaded { settings: Settings { theme, close_behavior, update_checks }, warning }
 }
 
 fn fallback(msg: &str) -> Loaded {
@@ -131,7 +136,7 @@ pub fn save(path: &Path, settings: Settings) -> std::io::Result<()> {
     builder.create(dir)?;
     let body = toml::to_string(&FileOut {
         version: 1,
-        desktop: DesktopOut { close_behavior: settings.close_behavior },
+        desktop: DesktopOut { close_behavior: settings.close_behavior, update_checks: settings.update_checks },
         ui: UiOut { theme: settings.theme },
     })
     .map_err(std::io::Error::other)?;
@@ -200,13 +205,14 @@ mod tests {
     fn round_trip_is_private_and_matches_schema() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("flavor/config.toml");
-        let s = Settings { theme: Theme::Dark, close_behavior: CloseBehavior::QuitGui };
+        let s = Settings { theme: Theme::Dark, close_behavior: CloseBehavior::QuitGui, update_checks: false };
         save(&path, s).unwrap();
         assert_eq!(load(&path).settings, s);
         let text = fs::read_to_string(&path).unwrap();
         assert!(text.contains("version = 1"));
         assert!(text.contains("close_behavior = \"quit_gui\""));
         assert!(text.contains("theme = \"dark\""));
+        assert!(text.contains("update_checks = false"));
         #[cfg(unix)]
         {
             assert_eq!(fs::metadata(&path).unwrap().permissions().mode() & 0o777, 0o600);
@@ -233,5 +239,13 @@ mod tests {
         let l = load(&path);
         assert_eq!(l.settings.theme, Theme::System);
         assert!(l.warning.is_some());
+    }
+
+    #[test]
+    fn update_checks_default_on_for_older_files() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("config.toml");
+        fs::write(&path, "version = 1\n[desktop]\nclose_behavior = \"tray\"\n").unwrap();
+        assert!(load(&path).settings.update_checks);
     }
 }

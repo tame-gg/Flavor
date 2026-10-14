@@ -31,6 +31,10 @@ pub fn spawn(app: AppHandle) {
         return;
     }
     std::thread::spawn(move || loop {
+        if !app.state::<crate::settings::Store>().get().settings.update_checks {
+            std::thread::sleep(EVERY);
+            continue;
+        }
         if let Err(e) = tauri::async_runtime::block_on(check(&app)) {
             eprintln!("update check failed: {e}");
         }

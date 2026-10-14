@@ -9,6 +9,7 @@ import { Card } from "@/ui/card";
 import { Label } from "@/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/ui/radio-group";
 import { Skeleton } from "@/ui/skeleton";
+import { Switch } from "@/ui/switch";
 
 type Props = { settings: LoadedSettings; error: string | null; onChange: (s: Settings) => void };
 
@@ -115,6 +116,28 @@ export function SettingsPage({ settings, error, onChange }: Props) {
               </div>
             ))}
           </RadioGroup>
+        </Card>
+      </Section>
+
+      <Section id="updates" title="Updates">
+        <Card className="gap-4 p-4">
+          <div className="flex items-start gap-3">
+            <Switch
+              id="update-checks"
+              checked={settings.updateChecks}
+              onCheckedChange={(on) => onChange({ ...settings, updateChecks: on })}
+              aria-describedby="update-checks-hint"
+              className="mt-0.5"
+            />
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="update-checks" className="font-normal">
+                Check for updates automatically
+              </Label>
+              <p id="update-checks-hint" className="text-xs text-muted-foreground">
+                On macOS and Windows, Flavor checks cdn.tame.gg on launch and every six hours, and asks before installing. When off, Flavor never contacts it.
+              </p>
+            </div>
+          </div>
         </Card>
       </Section>
 

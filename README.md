@@ -247,6 +247,7 @@ The desktop app and `flavorctl` talk to `flavord` with [Connect-RPC](https://con
 - **Your user only.** The daemon socket, forwarded ports and the SOCKS5 proxy all check that each connection comes from your user ID.
 - **Keys are not kept.** Pre-auth keys are used once and never written to disk, logs or diagnostics. Each network's identity lives in its own directory under `~/.local/share/flavor`.
 - **No telemetry.** Flavor sends nothing to its developers, and Tailscale's log upload is turned off.
+- **Update checks you can turn off.** On macOS and Windows, the desktop app checks `cdn.tame.gg` for a new version on launch and every six hours, and asks before installing it. Turn off **Check for updates automatically** in Settings to stop it; the app then never contacts the update server. Linux installs are updated by your package manager or tarball and never check.
 - **Separate identities, shared process.** Networks are kept apart logically, but they run in one daemon process and are not sandboxed from each other.
 - **Verifiable releases.** `SHA256SUMS` is signed with Sigstore and with the maintainer's GPG key, each tarball has a GitHub build-provenance attestation and an SBOM, and rebuilding a release commit with the same toolchains produces identical files.
 

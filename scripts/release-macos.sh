@@ -23,11 +23,14 @@ done
 # UPDATER=1 also signs Flavor.app.tar.gz for the Tauri updater, using TAURI_SIGNING_PRIVATE_KEY.
 updater=false
 [ "${UPDATER:-0}" = 1 ] && updater=true
+channel="$(./scripts/updater-channel.sh "$version")"
+endpoints=''
+[ "$channel" = flavor-desktop ] || endpoints=',"plugins":{"updater":{"endpoints":["https://cdn.tame.gg/'"$channel"'/latest.json"]}}'
 
 sysroot="$(rustc --print sysroot)"
 export RUSTFLAGS="${RUSTFLAGS:-} --remap-path-prefix=$ROOT=/build --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=$sysroot=/rust"
 (cd desktop && npm ci && npm run tauri build -- --runner "$ROOT/scripts/cargo-auditable.sh" --bundles app \
-	--config '{"bundle":{"active":true,"createUpdaterArtifacts":'"$updater"',"macOS":{"signingIdentity":"-"}}}')
+	--config '{"bundle":{"active":true,"createUpdaterArtifacts":'"$updater"',"macOS":{"signingIdentity":"-"}}'"$endpoints"'}')
 cp -R target/release/bundle/macos/Flavor.app "$stage/Flavor.app"
 codesign --verify --deep --strict "$stage/Flavor.app"
 if [ "$updater" = true ]; then

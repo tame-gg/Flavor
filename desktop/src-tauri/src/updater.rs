@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use std::sync::{Condvar, Mutex};
 use std::time::Duration;
 
 use serde::Serialize;
@@ -14,6 +14,25 @@ const EVERY: Duration = Duration::from_secs(6 * 3600);
 /// The newest update found by the background check, waiting for the user to accept it.
 #[derive(Default)]
 pub struct Pending(Mutex<Option<Update>>);
+
+#[derive(Default)]
+pub struct Wake {
+    woken: Mutex<bool>,
+    signal: Condvar,
+}
+
+impl Wake {
+    pub fn notify(&self) {
+        *self.woken.lock().unwrap() = true;
+        self.signal.notify_all();
+    }
+
+    fn wait(&self, timeout: Duration) {
+        let guard = self.woken.lock().unwrap();
+        let (mut woken, _) = self.signal.wait_timeout_while(guard, timeout, |w| !*w).unwrap();
+        *woken = false;
+    }
+}
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -84,13 +103,13 @@ pub fn spawn(app: AppHandle) {
     }
     std::thread::spawn(move || loop {
         if !app.state::<crate::settings::Store>().get().settings.update_checks {
-            std::thread::sleep(EVERY);
+            app.state::<Wake>().wait(EVERY);
             continue;
         }
         if let Err(e) = tauri::async_runtime::block_on(check(&app)) {
             eprintln!("update check failed: {e}");
         }
-        std::thread::sleep(EVERY);
+        app.state::<Wake>().wait(EVERY);
     });
 }
 
@@ -127,6 +146,19 @@ fn failed(message: &str) -> UiError {
 mod tests {
     use super::needs_flavord;
     use serde_json::json;
+
+    #[test]
+    fn a_notify_ends_the_wait_early() {
+        let wake = std::sync::Arc::new(super::Wake::default());
+        let waker = wake.clone();
+        let started = std::time::Instant::now();
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(50));
+            waker.notify();
+        });
+        wake.wait(std::time::Duration::from_secs(30));
+        assert!(started.elapsed() < std::time::Duration::from_secs(10));
+    }
 
     #[test]
     fn a_different_protocol_needs_flavord_updated_first() {

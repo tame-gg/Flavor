@@ -17,6 +17,7 @@ fn main() {
         .manage(events::Watcher::default())
         .manage(settings::Store::open(settings::default_path()))
         .manage(updater::Pending::default())
+        .manage(updater::Wake::default())
         .setup(|app| {
             tray::install(app)?;
             updater::spawn(app.handle().clone());

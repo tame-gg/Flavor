@@ -1,0 +1,122 @@
+name: aur-publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Published, non-prerelease release tag to publish to the AUR, e.g. v0.1.0."
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aur-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - name: download release assets
+        id: fetch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$TAG" =~ ^v[0-9A-Za-z.+-]+$ ]]; then
+            echo "::error::'$TAG' is not a release tag"
+            exit 1
+          fi
+          state="$(gh release view "$TAG" --json isDraft,isPrerelease --jq '"\(.isDraft) \(.isPrerelease)"')"
+          if [ "${state% *}" != false ]; then
+            echo "::error::release $TAG is still a draft. Publish it first."
+            exit 1
+          fi
+          if [ "${state#* }" != false ]; then
+            echo "::notice::release $TAG is a prerelease, skipping the AUR publish."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          version="${TAG#v}"
+          gh release download "$TAG" --dir release --pattern SHA256SUMS --pattern SHA256SUMS.asc \
+            --pattern "flavor-$version-linux-amd64.tar.gz" --pattern "flavor-$version-linux-arm64.tar.gz"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: checkout aur packaging
+        if: steps.fetch.outputs.skip != 'true'
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: src
+          persist-credentials: false
+          sparse-checkout: packaging/aur
+          sparse-checkout-cone-mode: false
+
+      - name: update pkgver, pkgrel and checksums
+        if: steps.fetch.outputs.skip != 'true'
+        env:
+          VERSION: ${{ steps.fetch.outputs.version }}
+        run: |
+          set -euo pipefail
+          src/packaging/aur/update.sh "$VERSION" release
+          git -C src diff -- packaging/aur
+
+      - name: regenerate .SRCINFO
+        if: steps.fetch.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
+          docker run --rm -e HOST_UID="$(id -u)" -v "$PWD/src/packaging/aur:/aur" archlinux:base-devel bash -euo pipefail -c '
+            useradd --uid "$HOST_UID" --create-home builder
+            for pkg in flavor flavor-bin; do
+              su builder -c "cd /aur/$pkg && makepkg --printsrcinfo > .SRCINFO"
+            done
+          '
+          git -C src diff -- packaging/aur
+
+      - name: push to the AUR
+        if: steps.fetch.outputs.skip != 'true'
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          if [ -z "$AUR_SSH_PRIVATE_KEY" ]; then
+            echo "::notice::AUR_SSH_PRIVATE_KEY not set, skipping the AUR publish for $TAG."
+            exit 0
+          fi
+          set -euo pipefail
+          mkdir -p -m 700 ~/.ssh
+          trap 'rm -f ~/.ssh/aur_key' EXIT
+          (umask 077 && printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/aur_key)
+          cat > ~/.ssh/aur_known_hosts <<'EOF'
+          aur.archlinux.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEuBKrPzbawxA/k2g6NcyV5jmqwJ2s+zpgZGZ7tpLIcN
+          aur.archlinux.org ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBLMiLrP8pVi5BFX2i3vepSUnpedeiewE5XptnUnau+ZoeUOPkpoCgZZuYfpaIQfhhJJI5qgnjJmr4hyJbe/zxow=
+          aur.archlinux.org ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDKF9vAFWdgm9Bi8uc+tYRBmXASBb5cB5iZsB7LOWWFeBrLp3r14w0/9S2vozjgqY5sJLDPONWoTTaVTbhe3vwO8CBKZTEt1AcWxuXNlRnk9FliR1/eNB9uz/7y1R0+c1Md+P98AJJSJWKN12nqIDIhjl2S1vOUvm7FNY43fU2knIhEbHybhwWeg+0wxpKwcAd/JeL5i92Uv03MYftOToUijd1pqyVFdJvQFhqD4v3M157jxS5FTOBrccAEjT+zYmFyD8WvKUa9vUclRddNllmBJdy4NyLB8SvVZULUPrP3QOlmzemeKracTlVOUG1wsDbxknF1BwSCU7CmU6UFP90kpWIyz66bP0bl67QAvlIc52Yix7pKJPbw85+zykvnfl2mdROsaT8p8R9nwCdFsBc9IiD0NhPEHcyHRwB8fokXTajk2QnGhL+zP5KnkmXnyQYOCUYo3EKMXIlVOVbPDgRYYT/XqvBuzq5S9rrU70KoI/S5lDnFfx/+lPLdtcnnEPk=
+          EOF
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/aur_key -o UserKnownHostsFile=$HOME/.ssh/aur_known_hosts -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o BatchMode=yes"
+          full() { echo "$(sed -n 's/^\tpkgver = //p' "$1")-$(sed -n 's/^\tpkgrel = //p' "$1")"; }
+          for pkg in flavor flavor-bin; do
+            git clone "ssh://aur@aur.archlinux.org/$pkg.git" "aur/$pkg"
+            next="$(full "src/packaging/aur/$pkg/.SRCINFO")"
+            if [ -f "aur/$pkg/.SRCINFO" ]; then
+              current="$(full "aur/$pkg/.SRCINFO")"
+              if [ "$(docker run --rm archlinux:base-devel vercmp "$current" "$next")" -gt 0 ]; then
+                echo "::error::$pkg is already at $current on the AUR, newer than $next"
+                exit 1
+              fi
+            fi
+            cp -f "src/packaging/aur/$pkg"/PKGBUILD "src/packaging/aur/$pkg"/*.install "src/packaging/aur/$pkg"/.SRCINFO "aur/$pkg/"
+            git -C "aur/$pkg" add -A
+            if git -C "aur/$pkg" diff --cached --quiet; then
+              echo "::notice::$pkg is already at $next on the AUR"
+              continue
+            fi
+            git -C "aur/$pkg" -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -m "update to $next"
+            git -C "aur/$pkg" push origin HEAD:master
+            echo "::notice::published $pkg $next to the AUR"
+          done

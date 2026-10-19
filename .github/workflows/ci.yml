@@ -3,7 +3,9 @@ name: ci
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -33,7 +35,9 @@ jobs:
           ./scripts/go.sh vet ./...
           ./scripts/go.sh test ./...
 
+  # macOS and Windows ARM bill 10x and 2x, so they only run on v* tags and manual runs.
   go-macos:
+    if: (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
     strategy:
       fail-fast: false
       matrix:
@@ -60,7 +64,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [windows-2025, windows-11-arm]
+        runner: ${{ fromJSON((startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch') && '["windows-2025","windows-11-arm"]' || '["windows-2025"]') }}
     runs-on: ${{ matrix.runner }}
     defaults:
       run:
@@ -91,7 +95,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-24.04, macos-15, windows-2025, windows-11-arm]
+        runner: ${{ fromJSON((startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch') && '["ubuntu-24.04","macos-15","windows-2025","windows-11-arm"]' || '["ubuntu-24.04","windows-2025"]') }}
     runs-on: ${{ matrix.runner }}
     defaults:
       run:
